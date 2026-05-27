@@ -116,6 +116,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 .calc-res .res-val{font-weight:600;color:var(--charcoal)}
 .calc-res .res-total-val{font-weight:700;font-size:16px;color:var(--gold-dark)}
 .check-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.calc-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gold-dark);margin:12px 0 6px;border-bottom:1px solid rgba(201,169,97,.25);padding-bottom:4px}
 .check-row label{font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--charcoal);cursor:pointer}
 
 /* CANVAS — desenho técnico */
@@ -635,25 +636,68 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
       <div class="calc-res" id="cab-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
     </div>
 
-    <!-- Calculadora de Trilho -->
+    <!-- Calculadora de Piso -->
     <div class="calc-card">
-      <div class="calc-title">📏 Calculadora de Trilho</div>
+      <div class="calc-title">🪵 Calculadora de Piso</div>
+
+      <!-- Cliente -->
       <div class="row">
-        <div class="f f2"><label>Largura do Vão (m)</label><input type="number" id="tri-larg" step="0.01" placeholder="0.00" oninput="calcTrilho()"></div>
-        <div class="f f2"><label>Extensão por Lado (m)</label><input type="number" id="tri-ext" step="0.01" value="0.15" oninput="calcTrilho()"></div>
+        <div class="f fw"><label>Cliente (para salvar no histórico)</label><input type="text" id="cp-cliente" placeholder="Nome do cliente"></div>
       </div>
-      <div class="calc-res" id="tri-res"><span style="color:var(--mid)">Preencha a largura do vão para calcular.</span></div>
+
+      <!-- Piso -->
+      <div class="calc-section-title">Piso</div>
+      <div class="row">
+        <div class="f f2"><label>Custo por m² (R$)</label><input type="number" id="cp-custo-m2" step="0.01" placeholder="Ex: 82.00" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Markup (%)</label><input type="number" id="cp-markup" step="1" placeholder="Ex: 40" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Metragem sem perda (m²)</label><input type="number" id="cp-m2" step="0.01" placeholder="Ex: 22.00" oninput="calcPiso()"></div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="calc-section-title">Rodapé</div>
+      <div class="row">
+        <div class="f f2"><label>Custo por ml (R$)</label><input type="number" id="cp-rod-custo" step="0.01" placeholder="Ex: 15.00" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Markup (%)</label><input type="number" id="cp-rod-markup" step="1" placeholder="Ex: 50" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Metragem sem perda (ml)</label><input type="number" id="cp-rod-ml" step="0.01" placeholder="Ex: 45.00" oninput="calcPiso()"></div>
+      </div>
+
+      <!-- Extras -->
+      <div class="calc-section-title">Extras</div>
+      <div class="row" style="flex-wrap:wrap;gap:10px 24px">
+        <div class="check-row"><input type="checkbox" id="cp-perfil-chk" onchange="calcPiso()"><label for="cp-perfil-chk">Perfil</label></div>
+        <div class="check-row"><input type="checkbox" id="cp-porta-chk" onchange="calcPiso()"><label for="cp-porta-chk">Corte de Porta</label></div>
+        <div class="check-row"><input type="checkbox" id="cp-cola-chk" onchange="calcPiso()"><label for="cp-cola-chk">Cola (Vinílico)</label></div>
+      </div>
+      <div id="cp-extras-fields">
+        <div class="row" id="cp-perfil-row" style="display:none">
+          <div class="f f2"><label>Qtd. Perfis</label><input type="number" id="cp-perfil-qtd" step="1" placeholder="Ex: 2" oninput="calcPiso()"></div>
+          <div class="f f2"><label>Valor por Perfil (R$)</label><input type="number" id="cp-perfil-val" step="0.01" value="200" oninput="calcPiso()"></div>
+        </div>
+        <div class="row" id="cp-porta-row" style="display:none">
+          <div class="f f2"><label>Qtd. Portas</label><input type="number" id="cp-porta-qtd" step="1" placeholder="Ex: 3" oninput="calcPiso()"></div>
+          <div class="f f2"><label>Valor por Porta (R$)</label><input type="number" id="cp-porta-val" step="0.01" placeholder="Ex: 80" oninput="calcPiso()"></div>
+        </div>
+        <div class="row" id="cp-cola-row" style="display:none">
+          <div class="f f2"><label>Valor total da Cola (R$)</label><input type="number" id="cp-cola-val" step="0.01" placeholder="Ex: 150" oninput="calcPiso()"></div>
+        </div>
+      </div>
+
+      <div class="calc-res" id="cp-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-p" onclick="salvarCalcPiso()" style="flex:1">💾 Salvar Cálculo</button>
+        <button class="btn btn-s" onclick="limparCalcPiso()">🗒 Limpar</button>
+      </div>
     </div>
 
-    <!-- Metragem Linear → m² -->
-    <div class="calc-card">
-      <div class="calc-title">🧵 Metragem Linear → m²</div>
-      <div class="row">
-        <div class="f f2"><label>Metragem Linear (m)</label><input type="number" id="m2-lin" step="0.01" placeholder="0.00" oninput="calcM2()"></div>
-        <div class="f f2"><label>Largura do Tecido (m)</label><input type="number" id="m2-larg" step="0.01" value="1.40" oninput="calcM2()"></div>
+    <!-- Histórico de Cálculos de Piso -->
+    <div class="calc-card" id="cp-hist-card" style="display:none">
+      <div class="calc-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📋 Histórico — Cálculos de Piso</span>
+        <button class="btn btn-s" style="font-size:11px;padding:4px 10px" onclick="toggleHistCalcPiso()">Fechar</button>
       </div>
-      <div class="calc-res" id="m2-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
+      <div id="cp-hist-lista"></div>
     </div>
+    <button class="btn btn-s" id="cp-hist-btn" onclick="toggleHistCalcPiso()" style="margin-top:-4px;margin-bottom:12px;width:100%">📋 Ver Histórico de Cálculos de Piso</button>
 
   </div>
 
@@ -680,12 +724,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso' };
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   // Persiste no servidor em background
-  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap') };
+  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso') };
   payload[K[key]] = arr; // garante que o valor recém-salvo está incluído
   fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(function(){});
@@ -698,6 +742,7 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
     if(d.cps_orc && d.cps_orc.length) localStorage.setItem('cps_orc', JSON.stringify(d.cps_orc));
     if(d.cps_cor && d.cps_cor.length) localStorage.setItem('cps_cor', JSON.stringify(d.cps_cor));
     if(d.cps_tap && d.cps_tap.length) localStorage.setItem('cps_tap', JSON.stringify(d.cps_tap));
+    if(d.cps_piso && d.cps_piso.length) localStorage.setItem('cps_piso', JSON.stringify(d.cps_piso));
     if(typeof atualizarDash === 'function') atualizarDash();
   }).catch(function(){});
 })();
@@ -1315,23 +1360,187 @@ function calcCabeceira(){
     '<div class="res-row"><span class="res-label">Área Total</span><span class="res-total-val">'+num2(largTec*altTec)+' m²</span></div>';
 }
 
-function calcTrilho(){
-  var larg=parseFloat(document.getElementById('tri-larg').value)||0;
-  var ext=parseFloat(document.getElementById('tri-ext').value)||0.15;
-  var res=document.getElementById('tri-res');
-  if(!larg){res.innerHTML='<span style="color:var(--mid)">Preencha a largura do vão para calcular.</span>';return;}
-  var trilho=larg+(ext*2);
-  res.innerHTML='<div class="res-row"><span class="res-label">Comprimento do Trilho</span><span class="res-total-val">'+num2(trilho)+' m</span></div>'+
-    '<div class="res-row"><span class="res-label">Cálculo</span><span class="res-val">'+num2(larg)+' m + '+num2(ext)+' m × 2 lados</span></div>';
+function calcPiso(){
+  // toggles extras
+  document.getElementById('cp-perfil-row').style.display=document.getElementById('cp-perfil-chk').checked?'':'none';
+  document.getElementById('cp-porta-row').style.display=document.getElementById('cp-porta-chk').checked?'':'none';
+  document.getElementById('cp-cola-row').style.display=document.getElementById('cp-cola-chk').checked?'':'none';
+
+  var res=document.getElementById('cp-res');
+  var custoM2=parseFloat(document.getElementById('cp-custo-m2').value)||0;
+  var mkPiso=parseFloat(document.getElementById('cp-markup').value)||0;
+  var m2=parseFloat(document.getElementById('cp-m2').value)||0;
+  var custoRodML=parseFloat(document.getElementById('cp-rod-custo').value)||0;
+  var mkRod=parseFloat(document.getElementById('cp-rod-markup').value)||0;
+  var rodML=parseFloat(document.getElementById('cp-rod-ml').value)||0;
+
+  if(!custoM2&&!m2&&!custoRodML&&!rodML){
+    res.innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
+    return;
+  }
+
+  // Piso com 10% perda
+  var m2c=m2*1.10;
+  var custoPisoTotal=custoM2*m2c;
+  var vendaM2=custoM2*(1+mkPiso/100);
+  var vendaPisoTotal=vendaM2*m2c;
+
+  // Rodapé com 10% perda
+  var mlc=rodML*1.10;
+  var custoRodTotal=custoRodML*mlc;
+  var vendaRodML=custoRodML*(1+mkRod/100);
+  var vendaRodTotal=vendaRodML*mlc;
+
+  // Extras
+  var custoPerfil=0,vendaPerfil=0,custoPorta=0,vendaPorta=0,custoCola=0;
+  if(document.getElementById('cp-perfil-chk').checked){
+    var qp=parseFloat(document.getElementById('cp-perfil-qtd').value)||0;
+    var vp=parseFloat(document.getElementById('cp-perfil-val').value)||200;
+    custoPerfil=vendaPerfil=qp*vp;
+  }
+  if(document.getElementById('cp-porta-chk').checked){
+    var qpt=parseFloat(document.getElementById('cp-porta-qtd').value)||0;
+    var vpt=parseFloat(document.getElementById('cp-porta-val').value)||0;
+    custoPorta=vendaPorta=qpt*vpt;
+  }
+  if(document.getElementById('cp-cola-chk').checked){
+    custoCola=parseFloat(document.getElementById('cp-cola-val').value)||0;
+  }
+
+  var custoTotal=custoPisoTotal+custoRodTotal+custoPerfil+custoPorta+custoCola;
+  var vendaTotal=vendaPisoTotal+vendaRodTotal+vendaPerfil+vendaPorta+custoCola;
+  var lucro=vendaTotal-custoTotal;
+  var margem=vendaTotal>0?(lucro/vendaTotal*100):0;
+
+  var h='';
+  if(m2>0){
+    h+='<div class="calc-section-title" style="margin-top:0">Piso</div>';
+    h+='<div class="res-row"><span class="res-label">Metragem c/ perda (10%)</span><span class="res-val">'+num2(m2c)+' m²</span></div>';
+    h+='<div class="res-row"><span class="res-label">Custo total</span><span class="res-val">'+brl(custoPisoTotal)+'</span></div>';
+    h+='<div class="res-row"><span class="res-label">Preço venda/m²</span><span class="res-val">'+brl(vendaM2)+'</span></div>';
+    h+='<div class="res-row"><span class="res-label">Preço venda total</span><span class="res-val">'+brl(vendaPisoTotal)+'</span></div>';
+  }
+  if(rodML>0){
+    h+='<div class="calc-section-title">Rodapé</div>';
+    h+='<div class="res-row"><span class="res-label">Metragem c/ perda (10%)</span><span class="res-val">'+num2(mlc)+' ml</span></div>';
+    h+='<div class="res-row"><span class="res-label">Custo total</span><span class="res-val">'+brl(custoRodTotal)+'</span></div>';
+    h+='<div class="res-row"><span class="res-label">Preço venda/ml</span><span class="res-val">'+brl(vendaRodML)+'</span></div>';
+    h+='<div class="res-row"><span class="res-label">Preço venda total</span><span class="res-val">'+brl(vendaRodTotal)+'</span></div>';
+  }
+  if(custoPerfil||custoPorta||custoCola){
+    h+='<div class="calc-section-title">Extras</div>';
+    if(custoPerfil) h+='<div class="res-row"><span class="res-label">Perfis</span><span class="res-val">'+brl(custoPerfil)+'</span></div>';
+    if(custoPorta) h+='<div class="res-row"><span class="res-label">Corte de porta</span><span class="res-val">'+brl(custoPorta)+'</span></div>';
+    if(custoCola) h+='<div class="res-row"><span class="res-label">Cola (vinílico)</span><span class="res-val">'+brl(custoCola)+'</span></div>';
+  }
+  h+='<div class="calc-section-title">Totais</div>';
+  h+='<div class="res-row"><span class="res-label">Custo total</span><span class="res-val">'+brl(custoTotal)+'</span></div>';
+  h+='<div class="res-row"><span class="res-label">Preço de venda</span><span class="res-total-val">'+brl(vendaTotal)+'</span></div>';
+  h+='<div class="res-row"><span class="res-label">Lucro</span><span class="res-val" style="color:#2a7a3b;font-weight:700">'+brl(lucro)+'</span></div>';
+  h+='<div class="res-row"><span class="res-label">Margem real</span><span class="res-val" style="color:#2a7a3b;font-weight:700">'+num2(margem)+'%</span></div>';
+  res.innerHTML=h;
 }
 
-function calcM2(){
-  var lin=parseFloat(document.getElementById('m2-lin').value)||0;
-  var larg=parseFloat(document.getElementById('m2-larg').value)||1.40;
-  var res=document.getElementById('m2-res');
-  if(!lin){res.innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';return;}
-  res.innerHTML='<div class="res-row"><span class="res-label">Área Total</span><span class="res-total-val">'+num2(lin*larg)+' m²</span></div>'+
-    '<div class="res-row"><span class="res-label">Cálculo</span><span class="res-val">'+num2(lin)+' m × '+num2(larg)+' m largura</span></div>';
+function salvarCalcPiso(){
+  var cliente=document.getElementById('cp-cliente').value.trim()||'Sem nome';
+  var res=document.getElementById('cp-res');
+  if(res.querySelector('span[style*="--mid"]')){toast('Calcule antes de salvar.','err');return;}
+  var reg={
+    id:uid(), _ts:Date.now(), cliente:cliente, data:hojeFormatado(),
+    custoM2:parseFloat(document.getElementById('cp-custo-m2').value)||0,
+    mkPiso:parseFloat(document.getElementById('cp-markup').value)||0,
+    m2:parseFloat(document.getElementById('cp-m2').value)||0,
+    custoRodML:parseFloat(document.getElementById('cp-rod-custo').value)||0,
+    mkRod:parseFloat(document.getElementById('cp-rod-markup').value)||0,
+    rodML:parseFloat(document.getElementById('cp-rod-ml').value)||0,
+    perfil:document.getElementById('cp-perfil-chk').checked,
+    perfilQtd:parseFloat(document.getElementById('cp-perfil-qtd').value)||0,
+    perfilVal:parseFloat(document.getElementById('cp-perfil-val').value)||200,
+    porta:document.getElementById('cp-porta-chk').checked,
+    portaQtd:parseFloat(document.getElementById('cp-porta-qtd').value)||0,
+    portaVal:parseFloat(document.getElementById('cp-porta-val').value)||0,
+    cola:document.getElementById('cp-cola-chk').checked,
+    colaVal:parseFloat(document.getElementById('cp-cola-val').value)||0,
+    resumoHtml:res.innerHTML
+  };
+  var arr=db('piso'); arr.push(reg);
+  dbSave('piso',arr);
+  toast('Cálculo salvo para '+cliente+'!','ok');
+  renderHistCalcPiso();
+}
+
+function limparCalcPiso(){
+  ['cp-cliente','cp-custo-m2','cp-markup','cp-m2','cp-rod-custo','cp-rod-markup','cp-rod-ml',
+   'cp-perfil-qtd','cp-porta-qtd','cp-porta-val','cp-cola-val'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('cp-perfil-val').value='200';
+  ['cp-perfil-chk','cp-porta-chk','cp-cola-chk'].forEach(function(id){document.getElementById(id).checked=false;});
+  ['cp-perfil-row','cp-porta-row','cp-cola-row'].forEach(function(id){document.getElementById(id).style.display='none';});
+  document.getElementById('cp-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
+}
+
+function toggleHistCalcPiso(){
+  var card=document.getElementById('cp-hist-card');
+  var btn=document.getElementById('cp-hist-btn');
+  var vis=card.style.display==='none'||!card.style.display;
+  card.style.display=vis?'block':'none';
+  btn.textContent=vis?'📋 Ocultar Histórico':'📋 Ver Histórico de Cálculos de Piso';
+  if(vis) renderHistCalcPiso();
+}
+
+function renderHistCalcPiso(){
+  var arr=db('piso').slice().reverse();
+  var el=document.getElementById('cp-hist-lista');
+  if(!arr.length){el.innerHTML='<div style="color:var(--mid);padding:12px 0;text-align:center">Nenhum cálculo salvo ainda.</div>';return;}
+  el.innerHTML=arr.map(function(r){
+    var m2c=(r.m2||0)*1.10;
+    var vendaM2=(r.custoM2||0)*(1+(r.mkPiso||0)/100);
+    var vendaPiso=vendaM2*m2c;
+    var mlc=(r.rodML||0)*1.10;
+    var vendaRod=(r.custoRodML||0)*(1+(r.mkRod||0)/100)*mlc;
+    var extras=(r.perfil?r.perfilQtd*r.perfilVal:0)+(r.porta?r.portaQtd*r.portaVal:0)+(r.cola?r.colaVal:0);
+    var venda=vendaPiso+vendaRod+extras;
+    return '<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+      '<div><strong>'+esc(r.cliente)+'</strong> <span style="color:var(--mid);font-size:11px">'+r.data+'</span></div>'+
+      '<div style="display:flex;gap:6px">'+
+      '<button class="btn btn-s" style="font-size:11px;padding:3px 8px" onclick="verCalcPiso(\''+r.id+'\')">Ver</button>'+
+      '<button class="btn" style="font-size:11px;padding:3px 8px;background:#b00;color:#fff" onclick="excluirCalcPiso(\''+r.id+'\')">✕</button>'+
+      '</div></div>'+
+      '<div style="font-size:12px;color:var(--mid)">Venda total: <strong style="color:var(--charcoal)">'+brl(venda)+'</strong></div>'+
+      '</div>';
+  }).join('');
+}
+
+function verCalcPiso(id){
+  var r=db('piso').find(function(o){return o.id===id;});
+  if(!r)return;
+  document.getElementById('cp-cliente').value=r.cliente||'';
+  document.getElementById('cp-custo-m2').value=r.custoM2||'';
+  document.getElementById('cp-markup').value=r.mkPiso||'';
+  document.getElementById('cp-m2').value=r.m2||'';
+  document.getElementById('cp-rod-custo').value=r.custoRodML||'';
+  document.getElementById('cp-rod-markup').value=r.mkRod||'';
+  document.getElementById('cp-rod-ml').value=r.rodML||'';
+  document.getElementById('cp-perfil-chk').checked=!!r.perfil;
+  document.getElementById('cp-perfil-qtd').value=r.perfilQtd||'';
+  document.getElementById('cp-perfil-val').value=r.perfilVal||200;
+  document.getElementById('cp-porta-chk').checked=!!r.porta;
+  document.getElementById('cp-porta-qtd').value=r.portaQtd||'';
+  document.getElementById('cp-porta-val').value=r.portaVal||'';
+  document.getElementById('cp-cola-chk').checked=!!r.cola;
+  document.getElementById('cp-cola-val').value=r.colaVal||'';
+  calcPiso();
+  ir('calculadoras',document.getElementById('nav-calculadoras'));
+  window.scrollTo(0,0);
+}
+
+function excluirCalcPiso(id){
+  if(!confirm('Excluir este cálculo?'))return;
+  dbSave('piso',db('piso').filter(function(o){return o.id!==id;}));
+  toast('Excluído.','ok');
+  renderHistCalcPiso();
 }
 
 // ── INIT ──────────────────────────────────────────────────
