@@ -593,6 +593,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
     <div class="calc-card">
       <div class="calc-title">🪟 Calculadora de Cortina</div>
       <div class="row">
+        <div class="f fw"><label>Cliente (para salvar no histórico)</label><input type="text" id="cc-cliente" placeholder="Nome do cliente"></div>
+      </div>
+      <div class="row">
         <div class="f f2"><label>Largura do Ambiente (m)</label><input type="number" id="cc-larg" step="0.01" placeholder="Ex: 3.07" oninput="calcCortina()"></div>
         <div class="f f2"><label>Altura (m)</label><input type="number" id="cc-alt" step="0.01" placeholder="Ex: 2.76" oninput="calcCortina()"></div>
         <div class="f f2"><label>Valor do Tecido (R$/m)</label><input type="number" id="cc-valor" step="0.01" placeholder="Ex: 85.00" oninput="calcCortina()"></div>
@@ -623,18 +626,21 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
         </div>
       </div>
       <div class="calc-res" id="cc-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-p" onclick="salvarCalcCortina()" style="flex:1">💾 Salvar Cálculo</button>
+        <button class="btn btn-s" onclick="limparCalcCortina()">🗒 Limpar</button>
+      </div>
     </div>
 
-    <!-- Calculadora de Cabeceira -->
-    <div class="calc-card">
-      <div class="calc-title">🛏 Calculadora de Cabeceira</div>
-      <div class="row">
-        <div class="f f2"><label>Largura da Cama (m)</label><input type="number" id="cab-larg" step="0.01" placeholder="Ex: 1.60" oninput="calcCabeceira()"></div>
-        <div class="f f2"><label>Altura da Cabeceira (m)</label><input type="number" id="cab-alt" step="0.01" placeholder="Ex: 0.70" oninput="calcCabeceira()"></div>
-        <div class="f f2"><label>Espessura Acolchoamento (cm)</label><input type="number" id="cab-esp" step="1" placeholder="Ex: 8" oninput="calcCabeceira()"></div>
+    <!-- Histórico de Cálculos de Cortina -->
+    <div class="calc-card" id="cc-hist-card" style="display:none">
+      <div class="calc-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📋 Histórico — Cálculos de Cortina</span>
+        <button class="btn btn-s" style="font-size:11px;padding:4px 10px" onclick="toggleHistCalcCortina()">Fechar</button>
       </div>
-      <div class="calc-res" id="cab-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
+      <div id="cc-hist-lista"></div>
     </div>
+    <button class="btn btn-s" id="cc-hist-btn" onclick="toggleHistCalcCortina()" style="margin-top:-4px;margin-bottom:12px;width:100%">📋 Ver Histórico de Cálculos de Cortina</button>
 
     <!-- Calculadora de Piso -->
     <div class="calc-card">
@@ -724,12 +730,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort' };
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   // Persiste no servidor em background
-  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso') };
+  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort') };
   payload[K[key]] = arr; // garante que o valor recém-salvo está incluído
   fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(function(){});
@@ -743,6 +749,7 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
     if(d.cps_cor && d.cps_cor.length) localStorage.setItem('cps_cor', JSON.stringify(d.cps_cor));
     if(d.cps_tap && d.cps_tap.length) localStorage.setItem('cps_tap', JSON.stringify(d.cps_tap));
     if(d.cps_piso && d.cps_piso.length) localStorage.setItem('cps_piso', JSON.stringify(d.cps_piso));
+    if(d.cps_cort && d.cps_cort.length) localStorage.setItem('cps_cort', JSON.stringify(d.cps_cort));
     if(typeof atualizarDash === 'function') atualizarDash();
   }).catch(function(){});
 })();
@@ -1346,18 +1353,71 @@ function calcCortina(){
   res.innerHTML=html;
 }
 
-function calcCabeceira(){
-  var larg=parseFloat(document.getElementById('cab-larg').value)||0;
-  var alt=parseFloat(document.getElementById('cab-alt').value)||0;
-  var esp=(parseFloat(document.getElementById('cab-esp').value)||0)/100;
-  var res=document.getElementById('cab-res');
-  if(!larg||!alt){res.innerHTML='<span style="color:var(--mid)">Preencha a largura e a altura para calcular.</span>';return;}
-  var largTec=larg+(esp*2)+0.20;
-  var altTec=alt+(esp*2)+0.30;
-  res.innerHTML=
-    '<div class="res-row"><span class="res-label">Largura do Tecido</span><span class="res-val"><strong>'+num2(largTec)+' m</strong></span></div>'+
-    '<div class="res-row"><span class="res-label">Altura do Tecido</span><span class="res-val"><strong>'+num2(altTec)+' m</strong></span></div>'+
-    '<div class="res-row"><span class="res-label">Área Total</span><span class="res-total-val">'+num2(largTec*altTec)+' m²</span></div>';
+
+// ── CALCULADORA DE CORTINA — HISTÓRICO ───────────────────
+function salvarCalcCortina(){
+  var cliente=document.getElementById('cc-cliente').value.trim();
+  if(!cliente){alert('Informe o nome do cliente antes de salvar.');return;}
+  var campos={
+    larg: document.getElementById('cc-larg').value,
+    alt: document.getElementById('cc-alt').value,
+    band: document.getElementById('cc-band').value,
+    forro: document.getElementById('cc-forro').value,
+    fator: document.getElementById('cc-fator').value,
+    preco: document.getElementById('cc-preco').value,
+    cus: document.getElementById('cc-cus').value,
+    mk: document.getElementById('cc-mk').value
+  };
+  var resEl=document.getElementById('cc-res');
+  if(!campos.larg||!campos.alt){alert('Calcule antes de salvar.');return;}
+  var reg={id:uid(),cliente:cliente,data:new Date().toLocaleDateString('pt-BR'),campos:campos,resHtml:resEl.innerHTML};
+  var arr=db('cort');arr.unshift(reg);
+  dbSave('cort',arr);
+  toast('Cálculo salvo para '+cliente+'!','ok');
+  renderHistCalcCortina();
+}
+function limparCalcCortina(){
+  ['cc-cliente','cc-larg','cc-alt','cc-band','cc-forro','cc-fator','cc-preco','cc-cus','cc-mk'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('cc-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
+}
+function toggleHistCalcCortina(){
+  var card=document.getElementById('cc-hist-card');
+  var btn=document.getElementById('cc-hist-btn');
+  if(card.style.display==='none'){card.style.display='';btn.style.display='none';renderHistCalcCortina();}
+  else{card.style.display='none';btn.style.display='';}
+}
+function renderHistCalcCortina(){
+  var arr=db('cort');
+  var el=document.getElementById('cc-hist-lista');
+  if(!arr.length){el.innerHTML='<p style="color:var(--mid);padding:12px">Nenhum cálculo salvo ainda.</p>';return;}
+  el.innerHTML=arr.map(function(r){
+    return '<div style="border:1px solid var(--gold);border-radius:8px;padding:12px;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+      '<strong>'+r.cliente+'</strong><span style="color:var(--mid);font-size:12px">'+r.data+'</span></div>'+
+      '<div style="display:flex;gap:6px">'+
+      '<button class="btn btn-p" style="font-size:11px;padding:4px 10px" onclick="verCalcCortina(\''+r.id+'\')">Carregar</button>'+
+      '<button class="btn" style="font-size:11px;padding:4px 10px;background:#c0392b;color:#fff" onclick="excluirCalcCortina(\''+r.id+'\')">Excluir</button>'+
+      '</div></div>';
+  }).join('');
+}
+function verCalcCortina(id){
+  var reg=db('cort').find(function(r){return r.id===id;});
+  if(!reg)return;
+  document.getElementById('cc-cliente').value=reg.cliente;
+  Object.keys(reg.campos).forEach(function(k){
+    var el=document.getElementById('cc-'+k);if(el)el.value=reg.campos[k];
+  });
+  document.getElementById('cc-res').innerHTML=reg.resHtml;
+  toggleHistCalcCortina();
+  toast('Cálculo de '+reg.cliente+' carregado.','ok');
+}
+function excluirCalcCortina(id){
+  if(!confirm('Excluir este cálculo?'))return;
+  dbSave('cort',db('cort').filter(function(r){return r.id!==id;}));
+  toast('Excluído.','ok');
+  renderHistCalcCortina();
 }
 
 function calcPiso(){
