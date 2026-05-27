@@ -657,6 +657,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
         <div class="f f2"><label>Custo por m² (R$)</label><input type="number" id="cp-custo-m2" step="0.01" placeholder="Ex: 82.00" oninput="calcPiso()"></div>
         <div class="f f2"><label>Markup (%)</label><input type="number" id="cp-markup" step="1" placeholder="Ex: 40" oninput="calcPiso()"></div>
         <div class="f f2"><label>Metragem sem perda (m²)</label><input type="number" id="cp-m2" step="0.01" placeholder="Ex: 22.00" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Rendimento da caixa (m²)</label><input type="number" id="cp-rend-cx" step="0.01" placeholder="Ex: 2.40" oninput="calcPiso()"></div>
       </div>
 
       <!-- Rodapé -->
@@ -665,6 +666,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
         <div class="f f2"><label>Custo por ml (R$)</label><input type="number" id="cp-rod-custo" step="0.01" placeholder="Ex: 15.00" oninput="calcPiso()"></div>
         <div class="f f2"><label>Markup (%)</label><input type="number" id="cp-rod-markup" step="1" placeholder="Ex: 50" oninput="calcPiso()"></div>
         <div class="f f2"><label>Metragem sem perda (ml)</label><input type="number" id="cp-rod-ml" step="0.01" placeholder="Ex: 45.00" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Tamanho da barra (ml)</label><input type="number" id="cp-rod-barra" step="0.01" placeholder="Ex: 2.40" oninput="calcPiso()"></div>
       </div>
 
       <!-- Extras -->
@@ -673,6 +675,8 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
         <div class="check-row"><input type="checkbox" id="cp-perfil-chk" onchange="calcPiso()"><label for="cp-perfil-chk">Perfil</label></div>
         <div class="check-row"><input type="checkbox" id="cp-porta-chk" onchange="calcPiso()"><label for="cp-porta-chk">Corte de Porta</label></div>
         <div class="check-row"><input type="checkbox" id="cp-cola-chk" onchange="calcPiso()"><label for="cp-cola-chk">Cola (Vinílico)</label></div>
+        <div class="check-row"><input type="checkbox" id="cp-nivel-chk" onchange="calcPiso()"><label for="cp-nivel-chk">Autonivelante</label></div>
+        <div class="check-row"><input type="checkbox" id="cp-prime-chk" onchange="calcPiso()"><label for="cp-prime-chk">Prime</label></div>
       </div>
       <div id="cp-extras-fields">
         <div class="row" id="cp-perfil-row" style="display:none">
@@ -685,6 +689,14 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
         </div>
         <div class="row" id="cp-cola-row" style="display:none">
           <div class="f f2"><label>Valor total da Cola (R$)</label><input type="number" id="cp-cola-val" step="0.01" placeholder="Ex: 150" oninput="calcPiso()"></div>
+        </div>
+        <div class="row" id="cp-nivel-row" style="display:none">
+          <div class="f f2"><label>Custo/m² do Autonivelante (R$)</label><input type="number" id="cp-nivel-custo" step="0.01" placeholder="Ex: 12.00" oninput="calcPiso()"></div>
+          <div class="f f2"><label>Markup Autonivelante (%)</label><input type="number" id="cp-nivel-mk" step="1" placeholder="Ex: 30" oninput="calcPiso()"></div>
+        </div>
+        <div class="row" id="cp-prime-row" style="display:none">
+          <div class="f f2"><label>Custo/m² do Prime (R$)</label><input type="number" id="cp-prime-custo" step="0.01" placeholder="Ex: 8.00" oninput="calcPiso()"></div>
+          <div class="f f2"><label>Markup Prime (%)</label><input type="number" id="cp-prime-mk" step="1" placeholder="Ex: 30" oninput="calcPiso()"></div>
         </div>
       </div>
 
@@ -1425,34 +1437,43 @@ function calcPiso(){
   document.getElementById('cp-perfil-row').style.display=document.getElementById('cp-perfil-chk').checked?'':'none';
   document.getElementById('cp-porta-row').style.display=document.getElementById('cp-porta-chk').checked?'':'none';
   document.getElementById('cp-cola-row').style.display=document.getElementById('cp-cola-chk').checked?'':'none';
+  document.getElementById('cp-nivel-row').style.display=document.getElementById('cp-nivel-chk').checked?'':'none';
+  document.getElementById('cp-prime-row').style.display=document.getElementById('cp-prime-chk').checked?'':'none';
 
   var res=document.getElementById('cp-res');
   var custoM2=parseFloat(document.getElementById('cp-custo-m2').value)||0;
   var mkPiso=parseFloat(document.getElementById('cp-markup').value)||0;
   var m2=parseFloat(document.getElementById('cp-m2').value)||0;
+  var rendCx=parseFloat(document.getElementById('cp-rend-cx').value)||0;
   var custoRodML=parseFloat(document.getElementById('cp-rod-custo').value)||0;
   var mkRod=parseFloat(document.getElementById('cp-rod-markup').value)||0;
   var rodML=parseFloat(document.getElementById('cp-rod-ml').value)||0;
+  var rodBarra=parseFloat(document.getElementById('cp-rod-barra').value)||0;
 
   if(!custoM2&&!m2&&!custoRodML&&!rodML){
     res.innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
     return;
   }
 
-  // Piso com 10% perda
-  var m2c=m2*1.10;
+  // Piso: m² com 10% de perda → arredonda caixas para cima → metragem final real
+  var m2comPerda=m2*1.10;
+  var caixas=0, m2c=m2comPerda;
+  if(rendCx>0){ caixas=Math.ceil(m2comPerda/rendCx); m2c=caixas*rendCx; }
   var custoPisoTotal=custoM2*m2c;
   var vendaM2=custoM2*(1+mkPiso/100);
   var vendaPisoTotal=vendaM2*m2c;
 
-  // Rodapé com 10% perda
-  var mlc=rodML*1.10;
+  // Rodapé: ml com 10% de perda → arredonda barras para cima → metragem final real
+  var mlComPerda=rodML*1.10;
+  var barras=0, mlc=mlComPerda;
+  if(rodBarra>0){ barras=Math.ceil(mlComPerda/rodBarra); mlc=barras*rodBarra; }
   var custoRodTotal=custoRodML*mlc;
   var vendaRodML=custoRodML*(1+mkRod/100);
   var vendaRodTotal=vendaRodML*mlc;
 
   // Extras
   var custoPerfil=0,vendaPerfil=0,custoPorta=0,vendaPorta=0,custoCola=0;
+  var custoNivel=0,vendaNivel=0,custoPrime=0,vendaPrime=0;
   if(document.getElementById('cp-perfil-chk').checked){
     var qp=parseFloat(document.getElementById('cp-perfil-qtd').value)||0;
     var vp=parseFloat(document.getElementById('cp-perfil-val').value)||200;
@@ -1466,32 +1487,54 @@ function calcPiso(){
   if(document.getElementById('cp-cola-chk').checked){
     custoCola=parseFloat(document.getElementById('cp-cola-val').value)||0;
   }
+  if(document.getElementById('cp-nivel-chk').checked){
+    var cnivel=parseFloat(document.getElementById('cp-nivel-custo').value)||0;
+    var mknivel=parseFloat(document.getElementById('cp-nivel-mk').value)||0;
+    custoNivel=cnivel*m2c;
+    vendaNivel=cnivel*(1+mknivel/100)*m2c;
+  }
+  if(document.getElementById('cp-prime-chk').checked){
+    var cprime=parseFloat(document.getElementById('cp-prime-custo').value)||0;
+    var mkprime=parseFloat(document.getElementById('cp-prime-mk').value)||0;
+    custoPrime=cprime*m2c;
+    vendaPrime=cprime*(1+mkprime/100)*m2c;
+  }
 
-  var custoTotal=custoPisoTotal+custoRodTotal+custoPerfil+custoPorta+custoCola;
-  var vendaTotal=vendaPisoTotal+vendaRodTotal+vendaPerfil+vendaPorta+custoCola;
+  var custoTotal=custoPisoTotal+custoRodTotal+custoPerfil+custoPorta+custoCola+custoNivel+custoPrime;
+  var vendaTotal=vendaPisoTotal+vendaRodTotal+vendaPerfil+vendaPorta+custoCola+vendaNivel+vendaPrime;
   var lucro=vendaTotal-custoTotal;
   var margem=vendaTotal>0?(lucro/vendaTotal*100):0;
 
   var h='';
   if(m2>0){
     h+='<div class="calc-section-title" style="margin-top:0">Piso</div>';
-    h+='<div class="res-row"><span class="res-label">Metragem c/ perda (10%)</span><span class="res-val">'+num2(m2c)+' m²</span></div>';
+    h+='<div class="res-row"><span class="res-label">Metragem c/ perda (10%)</span><span class="res-val">'+num2(m2comPerda)+' m²</span></div>';
+    if(caixas>0){
+      h+='<div class="res-row"><span class="res-label">Qtd. de caixas (↑ arred.)</span><span class="res-val"><strong>'+caixas+' cx</strong></span></div>';
+      h+='<div class="res-row"><span class="res-label">Metragem final (caixas)</span><span class="res-val">'+num2(m2c)+' m²</span></div>';
+    }
     h+='<div class="res-row"><span class="res-label">Custo total</span><span class="res-val">'+brl(custoPisoTotal)+'</span></div>';
     h+='<div class="res-row"><span class="res-label">Preço venda/m²</span><span class="res-val">'+brl(vendaM2)+'</span></div>';
     h+='<div class="res-row"><span class="res-label">Preço venda total</span><span class="res-val">'+brl(vendaPisoTotal)+'</span></div>';
   }
   if(rodML>0){
     h+='<div class="calc-section-title">Rodapé</div>';
-    h+='<div class="res-row"><span class="res-label">Metragem c/ perda (10%)</span><span class="res-val">'+num2(mlc)+' ml</span></div>';
+    h+='<div class="res-row"><span class="res-label">Metragem c/ perda (10%)</span><span class="res-val">'+num2(mlComPerda)+' ml</span></div>';
+    if(barras>0){
+      h+='<div class="res-row"><span class="res-label">Qtd. de barras (↑ arred.)</span><span class="res-val"><strong>'+barras+' barras</strong></span></div>';
+      h+='<div class="res-row"><span class="res-label">Metragem final (barras)</span><span class="res-val">'+num2(mlc)+' ml</span></div>';
+    }
     h+='<div class="res-row"><span class="res-label">Custo total</span><span class="res-val">'+brl(custoRodTotal)+'</span></div>';
     h+='<div class="res-row"><span class="res-label">Preço venda/ml</span><span class="res-val">'+brl(vendaRodML)+'</span></div>';
     h+='<div class="res-row"><span class="res-label">Preço venda total</span><span class="res-val">'+brl(vendaRodTotal)+'</span></div>';
   }
-  if(custoPerfil||custoPorta||custoCola){
+  if(custoPerfil||custoPorta||custoCola||vendaNivel||vendaPrime){
     h+='<div class="calc-section-title">Extras</div>';
-    if(custoPerfil) h+='<div class="res-row"><span class="res-label">Perfis</span><span class="res-val">'+brl(custoPerfil)+'</span></div>';
-    if(custoPorta) h+='<div class="res-row"><span class="res-label">Corte de porta</span><span class="res-val">'+brl(custoPorta)+'</span></div>';
+    if(custoPerfil) h+='<div class="res-row"><span class="res-label">Perfis</span><span class="res-val">'+brl(vendaPerfil)+'</span></div>';
+    if(custoPorta) h+='<div class="res-row"><span class="res-label">Corte de porta</span><span class="res-val">'+brl(vendaPorta)+'</span></div>';
     if(custoCola) h+='<div class="res-row"><span class="res-label">Cola (vinílico)</span><span class="res-val">'+brl(custoCola)+'</span></div>';
+    if(vendaNivel) h+='<div class="res-row"><span class="res-label">Autonivelante ('+num2(m2c)+' m²)</span><span class="res-val">'+brl(vendaNivel)+'</span></div>';
+    if(vendaPrime) h+='<div class="res-row"><span class="res-label">Prime ('+num2(m2c)+' m²)</span><span class="res-val">'+brl(vendaPrime)+'</span></div>';
   }
   h+='<div class="calc-section-title">Totais</div>';
   h+='<div class="res-row"><span class="res-label">Custo total</span><span class="res-val">'+brl(custoTotal)+'</span></div>';
@@ -1510,9 +1553,11 @@ function salvarCalcPiso(){
     custoM2:parseFloat(document.getElementById('cp-custo-m2').value)||0,
     mkPiso:parseFloat(document.getElementById('cp-markup').value)||0,
     m2:parseFloat(document.getElementById('cp-m2').value)||0,
+    rendCx:parseFloat(document.getElementById('cp-rend-cx').value)||0,
     custoRodML:parseFloat(document.getElementById('cp-rod-custo').value)||0,
     mkRod:parseFloat(document.getElementById('cp-rod-markup').value)||0,
     rodML:parseFloat(document.getElementById('cp-rod-ml').value)||0,
+    rodBarra:parseFloat(document.getElementById('cp-rod-barra').value)||0,
     perfil:document.getElementById('cp-perfil-chk').checked,
     perfilQtd:parseFloat(document.getElementById('cp-perfil-qtd').value)||0,
     perfilVal:parseFloat(document.getElementById('cp-perfil-val').value)||200,
@@ -1521,6 +1566,12 @@ function salvarCalcPiso(){
     portaVal:parseFloat(document.getElementById('cp-porta-val').value)||0,
     cola:document.getElementById('cp-cola-chk').checked,
     colaVal:parseFloat(document.getElementById('cp-cola-val').value)||0,
+    nivel:document.getElementById('cp-nivel-chk').checked,
+    nivelCusto:parseFloat(document.getElementById('cp-nivel-custo').value)||0,
+    nivelMk:parseFloat(document.getElementById('cp-nivel-mk').value)||0,
+    prime:document.getElementById('cp-prime-chk').checked,
+    primeCusto:parseFloat(document.getElementById('cp-prime-custo').value)||0,
+    primeMk:parseFloat(document.getElementById('cp-prime-mk').value)||0,
     resumoHtml:res.innerHTML
   };
   var arr=db('piso'); arr.push(reg);
@@ -1530,13 +1581,13 @@ function salvarCalcPiso(){
 }
 
 function limparCalcPiso(){
-  ['cp-cliente','cp-custo-m2','cp-markup','cp-m2','cp-rod-custo','cp-rod-markup','cp-rod-ml',
-   'cp-perfil-qtd','cp-porta-qtd','cp-porta-val','cp-cola-val'].forEach(function(id){
+  ['cp-cliente','cp-custo-m2','cp-markup','cp-m2','cp-rend-cx','cp-rod-custo','cp-rod-markup','cp-rod-ml','cp-rod-barra',
+   'cp-perfil-qtd','cp-porta-qtd','cp-porta-val','cp-cola-val','cp-nivel-custo','cp-nivel-mk','cp-prime-custo','cp-prime-mk'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('cp-perfil-val').value='200';
-  ['cp-perfil-chk','cp-porta-chk','cp-cola-chk'].forEach(function(id){document.getElementById(id).checked=false;});
-  ['cp-perfil-row','cp-porta-row','cp-cola-row'].forEach(function(id){document.getElementById(id).style.display='none';});
+  ['cp-perfil-chk','cp-porta-chk','cp-cola-chk','cp-nivel-chk','cp-prime-chk'].forEach(function(id){document.getElementById(id).checked=false;});
+  ['cp-perfil-row','cp-porta-row','cp-cola-row','cp-nivel-row','cp-prime-row'].forEach(function(id){document.getElementById(id).style.display='none';});
   document.getElementById('cp-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
 }
 
@@ -1580,9 +1631,11 @@ function verCalcPiso(id){
   document.getElementById('cp-custo-m2').value=r.custoM2||'';
   document.getElementById('cp-markup').value=r.mkPiso||'';
   document.getElementById('cp-m2').value=r.m2||'';
+  document.getElementById('cp-rend-cx').value=r.rendCx||'';
   document.getElementById('cp-rod-custo').value=r.custoRodML||'';
   document.getElementById('cp-rod-markup').value=r.mkRod||'';
   document.getElementById('cp-rod-ml').value=r.rodML||'';
+  document.getElementById('cp-rod-barra').value=r.rodBarra||'';
   document.getElementById('cp-perfil-chk').checked=!!r.perfil;
   document.getElementById('cp-perfil-qtd').value=r.perfilQtd||'';
   document.getElementById('cp-perfil-val').value=r.perfilVal||200;
@@ -1591,6 +1644,12 @@ function verCalcPiso(id){
   document.getElementById('cp-porta-val').value=r.portaVal||'';
   document.getElementById('cp-cola-chk').checked=!!r.cola;
   document.getElementById('cp-cola-val').value=r.colaVal||'';
+  document.getElementById('cp-nivel-chk').checked=!!r.nivel;
+  document.getElementById('cp-nivel-custo').value=r.nivelCusto||'';
+  document.getElementById('cp-nivel-mk').value=r.nivelMk||'';
+  document.getElementById('cp-prime-chk').checked=!!r.prime;
+  document.getElementById('cp-prime-custo').value=r.primeCusto||'';
+  document.getElementById('cp-prime-mk').value=r.primeMk||'';
   calcPiso();
   ir('calculadoras',document.getElementById('nav-calculadoras'));
   window.scrollTo(0,0);
