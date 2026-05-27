@@ -623,7 +623,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
       <div id="cc-faixa-fields" style="display:none">
         <div class="row">
           <div class="f f2"><label>Largura do Rolo (m)</label><input type="number" id="cc-larg-tec" step="0.01" placeholder="Ex: 3.00" oninput="calcCortina()"></div>
-          <div class="f f2"><label>Altura da Barra (m)</label><input type="number" id="cc-barra" step="0.01" placeholder="Ex: 0.30" oninput="calcCortina()"></div>
+          <div class="f f2"><label>Altura da Barra + Dobra (m)</label><input type="number" id="cc-barra" step="0.01" placeholder="Ex: 0.30" oninput="calcCortina()"></div>
         </div>
       </div>
       <div class="calc-res" id="cc-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
@@ -1371,18 +1371,18 @@ function calcCortina(){
 function salvarCalcCortina(){
   var cliente=document.getElementById('cc-cliente').value.trim();
   if(!cliente){alert('Informe o nome do cliente antes de salvar.');return;}
+  var resEl=document.getElementById('cc-res');
+  if(resEl.querySelector('span[style*="--mid"]')){alert('Calcule antes de salvar.');return;}
   var campos={
     larg: document.getElementById('cc-larg').value,
     alt: document.getElementById('cc-alt').value,
-    band: document.getElementById('cc-band').value,
-    forro: document.getElementById('cc-forro').value,
-    fator: document.getElementById('cc-fator').value,
-    preco: document.getElementById('cc-preco').value,
-    cus: document.getElementById('cc-cus').value,
-    mk: document.getElementById('cc-mk').value
+    valor: document.getElementById('cc-valor').value,
+    prega: document.getElementById('cc-prega').value,
+    forro: document.getElementById('cc-forro').checked,
+    faixa: document.getElementById('cc-faixa').checked,
+    largTec: document.getElementById('cc-larg-tec').value,
+    barra: document.getElementById('cc-barra').value
   };
-  var resEl=document.getElementById('cc-res');
-  if(!campos.larg||!campos.alt){alert('Calcule antes de salvar.');return;}
   var reg={id:uid(),cliente:cliente,data:new Date().toLocaleDateString('pt-BR'),campos:campos,resHtml:resEl.innerHTML};
   var arr=db('cort');arr.unshift(reg);
   dbSave('cort',arr);
@@ -1390,9 +1390,13 @@ function salvarCalcCortina(){
   renderHistCalcCortina();
 }
 function limparCalcCortina(){
-  ['cc-cliente','cc-larg','cc-alt','cc-band','cc-forro','cc-fator','cc-preco','cc-cus','cc-mk'].forEach(function(id){
+  ['cc-cliente','cc-larg','cc-alt','cc-valor','cc-larg-tec','cc-barra'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
+  document.getElementById('cc-forro').checked=false;
+  document.getElementById('cc-faixa').checked=false;
+  document.getElementById('cc-faixa-fields').style.display='none';
+  document.getElementById('cc-prega').value='wave';
   document.getElementById('cc-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
 }
 function toggleHistCalcCortina(){
@@ -1418,10 +1422,17 @@ function renderHistCalcCortina(){
 function verCalcCortina(id){
   var reg=db('cort').find(function(r){return r.id===id;});
   if(!reg)return;
+  var c=reg.campos;
   document.getElementById('cc-cliente').value=reg.cliente;
-  Object.keys(reg.campos).forEach(function(k){
-    var el=document.getElementById('cc-'+k);if(el)el.value=reg.campos[k];
-  });
+  document.getElementById('cc-larg').value=c.larg||'';
+  document.getElementById('cc-alt').value=c.alt||'';
+  document.getElementById('cc-valor').value=c.valor||'';
+  document.getElementById('cc-prega').value=c.prega||'wave';
+  document.getElementById('cc-forro').checked=!!c.forro;
+  document.getElementById('cc-faixa').checked=!!c.faixa;
+  document.getElementById('cc-larg-tec').value=c.largTec||'';
+  document.getElementById('cc-barra').value=c.barra||'';
+  document.getElementById('cc-faixa-fields').style.display=c.faixa?'':'none';
   document.getElementById('cc-res').innerHTML=reg.resHtml;
   toggleHistCalcCortina();
   toast('Cálculo de '+reg.cliente+' carregado.','ok');
