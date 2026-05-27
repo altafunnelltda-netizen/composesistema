@@ -20,6 +20,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Serve a logo
+app.get('/logo.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'logo_transp.png'));
+});
+
 // Lê os dados
 app.get('/dados', (req, res) => {
   try {
