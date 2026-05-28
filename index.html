@@ -1850,12 +1850,72 @@ function renderNotas(){
   }
 }
 
+var _nbDrawMode=false, _nbDrawing=false, _nbDrawTool='pen', _nbDrawColor='#2c2c2c', _nbDrawSize=2;
+var _nbDrawStart={x:0,y:0}, _nbDrawSnap=null, _nbCtx=null, _nbCurrentCli=null;
+
 function nbOpenNotebook(cli, mainEl){
+  _nbCurrentCli=cli.id; _nbDrawMode=false;
   if(!mainEl) mainEl=document.getElementById('nb-main');
   mainEl.innerHTML='';
+  // migrate plain text → html
+  var html=cli.texto||'';
+  if(html && !/<[a-z]/i.test(html)){
+    html=html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
   var page=document.createElement('div');
   page.className='nb-page';
   page.innerHTML=
+    // toolbar de formatação
+    '<div class="nb-toolbar">'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'bold\')" title="Negrito"><b>B</b></button>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'italic\')" title="Itálico"><i>I</i></button>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'underline\')" title="Sublinhado"><u>U</u></button>'+
+      '<div class="nb-tool-sep"></div>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'justifyLeft\')" title="Esquerda">'+
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="18" height="2"/><rect x="3" y="10" width="12" height="2"/><rect x="3" y="15" width="16" height="2"/><rect x="3" y="20" width="10" height="2"/></svg>'+
+      '</button>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'justifyCenter\')" title="Centralizar">'+
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="18" height="2"/><rect x="6" y="10" width="12" height="2"/><rect x="4" y="15" width="16" height="2"/><rect x="7" y="20" width="10" height="2"/></svg>'+
+      '</button>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'justifyRight\')" title="Alinhar direita">'+
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="18" height="2"/><rect x="9" y="10" width="12" height="2"/><rect x="5" y="15" width="16" height="2"/><rect x="11" y="20" width="10" height="2"/></svg>'+
+      '</button>'+
+      '<div class="nb-tool-sep"></div>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'insertUnorderedList\')" title="Lista com marcadores">• Lista</button>'+
+      '<button class="nb-tool-btn" onclick="nbFmt(\'insertOrderedList\')" title="Lista numerada">1. Lista</button>'+
+      '<button class="nb-tool-btn" onclick="nbInsertHR()" title="Inserir linha divisória">— Linha</button>'+
+      '<div class="nb-tool-sep"></div>'+
+      '<button class="nb-tool-btn" id="nb-draw-toggle" onclick="nbToggleDraw()">'+
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>'+
+        ' Desenhar'+
+      '</button>'+
+    '</div>'+
+    // barra de desenho (oculta por padrão)
+    '<div class="nb-draw-bar" id="nb-draw-bar">'+
+      '<button class="nb-dtool on" id="dbt-pen" onclick="nbSetDrawTool(\'pen\')">✏ Caneta</button>'+
+      '<button class="nb-dtool" id="dbt-line" onclick="nbSetDrawTool(\'line\')">╱ Linha</button>'+
+      '<button class="nb-dtool" id="dbt-rect" onclick="nbSetDrawTool(\'rect\')">▭ Retângulo</button>'+
+      '<button class="nb-dtool" id="dbt-circle" onclick="nbSetDrawTool(\'circle\')">○ Círculo</button>'+
+      '<button class="nb-dtool" id="dbt-eraser" onclick="nbSetDrawTool(\'eraser\')">◻ Borracha</button>'+
+      '<div class="nb-draw-sep"></div>'+
+      '<div class="nb-draw-colors">'+
+        '<div class="nb-dcolor on" style="background:#2c2c2c" onclick="nbSetDrawColor(this,\'#2c2c2c\')"></div>'+
+        '<div class="nb-dcolor" style="background:#c9a961" onclick="nbSetDrawColor(this,\'#c9a961\')"></div>'+
+        '<div class="nb-dcolor" style="background:#e05a52" onclick="nbSetDrawColor(this,\'#e05a52\')"></div>'+
+        '<div class="nb-dcolor" style="background:#4a9eca" onclick="nbSetDrawColor(this,\'#4a9eca\')"></div>'+
+        '<div class="nb-dcolor" style="background:#2a7a3b" onclick="nbSetDrawColor(this,\'#2a7a3b\')"></div>'+
+        '<div class="nb-dcolor" style="background:#9b59b6" onclick="nbSetDrawColor(this,\'#9b59b6\')"></div>'+
+      '</div>'+
+      '<div class="nb-draw-sep"></div>'+
+      '<select class="nb-dsize" onchange="nbDrawSizeSet(this.value)">'+
+        '<option value="1">Fino</option><option value="2" selected>Normal</option>'+
+        '<option value="4">Grosso</option><option value="8">Muito grosso</option>'+
+      '</select>'+
+      '<div class="nb-draw-sep"></div>'+
+      '<button class="nb-dtool" onclick="nbClearDraw()" style="color:#f08080;border-color:rgba(240,128,128,.3)">🗑 Limpar</button>'+
+      '<button class="nb-dtool" onclick="nbToggleDraw()" style="color:#a8e6cf;border-color:rgba(168,230,207,.3)">✓ Feito</button>'+
+    '</div>'+
+    // cabeçalho do cliente
     '<div class="nb-page-header">'+
       '<div class="nb-page-client-wrap">'+
         '<div class="nb-page-client">'+esc(cli.cliente)+'</div>'+
@@ -1866,45 +1926,144 @@ function nbOpenNotebook(cli, mainEl){
         '<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+cli.id+'\')">Excluir</button>'+
       '</div>'+
     '</div>'+
-    '<div class="nb-paper">'+
+    // papel
+    '<div class="nb-paper" id="nb-paper">'+
       '<div class="nb-paper-inner">'+
         '<div class="nb-margin-line"></div>'+
-        '<textarea class="nb-textarea" id="nb-textarea" placeholder="Escreva livremente — medidas, valores, observações, combinados...">'+esc(cli.texto||'')+'</textarea>'+
+        '<div class="nb-editor" id="nb-editor" contenteditable="true" data-placeholder="Escreva livremente — medidas, valores, observações, combinados..."></div>'+
       '</div>'+
+      '<canvas class="nb-draw-canvas" id="nb-draw-canvas"></canvas>'+
     '</div>'+
     '<div class="nb-footer">'+
       '<span class="nb-status" id="nb-status"></span>'+
       '<span class="nb-char-count" id="nb-char-count"></span>'+
     '</div>';
   mainEl.appendChild(page);
-  var ta=document.getElementById('nb-textarea');
-  if(ta){
-    ta.addEventListener('input',function(){ nbAutoSave(cli.id, ta.value); });
-    // auto-resize
-    ta.style.height='auto';
-    ta.style.height=Math.max(ta.scrollHeight,400)+'px';
-    ta.addEventListener('input',function(){
-      ta.style.height='auto';
-      ta.style.height=Math.max(ta.scrollHeight,500)+'px';
+  var ed=document.getElementById('nb-editor');
+  if(ed){
+    ed.innerHTML=html;
+    ed.addEventListener('input',function(){
+      nbAutoSave(cli.id,ed.innerHTML,null);
       var cc=document.getElementById('nb-char-count');
-      if(cc) cc.textContent=ta.value.length>0?ta.value.length+' caracteres':'';
+      if(cc){ var n=ed.innerText.trim().length; cc.textContent=n>0?n+' chars':''; }
     });
-    // init char count
     var cc=document.getElementById('nb-char-count');
-    if(cc&&ta.value.length>0) cc.textContent=ta.value.length+' caracteres';
+    if(cc){ var n=ed.innerText.trim().length; if(n>0) cc.textContent=n+' chars'; }
   }
+  nbInitDrawCanvas(cli.desenho||null);
 }
 
-function nbAutoSave(cliId, valor){
+/* ── formatação de texto ── */
+function nbFmt(cmd,val){
+  document.execCommand(cmd,false,val||null);
+  var ed=document.getElementById('nb-editor'); if(ed) ed.focus();
+}
+function nbInsertHR(){
+  document.execCommand('insertHTML',false,'<hr>');
+  var ed=document.getElementById('nb-editor'); if(ed) ed.focus();
+}
+
+/* ── canvas de desenho ── */
+function nbInitDrawCanvas(dataUrl){
+  var canvas=document.getElementById('nb-draw-canvas');
+  var paper=document.getElementById('nb-paper');
+  if(!canvas||!paper) return;
+  canvas.width=paper.clientWidth; canvas.height=paper.clientHeight;
+  _nbCtx=canvas.getContext('2d');
+  if(dataUrl){ var img=new Image(); img.onload=function(){ _nbCtx.drawImage(img,0,0,canvas.width,canvas.height); }; img.src=dataUrl; }
+  canvas.addEventListener('mousedown',nbDrawStart);
+  canvas.addEventListener('mousemove',nbDrawMove);
+  canvas.addEventListener('mouseup',nbDrawEnd);
+  canvas.addEventListener('mouseleave',nbDrawEnd);
+  canvas.addEventListener('touchstart',function(e){e.preventDefault();nbDrawStart(e.touches[0]);},{passive:false});
+  canvas.addEventListener('touchmove',function(e){e.preventDefault();nbDrawMove(e.touches[0]);},{passive:false});
+  canvas.addEventListener('touchend',function(e){e.preventDefault();nbDrawEnd();},{passive:false});
+}
+function nbGetXY(e,canvas){
+  var r=canvas.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*(canvas.width/r.width), y:(e.clientY-r.top)*(canvas.height/r.height)};
+}
+function nbDrawStart(e){
+  if(!_nbDrawMode) return;
+  _nbDrawing=true;
+  var c=document.getElementById('nb-draw-canvas'); if(!c) return;
+  var p=nbGetXY(e,c); _nbDrawStart=p;
+  if(_nbDrawTool==='pen'||_nbDrawTool==='eraser'){ _nbCtx.beginPath(); _nbCtx.moveTo(p.x,p.y); }
+  else { _nbDrawSnap=_nbCtx.getImageData(0,0,c.width,c.height); }
+}
+function nbDrawMove(e){
+  if(!_nbDrawing||!_nbDrawMode) return;
+  var c=document.getElementById('nb-draw-canvas'); if(!c) return;
+  var p=nbGetXY(e,c);
+  _nbCtx.strokeStyle=_nbDrawColor; _nbCtx.lineWidth=_nbDrawSize; _nbCtx.lineCap='round'; _nbCtx.lineJoin='round';
+  if(_nbDrawTool==='pen'){
+    _nbCtx.lineTo(p.x,p.y); _nbCtx.stroke();
+  } else if(_nbDrawTool==='eraser'){
+    _nbCtx.globalCompositeOperation='destination-out'; _nbCtx.lineWidth=_nbDrawSize*6;
+    _nbCtx.lineTo(p.x,p.y); _nbCtx.stroke(); _nbCtx.globalCompositeOperation='source-over';
+  } else if(_nbDrawSnap){
+    _nbCtx.putImageData(_nbDrawSnap,0,0);
+    if(_nbDrawTool==='line'){ _nbCtx.beginPath(); _nbCtx.moveTo(_nbDrawStart.x,_nbDrawStart.y); _nbCtx.lineTo(p.x,p.y); _nbCtx.stroke(); }
+    else if(_nbDrawTool==='rect'){ _nbCtx.strokeRect(_nbDrawStart.x,_nbDrawStart.y,p.x-_nbDrawStart.x,p.y-_nbDrawStart.y); }
+    else if(_nbDrawTool==='circle'){
+      var rx=(p.x-_nbDrawStart.x)/2,ry=(p.y-_nbDrawStart.y)/2;
+      _nbCtx.beginPath(); _nbCtx.ellipse(_nbDrawStart.x+rx,_nbDrawStart.y+ry,Math.abs(rx),Math.abs(ry),0,0,Math.PI*2); _nbCtx.stroke();
+    }
+  }
+}
+function nbDrawEnd(){
+  if(!_nbDrawing) return;
+  _nbDrawing=false; _nbDrawSnap=null;
+  if(_nbCtx) _nbCtx.beginPath();
+  var c=document.getElementById('nb-draw-canvas');
+  if(c&&_nbCurrentCli) nbAutoSave(_nbCurrentCli,null,c.toDataURL());
+}
+function nbToggleDraw(){
+  _nbDrawMode=!_nbDrawMode;
+  var bar=document.getElementById('nb-draw-bar');
+  var tog=document.getElementById('nb-draw-toggle');
+  var canvas=document.getElementById('nb-draw-canvas');
+  var ed=document.getElementById('nb-editor');
+  var paper=document.getElementById('nb-paper');
+  if(bar) bar.classList.toggle('on',_nbDrawMode);
+  if(tog) tog.classList.toggle('on',_nbDrawMode);
+  if(canvas){
+    canvas.classList.toggle('on',_nbDrawMode);
+    if(_nbDrawMode&&paper){ canvas.width=paper.clientWidth; canvas.height=paper.clientHeight; _nbCtx=canvas.getContext('2d');
+      var clientes=nbClientes(); var cli=clientes.find(function(c){return c.id===_nbCurrentCli;});
+      if(cli&&cli.desenho){ var img=new Image(); img.onload=function(){_nbCtx.drawImage(img,0,0,canvas.width,canvas.height);}; img.src=cli.desenho; }
+    }
+  }
+  if(ed) ed.style.pointerEvents=_nbDrawMode?'none':'';
+}
+function nbSetDrawTool(t){
+  _nbDrawTool=t;
+  ['pen','line','rect','circle','eraser'].forEach(function(x){ var b=document.getElementById('dbt-'+x); if(b) b.classList.toggle('on',x===t); });
+}
+function nbSetDrawColor(el,c){
+  _nbDrawColor=c;
+  document.querySelectorAll('.nb-dcolor').forEach(function(d){d.classList.remove('on');}); el.classList.add('on');
+}
+function nbDrawSizeSet(v){ _nbDrawSize=parseInt(v); }
+function nbClearDraw(){
+  var c=document.getElementById('nb-draw-canvas');
+  if(c&&_nbCtx){ _nbCtx.clearRect(0,0,c.width,c.height); if(_nbCurrentCli) nbAutoSave(_nbCurrentCli,null,''); }
+}
+
+function nbAutoSave(cliId, html, desenho){
   var statusEl=document.getElementById('nb-status');
   if(statusEl){ statusEl.textContent=''; statusEl.className='nb-status'; }
   clearTimeout(_nbTimer);
   _nbTimer=setTimeout(function(){
     var clientes=nbClientes();
     var idx=clientes.findIndex(function(c){return c.id===cliId;});
-    if(idx>=0){ clientes[idx].texto=valor; dbSave('notas',clientes); }
+    if(idx>=0){
+      if(html!==null) clientes[idx].texto=html;
+      if(desenho!==null) clientes[idx].desenho=desenho;
+      dbSave('notas',clientes);
+    }
     if(statusEl){ statusEl.textContent='✓ Salvo'; statusEl.className='nb-status saved'; setTimeout(function(){if(statusEl){statusEl.textContent='';statusEl.className='nb-status';}},2500); }
-  }, 700);
+  },700);
 }
 
 function nbNovoCliente(){
