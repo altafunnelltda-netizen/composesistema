@@ -25,6 +25,11 @@ app.get('/logo.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'logo_transp.png'));
 });
 
+// Serve o CSS
+app.get('/style.css', (req, res) => {
+  res.sendFile(path.join(__dirname, 'style.css'));
+});
+
 // Lê os dados
 app.get('/dados', (req, res) => {
   try {
