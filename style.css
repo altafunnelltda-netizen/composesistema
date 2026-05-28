@@ -1,9 +1,9 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --gold:#c9a961;--gold-dark:#b8903a;
-  --cream:#fdfcfa;--cream-dark:#f5f0e8;
-  --charcoal:#2c2c2c;--mid:#777;--border:#e0d8cc;
-  --white:#fff;--sb:220px;--r:8px;
+  --cream:#fdfcfa;--cream-dark:#f3efe8;
+  --charcoal:#2c2c2c;--mid:#777;--border:#ddd5c8;
+  --white:#fefdf8;--sb:220px;--r:8px;
 }
 /* ── TEMA ESCURO ── */
 [data-theme=dark]{
@@ -242,8 +242,20 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 .kb-card-obs{
   font-size:11px;color:var(--mid);line-height:1.45;
   display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  margin-bottom:6px;
+  margin-bottom:7px;
 }
+.kb-card-meta{
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:7px;
+}
+.kb-pri-chip{
+  font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+  padding:2px 6px;border-radius:4px;
+}
+.kb-pri-chip.baixa  {color:#64748b;background:rgba(100,116,139,.1)}
+.kb-pri-chip.normal {color:#3b82f6;background:rgba(59,130,246,.1)}
+.kb-pri-chip.alta   {color:#d97706;background:rgba(245,158,11,.1)}
+.kb-pri-chip.urgente{color:#dc2626;background:rgba(239,68,68,.1)}
+.kb-card-date{font-size:10px;color:var(--mid);display:flex;align-items:center;gap:3px}
 .kb-card-footer{
   display:flex;align-items:center;justify-content:space-between;gap:6px;
   padding-top:6px;border-top:1px solid var(--border);
@@ -256,12 +268,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 }
 .kb-chip-status.ok{background:#1a7a3b;border-color:#1a7a3b;color:#fff}
 .kb-chip-avatar{
-  width:24px;height:24px;border-radius:50%;
-  background:var(--gold);color:#fff;
+  width:26px;height:26px;border-radius:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;
   font-size:10px;font-weight:800;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   text-transform:uppercase;
-  box-shadow:0 1px 4px rgba(201,169,97,.4);
+  box-shadow:0 1px 4px rgba(201,169,97,.35);
 }
 .kb-empty{
   text-align:center;padding:24px 8px;
