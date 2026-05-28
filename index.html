@@ -6,6 +6,9 @@
 <title>Composê — Sistema</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="stylesheet" href="/style.css">
+<script>
+  (function(){ var t=localStorage.getItem('cps_theme')||'light'; document.documentElement.setAttribute('data-theme',t); })();
+</script>
 </head>
 <body>
 
@@ -66,7 +69,13 @@
 <div class="main">
   <div class="topbar no-print">
     <span class="topbar-title" id="topbar-title">Dashboard</span>
-    <span class="topbar-date" id="topbar-date"></span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="topbar-date" id="topbar-date"></span>
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
   </div>
   <div class="wrap">
 
@@ -1971,12 +1980,29 @@ function agendaCloseModal(){
   if(ov){ov.style.display='none';ov.innerHTML='';}
 }
 
+// ── TEMA CLARO / ESCURO ───────────────────────────────────
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme')||'light';
+  var next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('cps_theme', next);
+  updateThemeIcon(next);
+}
+function updateThemeIcon(t){
+  var sun  = document.getElementById('theme-icon-sun');
+  var moon = document.getElementById('theme-icon-moon');
+  if(!sun||!moon) return;
+  sun.style.display  = t==='dark'  ? '' : 'none';
+  moon.style.display = t==='light' ? '' : 'none';
+}
+
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('load',function(){
   var d=new Date();
   var dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   document.getElementById('topbar-date').textContent=dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()]+' de '+d.getFullYear();
+  updateThemeIcon(document.documentElement.getAttribute('data-theme')||'light');
   atualizarDash();
   novoOrcamento();
   gerarDesenho();
