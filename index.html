@@ -1535,7 +1535,23 @@ var KB_PRIS = {
   alta:   {label:'Alta',    color:'#f59e0b'},
   urgente:{label:'Urgente', color:'#ef4444'}
 };
-var _kbDrag=null, _kbDragCol=null, _kbDragColReady=null;
+var _kbDrag=null, _kbDragCol=null, _kbDragColReady=null, _kbScrollTimer=null, _kbScrollDir=0;
+
+document.addEventListener('dragover',function(e){
+  if(!_kbDrag && !_kbDragCol) return;
+  var board=document.getElementById('kb-board'); if(!board) return;
+  var r=board.getBoundingClientRect(), z=90;
+  if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
+    _kbScrollDir = e.clientX < r.left+z ? -1 : e.clientX > r.right-z ? 1 : 0;
+  } else { _kbScrollDir=0; }
+});
+function _kbAutoScrollTick(){
+  if(!_kbDrag && !_kbDragCol){ _kbScrollDir=0; _kbScrollTimer=null; return; }
+  if(_kbScrollDir){ var b=document.getElementById('kb-board'); if(b) b.scrollLeft+=_kbScrollDir*8; }
+  _kbScrollTimer=requestAnimationFrame(_kbAutoScrollTick);
+}
+function _kbScrollStart(){ if(!_kbScrollTimer) _kbScrollTimer=requestAnimationFrame(_kbAutoScrollTick); }
+function _kbScrollStop(){ _kbScrollDir=0; if(_kbScrollTimer){ cancelAnimationFrame(_kbScrollTimer); _kbScrollTimer=null; } }
 
 function dbKb(){
   var raw = localStorage.getItem('cps_kb');
@@ -1629,10 +1645,10 @@ function renderQuadro(){
     colEl.addEventListener('dragstart',function(e){
       if(!_kbDragColReady){ e.preventDefault(); return; }
       _kbDragCol=col.id; colEl.classList.add('col-dragging');
-      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.effectAllowed='move'; _kbScrollStart();
     });
     colEl.addEventListener('dragend',function(){
-      _kbDragCol=null; _kbDragColReady=null; colEl.classList.remove('col-dragging');
+      _kbDragCol=null; _kbDragColReady=null; colEl.classList.remove('col-dragging'); _kbScrollStop();
       document.querySelectorAll('.kb-col').forEach(function(c){c.classList.remove('drag-over');});
     });
   });
@@ -1676,8 +1692,8 @@ function kbMakeCard(card){
       '</div>'+
     '</div>';
   el.addEventListener('click',function(){kbOpenModal(card.id,card.col);});
-  el.addEventListener('dragstart',function(){_kbDrag=card.id;el.classList.add('dragging');});
-  el.addEventListener('dragend',function(){_kbDrag=null;el.classList.remove('dragging');});
+  el.addEventListener('dragstart',function(){_kbDrag=card.id;el.classList.add('dragging');_kbScrollStart();});
+  el.addEventListener('dragend',function(){_kbDrag=null;el.classList.remove('dragging');_kbScrollStop();});
   return el;
 }
 

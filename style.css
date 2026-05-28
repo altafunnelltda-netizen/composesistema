@@ -608,6 +608,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:14px;heigh
       #e6dfd3 32px
     );
   background-attachment:local;
+  background-position:0 14px;
 }
 .nb-paper::-webkit-scrollbar{width:6px}
 .nb-paper::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -769,8 +770,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:14px;heigh
 [data-theme=dark] .nb-main{background:var(--cream-dark)}
 [data-theme=dark] .nb-page-header{background:var(--white);border-color:var(--border);box-shadow:none}
 [data-theme=dark] .nb-paper{
-  background:#161b22;
+  background-color:#161b22;
   background-image:repeating-linear-gradient(transparent 0px,transparent 31px,rgba(255,255,255,.06) 31px,rgba(255,255,255,.06) 32px);
+  background-position:0 14px;
 }
 [data-theme=dark] .nb-margin-line{background:linear-gradient(180deg,rgba(212,181,116,.4),rgba(212,181,116,.1))}
 [data-theme=dark] .nb-editor{color:var(--charcoal)}
