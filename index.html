@@ -83,7 +83,7 @@
   <div id="pg-dashboard" class="pg on">
     <div class="stats">
       <div class="stat"><div class="stat-v" id="d-n-orc">0</div><div class="stat-l">Orçamentos</div></div>
-      <div class="stat"><div class="stat-v" id="d-v-orc">R$ 0</div><div class="stat-l">Valor Total</div></div>
+      <div class="stat"><div class="stat-v" id="d-v-orc">R$ 0</div><div class="stat-l">Valor Total</div><select id="d-periodo" class="dash-periodo" onchange="atualizarDash()"><option value="tudo">Todo período</option><option value="mes">Este mês</option><option value="semana">Esta semana</option><option value="hoje">Hoje</option></select></div>
       <div class="stat"><div class="stat-v" id="d-n-cor">0</div><div class="stat-l">OS Cortinas</div></div>
       <div class="stat"><div class="stat-v" id="d-n-tap">0</div><div class="stat-l">OS Tapeçaria</div></div>
     </div>
@@ -455,6 +455,7 @@
       <!-- Extras -->
       <div class="calc-section-title">Extras</div>
       <div class="row" style="flex-wrap:wrap;gap:10px 24px">
+        <div class="check-row"><input type="checkbox" id="cp-laminado-chk" onchange="calcPiso()"><label for="cp-laminado-chk">Laminado (manta)</label></div>
         <div class="check-row"><input type="checkbox" id="cp-perfil-chk" onchange="calcPiso()"><label for="cp-perfil-chk">Perfil</label></div>
         <div class="check-row"><input type="checkbox" id="cp-porta-chk" onchange="calcPiso()"><label for="cp-porta-chk">Corte de Porta</label></div>
         <div class="check-row"><input type="checkbox" id="cp-cola-chk" onchange="calcPiso()"><label for="cp-cola-chk">Cola (Vinílico)</label></div>
@@ -462,6 +463,9 @@
         <div class="check-row"><input type="checkbox" id="cp-prime-chk" onchange="calcPiso()"><label for="cp-prime-chk">Prime</label></div>
       </div>
       <div id="cp-extras-fields">
+        <div class="row" id="cp-laminado-row" style="display:none">
+          <div class="f f2"><label>Valor da manta/m² (R$)</label><input type="number" id="cp-manta-val" step="0.01" placeholder="Ex: 8.50" oninput="calcPiso()"></div>
+        </div>
         <div class="row" id="cp-perfil-row" style="display:none">
           <div class="f f2"><label>Qtd. Perfis</label><input type="number" id="cp-perfil-qtd" step="1" placeholder="Ex: 2" oninput="calcPiso()"></div>
           <div class="f f2"><label>Valor por Perfil (R$)</label><input type="number" id="cp-perfil-val" step="0.01" value="200" oninput="calcPiso()"></div>
@@ -474,12 +478,10 @@
           <div class="f f2"><label>Valor total da Cola (R$)</label><input type="number" id="cp-cola-val" step="0.01" placeholder="Ex: 150" oninput="calcPiso()"></div>
         </div>
         <div class="row" id="cp-nivel-row" style="display:none">
-          <div class="f f2"><label>Custo/m² do Autonivelante (R$)</label><input type="number" id="cp-nivel-custo" step="0.01" placeholder="Ex: 12.00" oninput="calcPiso()"></div>
-          <div class="f f2"><label>Markup Autonivelante (%)</label><input type="number" id="cp-nivel-mk" step="1" placeholder="Ex: 30" oninput="calcPiso()"></div>
+          <div class="f f2"><label>Valor/m² do Autonivelante (R$)</label><input type="number" id="cp-nivel-custo" step="0.01" placeholder="Ex: 12.00" oninput="calcPiso()"></div>
         </div>
         <div class="row" id="cp-prime-row" style="display:none">
-          <div class="f f2"><label>Custo/m² do Prime (R$)</label><input type="number" id="cp-prime-custo" step="0.01" placeholder="Ex: 8.00" oninput="calcPiso()"></div>
-          <div class="f f2"><label>Markup Prime (%)</label><input type="number" id="cp-prime-mk" step="1" placeholder="Ex: 30" oninput="calcPiso()"></div>
+          <div class="f f2"><label>Valor/m² do Prime (R$)</label><input type="number" id="cp-prime-custo" step="0.01" placeholder="Ex: 8.00" oninput="calcPiso()"></div>
         </div>
       </div>
 
@@ -633,7 +635,19 @@ function num2(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximu
 function atualizarDash(){
   var orcs=db('orc'),cors=db('cor'),taps=db('tap');
   document.getElementById('d-n-orc').textContent=orcs.length;
-  var soma=orcs.reduce(function(s,o){return s+(o.total||0);},0);
+  var periodo=(document.getElementById('d-periodo')||{value:'tudo'}).value||'tudo';
+  var agora=Date.now(), orcsF=orcs;
+  if(periodo==='hoje'){
+    var ini=new Date(); ini.setHours(0,0,0,0);
+    orcsF=orcs.filter(function(o){return(o._ts||0)>=ini.getTime();});
+  } else if(periodo==='semana'){
+    var ini=new Date(); ini.setHours(0,0,0,0); ini.setDate(ini.getDate()-((ini.getDay()+6)%7));
+    orcsF=orcs.filter(function(o){return(o._ts||0)>=ini.getTime();});
+  } else if(periodo==='mes'){
+    var ini=new Date(); ini.setDate(1); ini.setHours(0,0,0,0);
+    orcsF=orcs.filter(function(o){return(o._ts||0)>=ini.getTime();});
+  }
+  var soma=orcsF.reduce(function(s,o){return s+(o.total||0);},0);
   document.getElementById('d-v-orc').textContent='R$ '+soma.toLocaleString('pt-BR',{minimumFractionDigits:2});
   document.getElementById('d-n-cor').textContent=cors.length;
   document.getElementById('d-n-tap').textContent=taps.length;
@@ -1276,6 +1290,7 @@ function excluirCalcCortina(id){
 
 function calcPiso(){
   // toggles extras
+  document.getElementById('cp-laminado-row').style.display=document.getElementById('cp-laminado-chk').checked?'':'none';
   document.getElementById('cp-perfil-row').style.display=document.getElementById('cp-perfil-chk').checked?'':'none';
   document.getElementById('cp-porta-row').style.display=document.getElementById('cp-porta-chk').checked?'':'none';
   document.getElementById('cp-cola-row').style.display=document.getElementById('cp-cola-chk').checked?'':'none';
@@ -1315,7 +1330,11 @@ function calcPiso(){
 
   // Extras
   var custoPerfil=0,vendaPerfil=0,custoPorta=0,vendaPorta=0,custoCola=0;
-  var custoNivel=0,vendaNivel=0,custoPrime=0,vendaPrime=0;
+  var custoNivel=0,vendaNivel=0,custoPrime=0,vendaPrime=0,custoManta=0;
+  if(document.getElementById('cp-laminado-chk').checked){
+    var vmanta=parseFloat(document.getElementById('cp-manta-val').value)||0;
+    custoManta=vmanta*m2c;
+  }
   if(document.getElementById('cp-perfil-chk').checked){
     var qp=parseFloat(document.getElementById('cp-perfil-qtd').value)||0;
     var vp=parseFloat(document.getElementById('cp-perfil-val').value)||200;
@@ -1331,19 +1350,15 @@ function calcPiso(){
   }
   if(document.getElementById('cp-nivel-chk').checked){
     var cnivel=parseFloat(document.getElementById('cp-nivel-custo').value)||0;
-    var mknivel=parseFloat(document.getElementById('cp-nivel-mk').value)||0;
-    custoNivel=cnivel*m2c;
-    vendaNivel=cnivel*(1+mknivel/100)*m2c;
+    custoNivel=vendaNivel=cnivel*m2c;
   }
   if(document.getElementById('cp-prime-chk').checked){
     var cprime=parseFloat(document.getElementById('cp-prime-custo').value)||0;
-    var mkprime=parseFloat(document.getElementById('cp-prime-mk').value)||0;
-    custoPrime=cprime*m2c;
-    vendaPrime=cprime*(1+mkprime/100)*m2c;
+    custoPrime=vendaPrime=cprime*m2c;
   }
 
-  var custoTotal=custoPisoTotal+custoRodTotal+custoPerfil+custoPorta+custoCola+custoNivel+custoPrime;
-  var vendaTotal=vendaPisoTotal+vendaRodTotal+vendaPerfil+vendaPorta+custoCola+vendaNivel+vendaPrime;
+  var custoTotal=custoPisoTotal+custoRodTotal+custoPerfil+custoPorta+custoCola+custoNivel+custoPrime+custoManta;
+  var vendaTotal=vendaPisoTotal+vendaRodTotal+vendaPerfil+vendaPorta+custoCola+vendaNivel+vendaPrime+custoManta;
   var lucro=vendaTotal-custoTotal;
   var margem=vendaTotal>0?(lucro/vendaTotal*100):0;
 
@@ -1370,8 +1385,9 @@ function calcPiso(){
     h+='<div class="res-row"><span class="res-label">Preço venda/ml</span><span class="res-val">'+brl(vendaRodML)+'</span></div>';
     h+='<div class="res-row"><span class="res-label">Preço venda total</span><span class="res-val">'+brl(vendaRodTotal)+'</span></div>';
   }
-  if(custoPerfil||custoPorta||custoCola||vendaNivel||vendaPrime){
+  if(custoManta||custoPerfil||custoPorta||custoCola||vendaNivel||vendaPrime){
     h+='<div class="calc-section-title">Extras</div>';
+    if(custoManta) h+='<div class="res-row"><span class="res-label">Manta laminado ('+num2(m2c)+' m²)</span><span class="res-val">'+brl(custoManta)+'</span></div>';
     if(custoPerfil) h+='<div class="res-row"><span class="res-label">Perfis</span><span class="res-val">'+brl(vendaPerfil)+'</span></div>';
     if(custoPorta) h+='<div class="res-row"><span class="res-label">Corte de porta</span><span class="res-val">'+brl(vendaPorta)+'</span></div>';
     if(custoCola) h+='<div class="res-row"><span class="res-label">Cola (vinílico)</span><span class="res-val">'+brl(custoCola)+'</span></div>';
@@ -1410,10 +1426,10 @@ function salvarCalcPiso(){
     colaVal:parseFloat(document.getElementById('cp-cola-val').value)||0,
     nivel:document.getElementById('cp-nivel-chk').checked,
     nivelCusto:parseFloat(document.getElementById('cp-nivel-custo').value)||0,
-    nivelMk:parseFloat(document.getElementById('cp-nivel-mk').value)||0,
     prime:document.getElementById('cp-prime-chk').checked,
     primeCusto:parseFloat(document.getElementById('cp-prime-custo').value)||0,
-    primeMk:parseFloat(document.getElementById('cp-prime-mk').value)||0,
+    laminado:document.getElementById('cp-laminado-chk').checked,
+    mantaVal:parseFloat(document.getElementById('cp-manta-val').value)||0,
     resumoHtml:res.innerHTML
   };
   var arr=db('piso'); arr.push(reg);
@@ -1424,12 +1440,12 @@ function salvarCalcPiso(){
 
 function limparCalcPiso(){
   ['cp-cliente','cp-custo-m2','cp-markup','cp-m2','cp-rend-cx','cp-rod-custo','cp-rod-markup','cp-rod-ml','cp-rod-barra',
-   'cp-perfil-qtd','cp-porta-qtd','cp-porta-val','cp-cola-val','cp-nivel-custo','cp-nivel-mk','cp-prime-custo','cp-prime-mk'].forEach(function(id){
+   'cp-perfil-qtd','cp-porta-qtd','cp-porta-val','cp-cola-val','cp-nivel-custo','cp-prime-custo','cp-manta-val'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('cp-perfil-val').value='200';
-  ['cp-perfil-chk','cp-porta-chk','cp-cola-chk','cp-nivel-chk','cp-prime-chk'].forEach(function(id){document.getElementById(id).checked=false;});
-  ['cp-perfil-row','cp-porta-row','cp-cola-row','cp-nivel-row','cp-prime-row'].forEach(function(id){document.getElementById(id).style.display='none';});
+  ['cp-laminado-chk','cp-perfil-chk','cp-porta-chk','cp-cola-chk','cp-nivel-chk','cp-prime-chk'].forEach(function(id){document.getElementById(id).checked=false;});
+  ['cp-laminado-row','cp-perfil-row','cp-porta-row','cp-cola-row','cp-nivel-row','cp-prime-row'].forEach(function(id){document.getElementById(id).style.display='none';});
   document.getElementById('cp-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
 }
 
@@ -1488,10 +1504,10 @@ function verCalcPiso(id){
   document.getElementById('cp-cola-val').value=r.colaVal||'';
   document.getElementById('cp-nivel-chk').checked=!!r.nivel;
   document.getElementById('cp-nivel-custo').value=r.nivelCusto||'';
-  document.getElementById('cp-nivel-mk').value=r.nivelMk||'';
   document.getElementById('cp-prime-chk').checked=!!r.prime;
   document.getElementById('cp-prime-custo').value=r.primeCusto||'';
-  document.getElementById('cp-prime-mk').value=r.primeMk||'';
+  document.getElementById('cp-laminado-chk').checked=!!r.laminado;
+  document.getElementById('cp-manta-val').value=r.mantaVal||'';
   calcPiso();
   ir('calculadoras',document.getElementById('nav-calculadoras'));
   window.scrollTo(0,0);
@@ -1519,7 +1535,7 @@ var KB_PRIS = {
   alta:   {label:'Alta',    color:'#f59e0b'},
   urgente:{label:'Urgente', color:'#ef4444'}
 };
-var _kbDrag = null;
+var _kbDrag=null, _kbDragCol=null, _kbDragColReady=null;
 
 function dbKb(){
   var raw = localStorage.getItem('cps_kb');
@@ -1591,10 +1607,33 @@ function renderQuadro(){
     colEl.addEventListener('dragleave',function(e){if(!colEl.contains(e.relatedTarget))colEl.classList.remove('drag-over');});
     colEl.addEventListener('drop',function(e){
       e.preventDefault(); colEl.classList.remove('drag-over');
+      if(_kbDragCol){
+        // arrastar coluna
+        var d2=dbKb();
+        var fromIdx=d2.cols.findIndex(function(c){return c.id===_kbDragCol;});
+        var toIdx=d2.cols.findIndex(function(c){return c.id===col.id;});
+        if(fromIdx>=0&&toIdx>=0&&fromIdx!==toIdx){
+          var moved=d2.cols.splice(fromIdx,1)[0];
+          d2.cols.splice(toIdx,0,moved);
+          dbKbSave(d2); renderQuadro(); return;
+        }
+      }
       if(!_kbDrag) return;
       var d2=dbKb(); var idx=d2.cards.findIndex(function(c){return c.id===_kbDrag;});
       if(idx>=0) d2.cards[idx].col=col.id;
       dbKbSave(d2); renderQuadro();
+    });
+    // drag de coluna: pega pelo cabeçalho
+    colEl.querySelector('.kb-col-hd').addEventListener('mousedown',function(){_kbDragColReady=col.id;});
+    colEl.setAttribute('draggable','true');
+    colEl.addEventListener('dragstart',function(e){
+      if(!_kbDragColReady){ e.preventDefault(); return; }
+      _kbDragCol=col.id; colEl.classList.add('col-dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    colEl.addEventListener('dragend',function(){
+      _kbDragCol=null; _kbDragColReady=null; colEl.classList.remove('col-dragging');
+      document.querySelectorAll('.kb-col').forEach(function(c){c.classList.remove('drag-over');});
     });
   });
   // botão nova coluna
@@ -1939,6 +1978,27 @@ function nbOpenNotebook(cli, mainEl){
       '<button class="nb-tool-btn" onmousedown="event.preventDefault()" onclick="nbFmt(\'insertOrderedList\')" title="Lista numerada">1. Lista</button>'+
       '<button class="nb-tool-btn" onmousedown="event.preventDefault()" onclick="nbInsertHR()" title="Inserir linha divisória">— Linha</button>'+
       '<div class="nb-tool-sep"></div>'+
+      '<select class="nb-font-sel" onchange="nbApplyFont(this.value)" title="Fonte">'+
+        '<option value="\'Segoe UI\',system-ui,sans-serif">Sans-serif</option>'+
+        '<option value="Georgia,\'Times New Roman\',serif" selected>Serifada</option>'+
+        '<option value="\'Courier New\',Courier,monospace">Código</option>'+
+        '<option value="cursive">Cursiva</option>'+
+      '</select>'+
+      '<select class="nb-size-sel" onchange="nbApplyFontSize(this.value)" title="Tamanho">'+
+        '<option value="11px">11</option>'+
+        '<option value="13px">13</option>'+
+        '<option value="15px" selected>15</option>'+
+        '<option value="18px">18</option>'+
+        '<option value="22px">22</option>'+
+        '<option value="28px">28</option>'+
+        '<option value="36px">36</option>'+
+      '</select>'+
+      '<div class="nb-color-wrap" title="Cor do texto">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 16l6-12 6 12M8.5 11h7"/></svg>'+
+        '<div class="nb-color-bar" id="nb-color-bar"></div>'+
+        '<input type="color" id="nb-text-color" value="#2c2c2c" onchange="nbApplyColor(this.value)">'+
+      '</div>'+
+      '<div class="nb-tool-sep"></div>'+
       '<button class="nb-tool-btn" id="nb-draw-toggle" onclick="nbToggleDraw()">'+
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>'+
         ' Desenhar'+
@@ -1996,6 +2056,9 @@ function nbOpenNotebook(cli, mainEl){
   var ed=document.getElementById('nb-editor');
   if(ed){
     ed.innerHTML=html;
+    ed.addEventListener('blur',nbSaveRange);
+    ed.addEventListener('keyup',nbSaveRange);
+    ed.addEventListener('mouseup',nbSaveRange);
     ed.addEventListener('input',function(){
       nbAutoSave(cli.id,ed.innerHTML,null);
       var cc=document.getElementById('nb-char-count');
@@ -2008,6 +2071,16 @@ function nbOpenNotebook(cli, mainEl){
 }
 
 /* ── formatação de texto ── */
+var _nbSavedRange=null;
+function nbSaveRange(){
+  var sel=window.getSelection();
+  if(sel&&sel.rangeCount) _nbSavedRange=sel.getRangeAt(0).cloneRange();
+}
+function nbRestoreRange(){
+  var ed=document.getElementById('nb-editor'); if(ed) ed.focus();
+  if(!_nbSavedRange) return;
+  var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(_nbSavedRange);
+}
 function nbFmt(cmd,val){
   document.execCommand(cmd,false,val||null);
   var ed=document.getElementById('nb-editor'); if(ed) ed.focus();
@@ -2015,6 +2088,24 @@ function nbFmt(cmd,val){
 function nbInsertHR(){
   document.execCommand('insertHTML',false,'<hr>');
   var ed=document.getElementById('nb-editor'); if(ed) ed.focus();
+}
+function nbApplyFont(font){
+  nbRestoreRange();
+  document.execCommand('styleWithCSS',false,true);
+  document.execCommand('fontName',false,font);
+}
+function nbApplyFontSize(size){
+  nbRestoreRange();
+  document.execCommand('styleWithCSS',false,true);
+  document.execCommand('fontSize',false,'7');
+  var ed=document.getElementById('nb-editor');
+  if(ed) ed.querySelectorAll('font[size="7"]').forEach(function(f){ f.removeAttribute('size'); f.style.fontSize=size; });
+}
+function nbApplyColor(color){
+  nbRestoreRange();
+  document.execCommand('styleWithCSS',false,true);
+  document.execCommand('foreColor',false,color);
+  var bar=document.getElementById('nb-color-bar'); if(bar) bar.style.background=color;
 }
 
 /* ── canvas de desenho ── */
@@ -2131,19 +2222,27 @@ function nbOpenClienteModal(id){
   var cli=id?clientes.find(function(c){return c.id===id;}):null;
   var isNew=!cli; if(isNew) cli={id:'',cliente:'',tel:''};
   var ov=document.getElementById('nb-modal-overlay');
+  var initPrev=cli.cliente?cli.cliente.trim().split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase():'?';
   ov.innerHTML=
     '<div class="nb-modal">'+
       '<div class="nb-modal-hd">'+
         '<span class="nb-modal-title">'+(isNew?'Novo cliente':'Editar cliente')+'</span>'+
         '<button class="nb-modal-close" onclick="nbCloseModal()">×</button>'+
       '</div>'+
-      '<div class="nb-modal-body">'+
-        '<div class="f"><label>Nome do cliente</label><input id="nbm-nome" value="'+esc(cli.cliente)+'" placeholder="Ex: Maria Silva" /></div>'+
-        '<div class="f"><label>Telefone</label><input id="nbm-tel" value="'+esc(cli.tel||'')+'" placeholder="(13) 9 9999-9999" /></div>'+
+      '<div class="nb-modal-body" style="gap:18px;align-items:stretch">'+
+        '<div class="nbm-avatar-preview" id="nbm-av">'+esc(initPrev)+'</div>'+
+        '<div class="nbm-field">'+
+          '<label>Nome completo</label>'+
+          '<input id="nbm-nome" value="'+esc(cli.cliente)+'" placeholder="Ex: Maria Aparecida Silva" oninput="nbUpdateModalAvatar()" />'+
+        '</div>'+
+        '<div class="nbm-field">'+
+          '<label>Telefone / WhatsApp</label>'+
+          '<input id="nbm-tel" type="tel" value="'+esc(cli.tel||'')+'" placeholder="(13) 9 99999-9999" />'+
+        '</div>'+
       '</div>'+
       '<div class="nb-modal-ft">'+
-        '<div></div>'+
-        '<div style="display:flex;gap:7px">'+
+        '<div>'+(id?'<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+id+'\')">Excluir</button>':'')+'</div>'+
+        '<div style="display:flex;gap:8px">'+
           '<button class="btn btn-s btn-xs" onclick="nbCloseModal()">Cancelar</button>'+
           '<button class="btn btn-p btn-xs" onclick="nbSaveCliente(\''+id+'\','+isNew+')">Salvar</button>'+
         '</div>'+
@@ -2151,6 +2250,12 @@ function nbOpenClienteModal(id){
     '</div>';
   ov.style.display='flex';
   setTimeout(function(){var el=document.getElementById('nbm-nome');if(el)el.focus();},50);
+}
+function nbUpdateModalAvatar(){
+  var nome=(document.getElementById('nbm-nome')||{}).value||'';
+  var av=document.getElementById('nbm-av'); if(!av) return;
+  var inits=nome.trim().split(/\s+/).map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+  av.textContent=inits||'?';
 }
 function nbSaveCliente(id, isNew){
   var nome=(document.getElementById('nbm-nome').value||'').trim();
