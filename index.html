@@ -532,20 +532,29 @@
     <div class="kb-overlay" id="kb-overlay" style="display:none" onclick="if(event.target===this)kbCloseModal()"></div>
   </div>
 
-  <!-- AGENDA DE CLIENTES -->
+  <!-- CADERNO DE CLIENTES -->
   <div id="pg-notas" class="pg">
-    <div class="agenda-toolbar">
-      <div class="agenda-search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="agenda-search" placeholder="Buscar cliente..." oninput="renderNotas()">
+    <div class="nb-layout">
+      <!-- Sidebar clientes -->
+      <div class="nb-sidebar">
+        <div class="nb-sidebar-top">
+          <div class="nb-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="nb-search" placeholder="Buscar..." oninput="renderNotas()">
+          </div>
+          <button class="btn btn-p btn-xs" style="width:100%;justify-content:center" onclick="nbNovoCliente()">＋ Novo</button>
+        </div>
+        <div class="nb-client-list" id="nb-client-list"></div>
       </div>
-      <button class="btn btn-p btn-xs" onclick="agendaNovoCliente()">＋ Novo Cliente</button>
+      <!-- Caderno -->
+      <div class="nb-main" id="nb-main">
+        <div class="nb-empty-state">
+          <div class="nb-empty-icon">📒</div>
+          <div class="nb-empty-txt">Selecione um cliente para abrir o caderno</div>
+        </div>
+      </div>
     </div>
-    <div class="agenda-layout">
-      <div class="agenda-sidebar" id="agenda-sidebar"></div>
-      <div class="agenda-main" id="agenda-main"></div>
-    </div>
-    <div class="agenda-overlay" id="agenda-overlay" style="display:none" onclick="if(event.target===this)agendaCloseModal()"></div>
+    <div class="nb-modal-overlay" id="nb-modal-overlay" style="display:none" onclick="if(event.target===this)nbCloseModal()"></div>
   </div>
 
   </div><!-- /wrap -->
@@ -1781,202 +1790,164 @@ function kbDelCol(colId){
   dbKbSave(d); kbCloseModal(); renderQuadro();
 }
 
-// ── AGENDA DE CLIENTES ────────────────────────────────────
-var _agendaClienteId = null;
-var _agendaTimer = null;
+// ── CADERNO DE CLIENTES ───────────────────────────────────
+var _nbClienteId = null;
+var _nbTimer = null;
+
+function nbClientes(){
+  var raw=db('notas'); if(!Array.isArray(raw)) return [];
+  // migração do formato antigo (com entradas estruturadas)
+  return raw.map(function(c){
+    if(typeof c.texto==='string') return c;
+    var texto='';
+    if(c.entradas&&c.entradas.length){
+      texto=c.entradas.map(function(e){
+        var linha='';
+        if(e.data) linha+='['+fmt(e.data)+'] ';
+        if(e.categoria) linha+=e.categoria+' ';
+        if(e.valor) linha+='R$ '+e.valor+'\n';
+        if(e.obs) linha+=e.obs;
+        return linha.trim();
+      }).join('\n\n');
+    }
+    return {id:c.id,cliente:c.cliente,tel:c.tel||'',texto:texto};
+  });
+}
 
 function renderNotas(){
-  var clientes = db('notas');
-  if(!Array.isArray(clientes)) clientes=[];
-  var q = ((document.getElementById('agenda-search')||{}).value||'').toLowerCase();
-  var filtrados = q ? clientes.filter(function(c){ return (c.cliente||'').toLowerCase().includes(q); }) : clientes;
-  var sidebar = document.getElementById('agenda-sidebar');
-  var main = document.getElementById('agenda-main');
-  sidebar.innerHTML=''; main.innerHTML='';
+  var clientes=nbClientes();
+  var q=((document.getElementById('nb-search')||{}).value||'').toLowerCase();
+  var lista=document.getElementById('nb-client-list');
+  var main=document.getElementById('nb-main');
+  if(!lista) return;
+  lista.innerHTML='';
+  var filtrados=q?clientes.filter(function(c){return(c.cliente||'').toLowerCase().includes(q);}):clientes;
   if(!filtrados.length){
-    var msg=document.createElement('div');
-    msg.style.cssText='color:rgba(0,0,0,.3);font-size:12px;padding:12px 4px';
-    msg.textContent = clientes.length ? 'Nenhum resultado.' : 'Nenhum cliente ainda.';
-    sidebar.appendChild(msg);
+    lista.innerHTML='<div class="nb-empty-list">'+(clientes.length?'Nenhum resultado.':'Nenhum cliente ainda.')+'</div>';
   }
   filtrados.forEach(function(c){
     var btn=document.createElement('button');
-    btn.className='agenda-client-btn'+(c.id===_agendaClienteId?' on':'');
-    btn.dataset.id=c.id;
-    var ents=c.entradas||[];
-    var total=ents.reduce(function(s,e){return s+parseMoeda(e.valor);},0);
+    btn.className='nb-client-item'+(c.id===_nbClienteId?' on':'');
+    var initials=c.cliente.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+    var preview=(c.texto||'').trim().replace(/\n/g,' ').slice(0,40)||(c.tel||'');
     btn.innerHTML=
-      '<div class="agenda-client-name">'+esc(c.cliente)+'</div>'+
-      '<div class="agenda-client-meta">'+ents.length+' entrada'+(ents.length!==1?'s':'')+
-        (total>0?' · '+brl(total):'')+
+      '<div class="nb-client-avatar">'+initials+'</div>'+
+      '<div class="nb-client-info">'+
+        '<div class="nb-client-name">'+esc(c.cliente)+'</div>'+
+        (preview?'<div class="nb-client-preview">'+esc(preview)+'</div>':'')+
       '</div>';
-    btn.onclick=function(){ _agendaClienteId=c.id; renderNotas(); };
-    sidebar.appendChild(btn);
+    btn.onclick=function(){ _nbClienteId=c.id; nbOpenNotebook(c,main); renderNotas(); };
+    lista.appendChild(btn);
   });
-  // painel principal
-  if(_agendaClienteId){
-    var cli=clientes.find(function(c){return c.id===_agendaClienteId;});
-    if(!cli){ _agendaClienteId=null; main.innerHTML=''; return; }
-    var ents=cli.entradas||[];
-    var entsOrdenadas=ents.slice().sort(function(a,b){return b.data>a.data?1:-1;});
-    main.innerHTML=
-      '<div class="agenda-header">'+
-        '<div>'+
-          '<div class="agenda-client-title">'+esc(cli.cliente)+'</div>'+
-          (cli.tel?'<div class="agenda-client-tel">'+esc(cli.tel)+'</div>':'')+
-        '</div>'+
-        '<div style="display:flex;gap:7px">'+
-          '<button class="btn btn-s btn-xs" onclick="agendaEditCliente(\''+cli.id+'\')">Editar</button>'+
-          '<button class="btn btn-p btn-xs" onclick="agendaNovaEntrada(\''+cli.id+'\')">＋ Entrada</button>'+
-        '</div>'+
-      '</div>';
-    if(!entsOrdenadas.length){
-      main.innerHTML+='<div class="agenda-empty">'+
-        '<div class="agenda-empty-icon">📋</div>'+
-        '<div class="agenda-empty-txt">Nenhuma entrada ainda</div>'+
-        '<div class="agenda-empty-sub">Clique em "＋ Entrada" para registrar uma observação</div>'+
-      '</div>';
-    } else {
-      entsOrdenadas.forEach(function(ent){
-        main.innerHTML+=
-          '<div class="agenda-entry">'+
-            '<div class="agenda-entry-hd">'+
-              '<span class="agenda-entry-date">'+fmt(ent.data||'')+'</span>'+
-              (ent.categoria?'<span class="agenda-entry-cat">'+esc(ent.categoria)+'</span>':'')+
-              (ent.valor?'<span class="agenda-entry-val">R$ '+esc(ent.valor)+'</span>':'')+
-            '</div>'+
-            (ent.obs?'<div class="agenda-entry-obs">'+esc(ent.obs)+'</div>':'')+
-            '<div class="agenda-entry-actions">'+
-              '<button class="btn btn-s btn-xs" onclick="agendaEditEntrada(\''+cli.id+'\',\''+ent.id+'\')">Editar</button>'+
-              '<button class="btn btn-d btn-xs" onclick="agendaDelEntrada(\''+cli.id+'\',\''+ent.id+'\')">Excluir</button>'+
-            '</div>'+
-          '</div>';
-      });
-    }
-  } else if(filtrados.length){
-    main.innerHTML='<div class="agenda-empty">'+
-      '<div class="agenda-empty-icon">👈</div>'+
-      '<div class="agenda-empty-txt">Selecione um cliente</div>'+
-    '</div>';
+  // Se tem cliente selecionado e main está vazio, abre o caderno
+  if(_nbClienteId&&main&&!main.querySelector('.nb-page')){
+    var cli=clientes.find(function(c){return c.id===_nbClienteId;});
+    if(cli) nbOpenNotebook(cli,main);
   }
 }
 
-function agendaNovoCliente(){
-  agendaOpenClienteModal(null);
+function nbOpenNotebook(cli, mainEl){
+  if(!mainEl) mainEl=document.getElementById('nb-main');
+  mainEl.innerHTML='';
+  var page=document.createElement('div');
+  page.className='nb-page';
+  page.innerHTML=
+    '<div class="nb-page-header">'+
+      '<div class="nb-page-client">'+esc(cli.cliente)+'</div>'+
+      '<div class="nb-page-actions">'+
+        (cli.tel?'<span class="nb-page-tel">'+esc(cli.tel)+'</span>':'')+
+        '<button class="btn btn-s btn-xs" onclick="nbEditCliente(\''+cli.id+'\')">Editar</button>'+
+        '<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+cli.id+'\')">Excluir</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="nb-paper">'+
+      '<div class="nb-margin-line"></div>'+
+      '<textarea class="nb-textarea" id="nb-textarea" placeholder="Escreva livremente sobre este cliente — medidas, valores, observações, combinados...">'+esc(cli.texto||'')+'</textarea>'+
+    '</div>'+
+    '<div class="nb-status" id="nb-status"></div>';
+  mainEl.appendChild(page);
+  var ta=document.getElementById('nb-textarea');
+  if(ta){
+    ta.addEventListener('input',function(){ nbAutoSave(cli.id, ta.value); });
+    // auto-resize
+    ta.style.height='auto';
+    ta.style.height=Math.max(ta.scrollHeight,400)+'px';
+    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=Math.max(ta.scrollHeight,400)+'px'; });
+  }
 }
-function agendaEditCliente(id){
-  agendaOpenClienteModal(id);
+
+function nbAutoSave(cliId, valor){
+  var statusEl=document.getElementById('nb-status');
+  if(statusEl) statusEl.textContent='';
+  clearTimeout(_nbTimer);
+  _nbTimer=setTimeout(function(){
+    var clientes=nbClientes();
+    var idx=clientes.findIndex(function(c){return c.id===cliId;});
+    if(idx>=0){ clientes[idx].texto=valor; dbSave('notas',clientes); }
+    if(statusEl){ statusEl.textContent='✓ Salvo'; statusEl.className='nb-status saved'; setTimeout(function(){if(statusEl)statusEl.textContent='';},2000); }
+  }, 700);
 }
-function agendaOpenClienteModal(id){
-  var clientes=db('notas'); if(!Array.isArray(clientes)) clientes=[];
+
+function nbNovoCliente(){
+  nbOpenClienteModal(null);
+}
+function nbEditCliente(id){
+  nbOpenClienteModal(id);
+}
+function nbOpenClienteModal(id){
+  var clientes=nbClientes();
   var cli=id?clientes.find(function(c){return c.id===id;}):null;
   var isNew=!cli; if(isNew) cli={id:'',cliente:'',tel:''};
-  var ov=document.getElementById('agenda-overlay');
+  var ov=document.getElementById('nb-modal-overlay');
   ov.innerHTML=
-    '<div class="agenda-modal">'+
-      '<div class="agenda-modal-hd">'+
-        '<span class="agenda-modal-title">'+(isNew?'Novo cliente':'Editar cliente')+'</span>'+
-        '<button class="agenda-modal-close" onclick="agendaCloseModal()">×</button>'+
+    '<div class="nb-modal">'+
+      '<div class="nb-modal-hd">'+
+        '<span class="nb-modal-title">'+(isNew?'Novo cliente':'Editar cliente')+'</span>'+
+        '<button class="nb-modal-close" onclick="nbCloseModal()">×</button>'+
       '</div>'+
-      '<div class="agenda-modal-body">'+
-        '<div class="f"><label>Nome do cliente</label><input id="acm-nome" value="'+esc(cli.cliente)+'" placeholder="Ex: Maria Silva" /></div>'+
-        '<div class="f"><label>Telefone (opcional)</label><input id="acm-tel" value="'+esc(cli.tel||'')+'" placeholder="(13) 9 9999-9999" /></div>'+
+      '<div class="nb-modal-body">'+
+        '<div class="f"><label>Nome do cliente</label><input id="nbm-nome" value="'+esc(cli.cliente)+'" placeholder="Ex: Maria Silva" /></div>'+
+        '<div class="f"><label>Telefone</label><input id="nbm-tel" value="'+esc(cli.tel||'')+'" placeholder="(13) 9 9999-9999" /></div>'+
       '</div>'+
-      '<div class="agenda-modal-ft">'+
-        '<div>'+(!isNew?'<button class="btn btn-d btn-xs" onclick="agendaDelCliente(\''+id+'\')">Excluir cliente</button>':'')+'</div>'+
-        '<div style="display:flex;gap:7px">'+
-          '<button class="btn btn-s btn-xs" onclick="agendaCloseModal()">Cancelar</button>'+
-          '<button class="btn btn-p btn-xs" onclick="agendaSaveCliente(\''+id+'\','+isNew+')">Salvar</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
-  ov.style.display='flex';
-}
-function agendaSaveCliente(id, isNew){
-  var nome=document.getElementById('acm-nome').value.trim();
-  if(!nome){alert('Informe o nome.');return;}
-  var clientes=db('notas'); if(!Array.isArray(clientes)) clientes=[];
-  if(isNew){
-    var novo={id:uid(),cliente:nome,tel:document.getElementById('acm-tel').value.trim(),entradas:[]};
-    clientes.push(novo);
-    _agendaClienteId=novo.id;
-  } else {
-    var idx=clientes.findIndex(function(c){return c.id===id;});
-    if(idx>=0){clientes[idx].cliente=nome;clientes[idx].tel=document.getElementById('acm-tel').value.trim();}
-  }
-  dbSave('notas',clientes); agendaCloseModal(); renderNotas();
-}
-function agendaDelCliente(id){
-  if(!confirm('Excluir este cliente e todas as entradas?')) return;
-  var clientes=db('notas'); if(!Array.isArray(clientes)) clientes=[];
-  dbSave('notas',clientes.filter(function(c){return c.id!==id;}));
-  if(_agendaClienteId===id) _agendaClienteId=null;
-  agendaCloseModal(); renderNotas();
-}
-function agendaNovaEntrada(cliId){
-  agendaOpenEntradaModal(cliId, null);
-}
-function agendaEditEntrada(cliId, entId){
-  agendaOpenEntradaModal(cliId, entId);
-}
-function agendaOpenEntradaModal(cliId, entId){
-  var clientes=db('notas'); if(!Array.isArray(clientes)) clientes=[];
-  var cli=clientes.find(function(c){return c.id===cliId;});
-  if(!cli) return;
-  var ent=entId?(cli.entradas||[]).find(function(e){return e.id===entId;}):null;
-  var isNew=!ent; if(isNew) ent={id:'',data:hoje(),categoria:'',valor:'',obs:''};
-  var cats=['Cortina','Tapeçaria','Persianas','Piso','Outros'];
-  var catOpts=cats.map(function(c){ return '<option value="'+c+'"'+(ent.categoria===c?' selected':'')+'>'+c+'</option>'; }).join('');
-  var ov=document.getElementById('agenda-overlay');
-  ov.innerHTML=
-    '<div class="agenda-modal">'+
-      '<div class="agenda-modal-hd">'+
-        '<span class="agenda-modal-title">'+(isNew?'Nova entrada':'Editar entrada')+' — '+esc(cli.cliente)+'</span>'+
-        '<button class="agenda-modal-close" onclick="agendaCloseModal()">×</button>'+
-      '</div>'+
-      '<div class="agenda-modal-body">'+
-        '<div style="display:flex;gap:8px">'+
-          '<div class="f" style="flex:1"><label>Data</label><input type="date" id="aem-data" value="'+esc(ent.data)+'" /></div>'+
-          '<div class="f" style="flex:1"><label>Categoria</label><select id="aem-cat"><option value="">Selecione...</option>'+catOpts+'</select></div>'+
-        '</div>'+
-        '<div class="f"><label>Valor</label><input id="aem-valor" value="'+esc(ent.valor)+'" placeholder="Ex: 1.200,00" /></div>'+
-        '<div class="f"><label>Observações / Detalhes</label><textarea id="aem-obs" rows="5" placeholder="Medidas, tecidos, condições, pendências...">'+esc(ent.obs)+'</textarea></div>'+
-      '</div>'+
-      '<div class="agenda-modal-ft">'+
+      '<div class="nb-modal-ft">'+
         '<div></div>'+
         '<div style="display:flex;gap:7px">'+
-          '<button class="btn btn-s btn-xs" onclick="agendaCloseModal()">Cancelar</button>'+
-          '<button class="btn btn-p btn-xs" onclick="agendaSaveEntrada(\''+cliId+'\',\''+entId+'\','+isNew+')">Salvar</button>'+
+          '<button class="btn btn-s btn-xs" onclick="nbCloseModal()">Cancelar</button>'+
+          '<button class="btn btn-p btn-xs" onclick="nbSaveCliente(\''+id+'\','+isNew+')">Salvar</button>'+
         '</div>'+
       '</div>'+
     '</div>';
   ov.style.display='flex';
+  setTimeout(function(){var el=document.getElementById('nbm-nome');if(el)el.focus();},50);
 }
-function agendaSaveEntrada(cliId, entId, isNew){
-  var clientes=db('notas'); if(!Array.isArray(clientes)) clientes=[];
-  var cli=clientes.find(function(c){return c.id===cliId;});
-  if(!cli) return;
-  if(!cli.entradas) cli.entradas=[];
-  var ent={
-    id: isNew?uid():entId,
-    data: document.getElementById('aem-data').value,
-    categoria: document.getElementById('aem-cat').value,
-    valor: document.getElementById('aem-valor').value.trim(),
-    obs: document.getElementById('aem-obs').value.trim()
-  };
-  if(isNew){ cli.entradas.push(ent); }
-  else { var idx=cli.entradas.findIndex(function(e){return e.id===entId;}); if(idx>=0) cli.entradas[idx]=ent; }
-  dbSave('notas',clientes); agendaCloseModal(); renderNotas();
+function nbSaveCliente(id, isNew){
+  var nome=(document.getElementById('nbm-nome').value||'').trim();
+  if(!nome){alert('Informe o nome.');return;}
+  var clientes=nbClientes();
+  if(isNew){
+    var novo={id:uid(),cliente:nome,tel:document.getElementById('nbm-tel').value.trim(),texto:''};
+    clientes.push(novo);
+    _nbClienteId=novo.id;
+    dbSave('notas',clientes); nbCloseModal(); renderNotas();
+    setTimeout(function(){
+      var main=document.getElementById('nb-main');
+      if(main) nbOpenNotebook(novo,main);
+    },50);
+  } else {
+    var idx=clientes.findIndex(function(c){return c.id===id;});
+    if(idx>=0){clientes[idx].cliente=nome;clientes[idx].tel=document.getElementById('nbm-tel').value.trim();}
+    dbSave('notas',clientes); nbCloseModal(); renderNotas();
+  }
 }
-function agendaDelEntrada(cliId, entId){
-  if(!confirm('Excluir esta entrada?')) return;
-  var clientes=db('notas'); if(!Array.isArray(clientes)) clientes=[];
-  var cli=clientes.find(function(c){return c.id===cliId;});
-  if(cli&&cli.entradas) cli.entradas=cli.entradas.filter(function(e){return e.id!==entId;});
-  dbSave('notas',clientes); renderNotas();
+function nbDelCliente(id){
+  if(!confirm('Excluir este cliente e todas as anotações?')) return;
+  var clientes=nbClientes();
+  dbSave('notas',clientes.filter(function(c){return c.id!==id;}));
+  if(_nbClienteId===id){ _nbClienteId=null; var m=document.getElementById('nb-main'); if(m) m.innerHTML='<div class="nb-empty-state"><div class="nb-empty-icon">📒</div><div class="nb-empty-txt">Selecione um cliente para abrir o caderno</div></div>'; }
+  renderNotas();
 }
-function agendaCloseModal(){
-  var ov=document.getElementById('agenda-overlay');
+function nbCloseModal(){
+  var ov=document.getElementById('nb-modal-overlay');
   if(ov){ov.style.display='none';ov.innerHTML='';}
 }
 
