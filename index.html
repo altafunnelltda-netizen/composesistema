@@ -538,11 +538,15 @@
       <!-- Sidebar clientes -->
       <div class="nb-sidebar">
         <div class="nb-sidebar-top">
+          <div class="nb-sidebar-heading">Caderno de Clientes</div>
           <div class="nb-search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="nb-search" placeholder="Buscar..." oninput="renderNotas()">
+            <input type="text" id="nb-search" placeholder="Buscar cliente..." oninput="renderNotas()">
           </div>
-          <button class="btn btn-p btn-xs" style="width:100%;justify-content:center" onclick="nbNovoCliente()">＋ Novo</button>
+          <button class="nb-add-btn" onclick="nbNovoCliente()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+            Novo Cliente
+          </button>
         </div>
         <div class="nb-client-list" id="nb-client-list"></div>
       </div>
@@ -1853,18 +1857,25 @@ function nbOpenNotebook(cli, mainEl){
   page.className='nb-page';
   page.innerHTML=
     '<div class="nb-page-header">'+
-      '<div class="nb-page-client">'+esc(cli.cliente)+'</div>'+
+      '<div class="nb-page-client-wrap">'+
+        '<div class="nb-page-client">'+esc(cli.cliente)+'</div>'+
+        (cli.tel?'<div class="nb-page-tel">📞 '+esc(cli.tel)+'</div>':'')+
+      '</div>'+
       '<div class="nb-page-actions">'+
-        (cli.tel?'<span class="nb-page-tel">'+esc(cli.tel)+'</span>':'')+
         '<button class="btn btn-s btn-xs" onclick="nbEditCliente(\''+cli.id+'\')">Editar</button>'+
         '<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+cli.id+'\')">Excluir</button>'+
       '</div>'+
     '</div>'+
     '<div class="nb-paper">'+
-      '<div class="nb-margin-line"></div>'+
-      '<textarea class="nb-textarea" id="nb-textarea" placeholder="Escreva livremente sobre este cliente — medidas, valores, observações, combinados...">'+esc(cli.texto||'')+'</textarea>'+
+      '<div class="nb-paper-inner">'+
+        '<div class="nb-margin-line"></div>'+
+        '<textarea class="nb-textarea" id="nb-textarea" placeholder="Escreva livremente — medidas, valores, observações, combinados...">'+esc(cli.texto||'')+'</textarea>'+
+      '</div>'+
     '</div>'+
-    '<div class="nb-status" id="nb-status"></div>';
+    '<div class="nb-footer">'+
+      '<span class="nb-status" id="nb-status"></span>'+
+      '<span class="nb-char-count" id="nb-char-count"></span>'+
+    '</div>';
   mainEl.appendChild(page);
   var ta=document.getElementById('nb-textarea');
   if(ta){
@@ -1872,19 +1883,27 @@ function nbOpenNotebook(cli, mainEl){
     // auto-resize
     ta.style.height='auto';
     ta.style.height=Math.max(ta.scrollHeight,400)+'px';
-    ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=Math.max(ta.scrollHeight,400)+'px'; });
+    ta.addEventListener('input',function(){
+      ta.style.height='auto';
+      ta.style.height=Math.max(ta.scrollHeight,500)+'px';
+      var cc=document.getElementById('nb-char-count');
+      if(cc) cc.textContent=ta.value.length>0?ta.value.length+' caracteres':'';
+    });
+    // init char count
+    var cc=document.getElementById('nb-char-count');
+    if(cc&&ta.value.length>0) cc.textContent=ta.value.length+' caracteres';
   }
 }
 
 function nbAutoSave(cliId, valor){
   var statusEl=document.getElementById('nb-status');
-  if(statusEl) statusEl.textContent='';
+  if(statusEl){ statusEl.textContent=''; statusEl.className='nb-status'; }
   clearTimeout(_nbTimer);
   _nbTimer=setTimeout(function(){
     var clientes=nbClientes();
     var idx=clientes.findIndex(function(c){return c.id===cliId;});
     if(idx>=0){ clientes[idx].texto=valor; dbSave('notas',clientes); }
-    if(statusEl){ statusEl.textContent='✓ Salvo'; statusEl.className='nb-status saved'; setTimeout(function(){if(statusEl)statusEl.textContent='';},2000); }
+    if(statusEl){ statusEl.textContent='✓ Salvo'; statusEl.className='nb-status saved'; setTimeout(function(){if(statusEl){statusEl.textContent='';statusEl.className='nb-status';}},2500); }
   }, 700);
 }
 
@@ -1943,7 +1962,7 @@ function nbDelCliente(id){
   if(!confirm('Excluir este cliente e todas as anotações?')) return;
   var clientes=nbClientes();
   dbSave('notas',clientes.filter(function(c){return c.id!==id;}));
-  if(_nbClienteId===id){ _nbClienteId=null; var m=document.getElementById('nb-main'); if(m) m.innerHTML='<div class="nb-empty-state"><div class="nb-empty-icon">📒</div><div class="nb-empty-txt">Selecione um cliente para abrir o caderno</div></div>'; }
+  if(_nbClienteId===id){ _nbClienteId=null; var m=document.getElementById('nb-main'); if(m) m.innerHTML='<div class="nb-empty-state"><div class="nb-empty-icon">📒</div><div class="nb-empty-txt">Selecione um cliente</div><div class="nb-empty-sub">para abrir o caderno</div></div>'; }
   renderNotas();
 }
 function nbCloseModal(){
