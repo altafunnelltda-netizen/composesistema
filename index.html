@@ -35,6 +35,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 .topbar-title{font-size:14px;font-weight:700}
 .topbar-date{font-size:11px;color:var(--mid)}
 .wrap{padding:20px 22px;max-width:900px}
+#pg-quadro,#pg-notas{max-width:none}
 
 /* PAGES */
 .pg{display:none}.pg.on{display:block}
@@ -67,6 +68,42 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 .btn-xs{padding:3px 8px;font-size:11px}
 .btn-bar{display:flex;gap:7px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);margin-top:10px}
 
+/* KANBAN */
+.kb-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;min-height:calc(100vh - 120px);align-items:flex-start}
+.kb-col{background:var(--cream-dark);border:1px solid var(--border);border-radius:var(--r);width:220px;flex-shrink:0;display:flex;flex-direction:column}
+.kb-col-hd{padding:10px 12px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.kb-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.kb-count{background:var(--border);border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;color:var(--mid)}
+.kb-cards{padding:8px;display:flex;flex-direction:column;gap:7px;flex:1;min-height:60px}
+.kb-card{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:10px;cursor:grab;user-select:none;transition:.15s;position:relative}
+.kb-card:hover{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.kb-card.dragging{opacity:.4;cursor:grabbing}
+.kb-col.drag-over .kb-cards{background:rgba(201,169,97,.08);border-radius:6px}
+.kb-card-title{font-size:13px;font-weight:600;margin-bottom:4px;padding-right:18px}
+.kb-card-cliente{font-size:11px;color:var(--mid);margin-bottom:3px}
+.kb-card-valor{font-size:12px;font-weight:700;color:var(--gold-dark)}
+.kb-card-obs{font-size:11px;color:var(--mid);margin-top:4px;border-top:1px solid var(--border);padding-top:4px}
+.kb-card-del{position:absolute;top:6px;right:6px;background:none;border:none;cursor:pointer;color:var(--border);font-size:14px;line-height:1;padding:2px}
+.kb-card-del:hover{color:#b00}
+.kb-add{padding:8px;border-top:1px solid var(--border)}
+.kb-add-btn{width:100%;background:none;border:1px dashed var(--border);border-radius:6px;padding:6px;font-size:12px;color:var(--mid);cursor:pointer;font-family:inherit;transition:.15s}
+.kb-add-btn:hover{border-color:var(--gold);color:var(--gold-dark)}
+.kb-form{background:var(--white);border:1px solid var(--gold);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.kb-form input,.kb-form textarea{border:1px solid var(--border);border-radius:4px;padding:5px 7px;font-size:12px;font-family:inherit;background:var(--cream);color:var(--charcoal);outline:none;width:100%}
+.kb-form input:focus,.kb-form textarea:focus{border-color:var(--gold)}
+.kb-form textarea{resize:none;min-height:48px}
+.kb-form-btns{display:flex;gap:5px}
+.kb-tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:4px}
+/* NOTAS */
+.notas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.nota-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;min-height:140px}
+.nota-card:hover{border-color:var(--gold)}
+.nota-title-input{border:none;border-bottom:1px solid var(--border);background:transparent;font-size:14px;font-weight:700;color:var(--charcoal);outline:none;padding:2px 0;width:100%;font-family:inherit}
+.nota-title-input:focus{border-color:var(--gold)}
+.nota-body{border:none;background:transparent;font-size:13px;color:var(--charcoal);outline:none;resize:none;flex:1;width:100%;font-family:inherit;line-height:1.5;min-height:80px}
+.nota-footer{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--mid)}
+.nota-new{background:var(--cream-dark);border:2px dashed var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:140px;color:var(--mid);font-size:13px;transition:.15s}
+.nota-new:hover{border-color:var(--gold);color:var(--gold-dark)}
 /* DASHBOARD */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
 .stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
@@ -275,6 +312,15 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
       </div>
     </div>
     <div class="sb-group">
+      <div class="sb-lbl">Gestão</div>
+      <div class="sb-item" id="nav-quadro" onclick="ir('quadro',this);renderQuadro()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+        Quadro
+      </div>
+      <div class="sb-item" id="nav-notas" onclick="ir('notas',this);renderNotas()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Anotações
+      </div>
       <div class="sb-lbl">Ferramentas</div>
       <div class="sb-item" id="nav-calculadoras" onclick="ir('calculadoras',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
@@ -736,6 +782,21 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
     <div id="hpn-tap" class="tab-pn"></div>
   </div>
 
+  <!-- QUADRO KANBAN -->
+  <div id="pg-quadro" class="pg">
+    <div style="max-width:100%;overflow-x:auto">
+      <div class="kb-board" id="kb-board"></div>
+    </div>
+  </div>
+
+  <!-- ANOTAÇÕES -->
+  <div id="pg-notas" class="pg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--mid)">Clique num bloco para editar. As alterações são salvas automaticamente.</div>
+    </div>
+    <div class="notas-grid" id="notas-grid"></div>
+  </div>
+
   </div><!-- /wrap -->
 </div><!-- /main -->
 
@@ -743,12 +804,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:13px;heigh
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas' };
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   // Persiste no servidor em background
-  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort') };
+  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas') };
   payload[K[key]] = arr; // garante que o valor recém-salvo está incluído
   fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(function(){});
@@ -763,12 +824,14 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
     if(d.cps_tap && d.cps_tap.length) localStorage.setItem('cps_tap', JSON.stringify(d.cps_tap));
     if(d.cps_piso && d.cps_piso.length) localStorage.setItem('cps_piso', JSON.stringify(d.cps_piso));
     if(d.cps_cort && d.cps_cort.length) localStorage.setItem('cps_cort', JSON.stringify(d.cps_cort));
+    if(d.cps_kb && d.cps_kb.length) localStorage.setItem('cps_kb', JSON.stringify(d.cps_kb));
+    if(d.cps_notas && d.cps_notas.length) localStorage.setItem('cps_notas', JSON.stringify(d.cps_notas));
     if(typeof atualizarDash === 'function') atualizarDash();
   }).catch(function(){});
 })();
 
 // ── NAV ───────────────────────────────────────────────────
-var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico' };
+var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Anotações' };
 function ir(id,el) {
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.sb-item').forEach(function(i){i.classList.remove('on');});
@@ -1672,6 +1735,175 @@ function excluirCalcPiso(id){
   dbSave('piso',db('piso').filter(function(o){return o.id!==id;}));
   toast('Excluído.','ok');
   renderHistCalcPiso();
+}
+
+// ── QUADRO KANBAN ─────────────────────────────────────────
+var KB_COLS = [
+  {id:'novo',      label:'Novo Orçamento',      color:'#3b82f6'},
+  {id:'andamento', label:'Em Andamento',         color:'#f59e0b'},
+  {id:'aguardando',label:'Aguardando Cliente',   color:'#8b5cf6'},
+  {id:'aprovado',  label:'Aprovado',             color:'#10b981'},
+  {id:'concluido', label:'Concluído',            color:'#6b7280'},
+  {id:'cancelado', label:'Cancelado',            color:'#ef4444'}
+];
+
+var _kbDragging = null;
+
+function renderQuadro(){
+  var cards = db('kb');
+  var board = document.getElementById('kb-board');
+  board.innerHTML = '';
+  KB_COLS.forEach(function(col){
+    var colCards = cards.filter(function(c){return c.col===col.id;});
+    var colEl = document.createElement('div');
+    colEl.className = 'kb-col';
+    colEl.dataset.col = col.id;
+    colEl.innerHTML =
+      '<div class="kb-col-hd">'+
+        '<span class="kb-col-title" style="color:'+col.color+'">'+col.label+'</span>'+
+        '<span class="kb-count">'+colCards.length+'</span>'+
+      '</div>'+
+      '<div class="kb-cards" id="kbc-'+col.id+'"></div>'+
+      '<div class="kb-add"><button class="kb-add-btn" onclick="kbShowForm(\''+col.id+'\')">+ Adicionar card</button></div>';
+    board.appendChild(colEl);
+    var cardsEl = colEl.querySelector('.kb-cards');
+    colCards.forEach(function(card){
+      cardsEl.appendChild(kbMakeCard(card));
+    });
+    // drag-over na coluna
+    colEl.addEventListener('dragover', function(e){
+      e.preventDefault();
+      colEl.classList.add('drag-over');
+    });
+    colEl.addEventListener('dragleave', function(e){
+      if(!colEl.contains(e.relatedTarget)) colEl.classList.remove('drag-over');
+    });
+    colEl.addEventListener('drop', function(e){
+      e.preventDefault();
+      colEl.classList.remove('drag-over');
+      if(!_kbDragging) return;
+      var cards2 = db('kb');
+      var idx = cards2.findIndex(function(c){return c.id===_kbDragging;});
+      if(idx>=0) cards2[idx].col = col.id;
+      dbSave('kb', cards2);
+      renderQuadro();
+    });
+  });
+}
+
+function kbMakeCard(card){
+  var el = document.createElement('div');
+  el.className = 'kb-card';
+  el.draggable = true;
+  el.dataset.id = card.id;
+  var col = KB_COLS.find(function(c){return c.id===card.col;})||KB_COLS[0];
+  el.innerHTML =
+    '<button class="kb-card-del" onclick="kbDel(\''+card.id+'\',event)" title="Excluir">×</button>'+
+    '<div class="kb-tag" style="background:'+col.color+'22;color:'+col.color+'">'+col.label+'</div>'+
+    '<div class="kb-card-title">'+esc(card.titulo||'Sem título')+'</div>'+
+    (card.cliente?'<div class="kb-card-cliente">👤 '+esc(card.cliente)+'</div>':'')+
+    (card.valor?'<div class="kb-card-valor">R$ '+card.valor+'</div>':'')+
+    (card.obs?'<div class="kb-card-obs">'+esc(card.obs)+'</div>':'');
+  el.addEventListener('dragstart',function(){_kbDragging=card.id;el.classList.add('dragging');});
+  el.addEventListener('dragend',function(){_kbDragging=null;el.classList.remove('dragging');});
+  return el;
+}
+
+function kbShowForm(colId){
+  var colEl = document.querySelector('[data-col="'+colId+'"] .kb-add');
+  if(!colEl) return;
+  colEl.innerHTML =
+    '<div class="kb-form">'+
+      '<input id="kbf-titulo" placeholder="Título do card" />'+
+      '<input id="kbf-cliente" placeholder="Cliente (opcional)" />'+
+      '<input id="kbf-valor" placeholder="Valor (ex: 1.200,00)" />'+
+      '<textarea id="kbf-obs" placeholder="Observações..."></textarea>'+
+      '<div class="kb-form-btns">'+
+        '<button class="btn btn-p btn-xs" onclick="kbSalvar(\''+colId+'\')">Salvar</button>'+
+        '<button class="btn btn-s btn-xs" onclick="renderQuadro()">Cancelar</button>'+
+      '</div>'+
+    '</div>';
+  setTimeout(function(){var el=document.getElementById('kbf-titulo');if(el)el.focus();},50);
+}
+
+function kbSalvar(colId){
+  var titulo = (document.getElementById('kbf-titulo')||{}).value||'';
+  var cliente = (document.getElementById('kbf-cliente')||{}).value||'';
+  var valor = (document.getElementById('kbf-valor')||{}).value||'';
+  var obs = (document.getElementById('kbf-obs')||{}).value||'';
+  if(!titulo.trim()){alert('Informe um título.');return;}
+  var cards = db('kb');
+  cards.push({id:uid(),col:colId,titulo:titulo.trim(),cliente:cliente.trim(),valor:valor.trim(),obs:obs.trim(),data:new Date().toLocaleDateString('pt-BR')});
+  dbSave('kb',cards);
+  renderQuadro();
+}
+
+function kbDel(id, e){
+  e.stopPropagation();
+  if(!confirm('Excluir este card?')) return;
+  dbSave('kb', db('kb').filter(function(c){return c.id!==id;}));
+  renderQuadro();
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── ANOTAÇÕES ─────────────────────────────────────────────
+function renderNotas(){
+  var notas = db('notas');
+  var grid = document.getElementById('notas-grid');
+  grid.innerHTML = '';
+  notas.forEach(function(nota){
+    grid.appendChild(notaMakeCard(nota));
+  });
+  // botão nova nota
+  var btn = document.createElement('div');
+  btn.className = 'nota-new';
+  btn.innerHTML = '+ Nova anotação';
+  btn.onclick = function(){ notaNova(); };
+  grid.appendChild(btn);
+}
+
+function notaMakeCard(nota){
+  var el = document.createElement('div');
+  el.className = 'nota-card';
+  el.innerHTML =
+    '<input class="nota-title-input" value="'+esc(nota.titulo||'')+'" placeholder="Título..." data-id="'+nota.id+'" oninput="notaUpdate(this,\'titulo\')" />'+
+    '<textarea class="nota-body" placeholder="Escreva aqui..." data-id="'+nota.id+'" oninput="notaUpdate(this,\'corpo\')">'+esc(nota.corpo||'')+'</textarea>'+
+    '<div class="nota-footer">'+
+      '<span>'+nota.data+'</span>'+
+      '<button style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px" onclick="notaDel(\''+nota.id+'\')">🗑 excluir</button>'+
+    '</div>';
+  return el;
+}
+
+function notaNova(){
+  var notas = db('notas');
+  var nova = {id:uid(), titulo:'', corpo:'', data:new Date().toLocaleDateString('pt-BR')};
+  notas.unshift(nova);
+  dbSave('notas',notas);
+  renderNotas();
+  // foca no título da nova nota
+  setTimeout(function(){
+    var el=document.querySelector('.nota-title-input[data-id="'+nova.id+'"]');
+    if(el) el.focus();
+  },50);
+}
+
+var _notaTimer = null;
+function notaUpdate(el, campo){
+  var id = el.dataset.id;
+  clearTimeout(_notaTimer);
+  _notaTimer = setTimeout(function(){
+    var notas = db('notas');
+    var idx = notas.findIndex(function(n){return n.id===id;});
+    if(idx>=0){ notas[idx][campo]=el.value; dbSave('notas',notas); }
+  }, 600);
+}
+
+function notaDel(id){
+  if(!confirm('Excluir esta anotação?')) return;
+  dbSave('notas', db('notas').filter(function(n){return n.id!==id;}));
+  renderNotas();
 }
 
 // ── INIT ──────────────────────────────────────────────────
