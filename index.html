@@ -61,9 +61,29 @@
         Histórico
       </div>
     </div>
+    <div class="sb-group sb-trash-group">
+      <div class="sb-item sb-trash-btn" id="nav-lixeira" onclick="abrirLixeira()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Lixeira
+        <span class="sb-trash-badge" id="trash-badge" style="display:none"></span>
+      </div>
+    </div>
   </nav>
   <div class="sb-foot">Composê Home<br>composesantos.com.br</div>
 </aside>
+
+<div id="lixeira-overlay" onclick="if(event.target===this)fecharLixeira()">
+  <div class="lx-modal">
+    <div class="lx-hd">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <span class="lx-title">Lixeira</span>
+      <span class="lx-sub-count" id="lx-count"></span>
+      <button class="lx-purge-all" id="lx-purge-all-btn" onclick="trashPurgeAll()">Esvaziar</button>
+      <button class="lx-close" onclick="fecharLixeira()">×</button>
+    </div>
+    <div class="lx-body" id="lx-body"></div>
+  </div>
+</div>
 
 <!-- MAIN -->
 <div class="main">
@@ -570,12 +590,12 @@
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira' };
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   // Persiste no servidor em background
-  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas') };
+  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira') };
   payload[K[key]] = arr; // garante que o valor recém-salvo está incluído
   fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(function(){});
@@ -592,7 +612,9 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
     if(d.cps_cort && d.cps_cort.length) localStorage.setItem('cps_cort', JSON.stringify(d.cps_cort));
     if(d.cps_kb) localStorage.setItem('cps_kb', JSON.stringify(d.cps_kb));
     if(d.cps_notas && d.cps_notas.length) localStorage.setItem('cps_notas', JSON.stringify(d.cps_notas));
+    if(d.cps_lixeira) localStorage.setItem('cps_lixeira', JSON.stringify(d.cps_lixeira));
     if(typeof atualizarDash === 'function') atualizarDash();
+    if(typeof atualizarTrashBadge === 'function') atualizarTrashBadge();
   }).catch(function(){});
 })();
 
@@ -647,6 +669,105 @@ document.addEventListener('click',ctxHide);
 document.addEventListener('keydown',function(e){if(e.key==='Escape')ctxHide();});
 document.addEventListener('scroll',ctxHide,true);
 
+// ── LIXEIRA ───────────────────────────────────────────────
+var TRASH_TIPOS = {orc:'Orçamento',cor:'OS Cortinas',tap:'OS Tapeçaria',notas:'Cliente'};
+var TRASH_ICONS = {orc:'📄',cor:'🪟',tap:'🛋️',notas:'📒'};
+
+function trashAdd(key,obj){
+  var arr=db('lixeira');
+  arr.unshift({
+    id:uid(), key:key,
+    tipo:TRASH_TIPOS[key]||key,
+    icon:TRASH_ICONS[key]||'📁',
+    cliente:obj.cliente||obj.nome||'',
+    resumo:obj.total?'R$ '+obj.total:(obj.texto||'').replace(/<[^>]+>/g,'').trim().slice(0,50)||'—',
+    deletedAt:Date.now(),
+    data:obj
+  });
+  dbSave('lixeira',arr);
+  dbSave(key,db(key).filter(function(o){return o.id!==obj.id;}));
+  atualizarTrashBadge();
+}
+
+function trashRestore(trashId){
+  var arr=db('lixeira');
+  var item=arr.find(function(i){return i.id===trashId;});
+  if(!item)return;
+  var orig=db(item.key);
+  orig.unshift(item.data);
+  dbSave(item.key,orig);
+  dbSave('lixeira',arr.filter(function(i){return i.id!==trashId;}));
+  toast('Restaurado com sucesso!','ok');
+  renderLixeira();
+  if(typeof atualizarDash==='function') atualizarDash();
+}
+
+function trashPurge(trashId){
+  if(!confirm('Excluir permanentemente? Esta ação não pode ser desfeita.'))return;
+  dbSave('lixeira',db('lixeira').filter(function(i){return i.id!==trashId;}));
+  toast('Excluído permanentemente.','ok');
+  renderLixeira();
+}
+
+function trashPurgeAll(){
+  var n=db('lixeira').length;
+  if(!n)return;
+  if(!confirm('Esvaziar a lixeira ('+n+' item'+(n>1?'s':'')+')? Esta ação não pode ser desfeita.'))return;
+  dbSave('lixeira',[]);
+  toast('Lixeira esvaziada.','ok');
+  renderLixeira();
+}
+
+function atualizarTrashBadge(){
+  var n=db('lixeira').length;
+  var badge=document.getElementById('trash-badge');
+  if(badge){badge.textContent=n;badge.style.display=n?'':'none';}
+}
+
+function abrirLixeira(){
+  document.getElementById('lixeira-overlay').classList.add('on');
+  renderLixeira();
+}
+function fecharLixeira(){
+  document.getElementById('lixeira-overlay').classList.remove('on');
+}
+
+function renderLixeira(){
+  var arr=db('lixeira');
+  var body=document.getElementById('lx-body');
+  var countEl=document.getElementById('lx-count');
+  var purgeBtn=document.getElementById('lx-purge-all-btn');
+  if(!body)return;
+  atualizarTrashBadge();
+  if(countEl) countEl.textContent=arr.length?arr.length+' item'+(arr.length>1?'s':''):'';
+  if(purgeBtn) purgeBtn.style.display=arr.length?'':'none';
+  if(!arr.length){
+    body.innerHTML='<div class="lx-empty"><div style="font-size:40px;margin-bottom:12px">🗑️</div><div>A lixeira está vazia</div></div>';
+    return;
+  }
+  body.innerHTML='';
+  arr.forEach(function(item){
+    var age=Math.floor((Date.now()-item.deletedAt)/86400000);
+    var ageStr=age===0?'Hoje':age===1?'Ontem':age+' dias atrás';
+    var el=document.createElement('div');
+    el.className='lx-item';
+    el.innerHTML=
+      '<div class="lx-ico">'+item.icon+'</div>'+
+      '<div class="lx-info">'+
+        '<div class="lx-name">'+(item.cliente?esc(item.cliente):'(sem nome)')+'</div>'+
+        '<div class="lx-sub">'+esc(item.tipo)+(item.resumo?' · '+esc(item.resumo):'')+'</div>'+
+        '<div class="lx-age">'+ageStr+'</div>'+
+      '</div>'+
+      '<div class="lx-btns">'+
+        '<button class="btn btn-sm lx-restore-btn" title="Restaurar">↩ Restaurar</button>'+
+        '<button class="btn btn-d btn-sm lx-del-btn" title="Excluir permanentemente">✕</button>'+
+      '</div>';
+    el.querySelector('.lx-restore-btn').onclick=(function(id){return function(){trashRestore(id);};})(item.id);
+    el.querySelector('.lx-del-btn').onclick=(function(id){return function(){trashPurge(id);};})(item.id);
+    body.appendChild(el);
+  });
+}
+
 // ── HELPERS ───────────────────────────────────────────────
 function v(id){return document.getElementById(id)?document.getElementById(id).value:'';}
 function sv(id,val){var el=document.getElementById(id);if(el)el.value=(val||'');}
@@ -698,10 +819,9 @@ function dashCtx(e,key,id){
   ctxShow(e,[
     {icon:'✏️',label:'Abrir',fn:function(){abrirDoc(key,id);}},
     'sep',
-    {icon:'🗑️',label:'Excluir',danger:true,fn:function(){
-      if(!confirm('Excluir este item? Esta ação não pode ser desfeita.'))return;
-      dbSave(key,db(key).filter(function(o){return o.id!==id;}));
-      toast('Excluído.','ok');atualizarDash();
+    {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
+      var obj=db(key).find(function(o){return o.id===id;});
+      if(obj){trashAdd(key,obj);toast('Movido para a lixeira.','ok');atualizarDash();}
     }}
   ]);
 }
@@ -1170,10 +1290,9 @@ function histCtx(e,key,id){
   ctxShow(e,[
     {icon:'✏️',label:'Abrir / Carregar',fn:function(){abrirDoc(key,id);}},
     'sep',
-    {icon:'🗑️',label:'Excluir',danger:true,fn:function(){
-      if(!confirm('Excluir este item? Esta ação não pode ser desfeita.'))return;
-      dbSave(key,db(key).filter(function(o){return o.id!==id;}));
-      toast('Excluído.','ok');renderHistorico();atualizarDash();
+    {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
+      var obj=db(key).find(function(o){return o.id===id;});
+      if(obj){trashAdd(key,obj);toast('Movido para a lixeira.','ok');renderHistorico();atualizarDash();}
     }}
   ]);
 }
@@ -2054,11 +2173,13 @@ function renderNotas(){
         {icon:'📖',label:'Abrir',fn:function(){_nbClienteId=c.id;nbOpenNotebook(c,main);renderNotas();}},
         {icon:'✏️',label:'Editar',fn:function(){nbEditCliente(c.id);}},
         'sep',
-        {icon:'🗑️',label:'Excluir cliente',danger:true,fn:function(){
-          if(!confirm('Excluir o cliente e todas as anotações? Esta ação não pode ser desfeita.'))return;
-          dbSave('notas',nbClientes().filter(function(cl){return cl.id!==c.id;}));
-          if(_nbClienteId===c.id){_nbClienteId=null;var m=document.getElementById('nb-main');if(m)m.innerHTML='<div class="nb-empty-state"><div class="nb-empty-icon">📒</div><div class="nb-empty-txt">Selecione um cliente</div><div class="nb-empty-sub">para abrir o caderno</div></div>';}
-          renderNotas();toast('Cliente excluído.','ok');
+        {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
+          var obj=nbClientes().find(function(cl){return cl.id===c.id;});
+          if(obj){
+            trashAdd('notas',obj);
+            if(_nbClienteId===c.id){_nbClienteId=null;var m=document.getElementById('nb-main');if(m)m.innerHTML='<div class="nb-empty-state"><div class="nb-empty-icon">📒</div><div class="nb-empty-txt">Selecione um cliente</div><div class="nb-empty-sub">para abrir o caderno</div></div>';}
+            renderNotas();toast('Movido para a lixeira.','ok');
+          }
         }}
       ]);
     });

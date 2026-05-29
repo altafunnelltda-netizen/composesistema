@@ -1019,6 +1019,61 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .orc-print-header-produto{display:none}
 .orc-print-footer{display:none}
 
+/* ── CONTEXT MENU ── */
+.ctx-menu{
+  position:fixed;z-index:9999;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:11px;
+  box-shadow:0 12px 40px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.07);
+  padding:5px;min-width:172px;display:none;
+  animation:ctxIn .12s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes ctxIn{from{opacity:0;transform:scale(.94) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.ctx-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:7px;
+  font-size:12.5px;font-weight:500;color:var(--charcoal);
+  cursor:pointer;transition:background .1s;user-select:none;white-space:nowrap;
+}
+.ctx-item:hover{background:var(--cream-dark)}
+.ctx-item.danger{color:#c00}
+.ctx-item.danger:hover{background:rgba(192,0,0,.08)}
+.ctx-icon{font-size:13px;width:17px;text-align:center;flex-shrink:0;opacity:.75}
+.ctx-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;
+  color:var(--mid);padding:7px 12px 3px;opacity:.7}
+.ctx-sep{height:1px;background:var(--border);margin:4px 7px}
+[data-theme=dark] .ctx-menu{background:var(--white);box-shadow:0 12px 40px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.25)}
+[data-theme=dark] .ctx-item:hover{background:var(--cream-dark)}
+[data-theme=dark] .ctx-item.danger:hover{background:rgba(240,128,128,.1)}
+
+/* LIXEIRA */
+.sb-trash-group{margin-top:auto;border-top:1px solid var(--border);padding-top:8px}
+.sb-trash-btn{position:relative;color:var(--mid)}
+.sb-trash-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px;min-width:18px;text-align:center;line-height:16px}
+#lixeira-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:8000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+#lixeira-overlay.on{display:flex}
+.lx-modal{background:var(--white);border-radius:18px;width:min(560px,94vw);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.08);animation:ctxIn .15s cubic-bezier(.2,.8,.2,1)}
+.lx-hd{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.lx-hd svg{color:var(--mid);flex-shrink:0}
+.lx-title{font-size:16px;font-weight:700;color:var(--charcoal);flex:1}
+.lx-sub-count{font-size:12px;color:var(--mid)}
+.lx-purge-all{background:none;border:1px solid rgba(192,0,0,.25);color:#c00;font-size:12px;font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;transition:background .12s}
+.lx-purge-all:hover{background:rgba(192,0,0,.07)}
+.lx-close{background:none;border:none;font-size:22px;color:var(--mid);cursor:pointer;line-height:1;padding:0 0 0 8px;margin-left:4px}
+.lx-body{overflow-y:auto;padding:12px;flex:1}
+.lx-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:11px;border:1px solid var(--border);margin-bottom:8px;background:var(--cream);transition:border-color .12s}
+.lx-item:hover{border-color:var(--gold)}
+.lx-ico{font-size:24px;width:38px;text-align:center;flex-shrink:0}
+.lx-info{flex:1;min-width:0}
+.lx-name{font-size:14px;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lx-sub{font-size:12px;color:var(--mid);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lx-age{font-size:11px;color:var(--mid);opacity:.65;margin-top:3px}
+.lx-btns{display:flex;gap:6px;flex-shrink:0}
+.lx-restore-btn{background:var(--gold)!important;color:#fff!important;font-size:12px;padding:6px 12px;white-space:nowrap}
+.lx-del-btn{font-size:12px;padding:6px 10px}
+.lx-empty{text-align:center;padding:52px 24px;color:var(--mid);font-size:14px}
+[data-theme=dark] .lx-item{background:rgba(255,255,255,.04)}
+
 /* PRINT */
 @media print{
   .sb,.topbar,.btn-bar,.btn,.no-print{display:none!important}
