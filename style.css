@@ -1038,7 +1038,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   textarea{height:auto!important;overflow:visible!important;min-height:0!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{margin:14mm 16mm;size:A4 portrait}
-  #pg-orcamento .card{box-shadow:none;border:none;page-break-inside:avoid;break-inside:avoid;margin-bottom:0;padding:0}
+  #pg-orcamento .card{box-shadow:none;border:none;margin-bottom:0;padding:0;page-break-inside:auto;break-inside:auto}
   #pg-orcamento .card-title{display:none}
   #pg-orcamento label{display:none}
   #orc-card-cliente,#orc-card-condicoes{display:none!important}
