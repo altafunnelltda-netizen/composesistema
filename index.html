@@ -2107,15 +2107,30 @@ function nbInsertHR(){
 }
 function nbApplyFont(font){
   nbRestoreRange();
-  document.execCommand('styleWithCSS',false,true);
-  document.execCommand('fontName',false,font);
+  var id='_nbf_'+Date.now();
+  document.execCommand('styleWithCSS',false,false);
+  document.execCommand('fontName',false,id);
+  var ed=document.getElementById('nb-editor');
+  if(!ed) return;
+  ed.querySelectorAll('font[face="'+id+'"]').forEach(function(f){
+    var s=document.createElement('span');
+    s.style.fontFamily=font;
+    while(f.firstChild) s.appendChild(f.firstChild);
+    f.parentNode.replaceChild(s,f);
+  });
 }
 function nbApplyFontSize(size){
   nbRestoreRange();
-  document.execCommand('styleWithCSS',false,true);
+  document.execCommand('styleWithCSS',false,false);
   document.execCommand('fontSize',false,'7');
   var ed=document.getElementById('nb-editor');
-  if(ed) ed.querySelectorAll('font[size="7"]').forEach(function(f){ f.removeAttribute('size'); f.style.fontSize=size; });
+  if(!ed) return;
+  ed.querySelectorAll('font[size="7"]').forEach(function(f){
+    var s=document.createElement('span');
+    s.style.fontSize=size;
+    while(f.firstChild) s.appendChild(f.firstChild);
+    f.parentNode.replaceChild(s,f);
+  });
 }
 function nbApplyColor(color){
   nbRestoreRange();
