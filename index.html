@@ -699,6 +699,7 @@ function dashCtx(e,key,id){
     {icon:'✏️',label:'Abrir',fn:function(){abrirDoc(key,id);}},
     'sep',
     {icon:'🗑️',label:'Excluir',danger:true,fn:function(){
+      if(!confirm('Excluir este item? Esta ação não pode ser desfeita.'))return;
       dbSave(key,db(key).filter(function(o){return o.id!==id;}));
       toast('Excluído.','ok');atualizarDash();
     }}
@@ -1170,6 +1171,7 @@ function histCtx(e,key,id){
     {icon:'✏️',label:'Abrir / Carregar',fn:function(){abrirDoc(key,id);}},
     'sep',
     {icon:'🗑️',label:'Excluir',danger:true,fn:function(){
+      if(!confirm('Excluir este item? Esta ação não pode ser desfeita.'))return;
       dbSave(key,db(key).filter(function(o){return o.id!==id;}));
       toast('Excluído.','ok');renderHistorico();atualizarDash();
     }}
@@ -1772,6 +1774,7 @@ function kbMakeCard(card){
     }
     items.push('sep');
     items.push({icon:'🗑️',label:'Excluir',danger:true,fn:function(){
+      if(!confirm('Excluir este cartão? Esta ação não pode ser desfeita.'))return;
       var d2=dbKb();
       d2.cards=d2.cards.filter(function(c){return c.id!==card.id;});
       dbKbSave(d2);renderQuadro();toast('Card excluído.','ok');
@@ -2052,6 +2055,7 @@ function renderNotas(){
         {icon:'✏️',label:'Editar',fn:function(){nbEditCliente(c.id);}},
         'sep',
         {icon:'🗑️',label:'Excluir cliente',danger:true,fn:function(){
+          if(!confirm('Excluir o cliente e todas as anotações? Esta ação não pode ser desfeita.'))return;
           dbSave('notas',nbClientes().filter(function(cl){return cl.id!==c.id;}));
           if(_nbClienteId===c.id){_nbClienteId=null;var m=document.getElementById('nb-main');if(m)m.innerHTML='<div class="nb-empty-state"><div class="nb-empty-icon">📒</div><div class="nb-empty-txt">Selecione um cliente</div><div class="nb-empty-sub">para abrir o caderno</div></div>';}
           renderNotas();toast('Cliente excluído.','ok');
