@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Composê — Acesso</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(135deg,#1a1814 0%,#252320 60%,#1e1c19 100%);
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+}
+.card{
+  background:#fdfcfa;
+  border-radius:18px;
+  padding:40px 36px 36px;
+  width:100%;max-width:360px;
+  box-shadow:0 32px 80px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+}
+.brand{
+  text-align:center;
+  margin-bottom:28px;
+}
+.brand-name{
+  font-size:30px;font-weight:800;letter-spacing:.5px;
+  background:linear-gradient(135deg,#c9a961,#e8c97a);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:block;line-height:1.1;margin-bottom:6px;
+}
+.brand-line{
+  display:flex;align-items:center;gap:8px;margin:8px 0 4px;
+}
+.brand-line::before,.brand-line::after{content:'';flex:1;height:1px;background:#ddd5c8}
+.brand-line span{font-size:9px;letter-spacing:3px;color:#bbb;text-transform:uppercase;white-space:nowrap}
+.brand-sub{font-size:11px;color:#aaa;letter-spacing:.3px}
+
+.erro{
+  background:rgba(176,0,0,.07);
+  border:1px solid rgba(176,0,0,.2);
+  color:#b00;border-radius:9px;
+  padding:10px 14px;font-size:12.5px;
+  margin-bottom:16px;text-align:center;
+  font-weight:600;
+}
+label{
+  display:block;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.7px;
+  color:#888;margin-bottom:6px;
+}
+input[type=password]{
+  width:100%;border:1.5px solid #ddd5c8;
+  border-radius:10px;padding:12px 14px;
+  font-size:15px;font-family:inherit;
+  color:#2c2c2c;background:#fefdf8;
+  outline:none;transition:border-color .18s,box-shadow .18s;
+  margin-bottom:20px;
+}
+input[type=password]:focus{
+  border-color:#c9a961;
+  box-shadow:0 0 0 3.5px rgba(201,169,97,.14);
+}
+input[type=password]::placeholder{color:rgba(0,0,0,.22);font-size:20px;letter-spacing:3px}
+button{
+  width:100%;
+  background:linear-gradient(135deg,#c9a961 0%,#b8903a 100%);
+  color:#fff;border:none;border-radius:10px;
+  padding:13px;font-size:14px;font-weight:700;
+  font-family:inherit;cursor:pointer;
+  transition:opacity .18s,transform .18s,box-shadow .18s;
+  box-shadow:0 3px 12px rgba(201,169,97,.35);
+  letter-spacing:.3px;
+}
+button:hover{opacity:.93;transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,169,97,.45)}
+button:active{transform:translateY(0);opacity:1}
+.foot{
+  text-align:center;margin-top:20px;
+  font-size:10px;color:#ccc;letter-spacing:.3px;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <span class="brand-name">Composê</span>
+    <div class="brand-line"><span>Sistema Interno</span></div>
+    <div class="brand-sub">Santos — SP</div>
+  </div>
+
+  <div class="erro" id="msg-erro" style="display:none">Senha incorreta. Tente novamente.</div>
+
+  <form method="POST" action="/login">
+    <label for="senha">Senha de Acesso</label>
+    <input type="password" id="senha" name="senha" placeholder="••••••••" autofocus autocomplete="current-password">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<div class="foot">Composê Home · composesantos.com.br</div>
+
+<script>
+  if (new URLSearchParams(location.search).get('erro')) {
+    document.getElementById('msg-erro').style.display = 'block';
+  }
+</script>
+</body>
+</html>

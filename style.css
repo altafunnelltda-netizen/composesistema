@@ -143,7 +143,16 @@ body{
   padding:14px 18px;
   border-top:1px solid rgba(255,255,255,.05);
   font-size:10px;color:rgba(255,255,255,.18);line-height:1.7;
+  display:flex;flex-direction:column;gap:7px;
 }
+.sb-logout{
+  display:inline-flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.35);font-size:10px;font-weight:700;
+  letter-spacing:.8px;text-transform:uppercase;text-decoration:none;
+  border:1px solid rgba(255,255,255,.12);border-radius:6px;
+  padding:4px 10px;transition:.15s;width:fit-content;
+}
+.sb-logout:hover{color:rgba(255,100,100,.8);border-color:rgba(255,100,100,.3);background:rgba(255,100,100,.07)}
 
 /* ── TOPBAR ── */
 .main{margin-left:var(--sb);flex:1;min-width:0}
