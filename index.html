@@ -2436,7 +2436,7 @@ function renderNotas(){
   }
 }
 
-var _nbDrawMode=false, _nbDrawing=false, _nbDrawTool='pen', _nbDrawColor='#2c2c2c', _nbDrawSize=2;
+var _nbDrawMode=false, _nbDrawing=false, _nbDrawTool='pen', _nbDrawColor='#cc3333', _nbDrawSize=2;
 var _nbDrawStart={x:0,y:0}, _nbDrawSnap=null, _nbCtx=null, _nbCurrentCli=null;
 
 function nbOpenNotebook(cli, mainEl){
@@ -2502,14 +2502,17 @@ function nbOpenNotebook(cli, mainEl){
       '<button class="nb-dtool" id="dbt-circle" onclick="nbSetDrawTool(\'circle\')">○ Círculo</button>'+
       '<button class="nb-dtool" id="dbt-eraser" onclick="nbSetDrawTool(\'eraser\')">◻ Borracha</button>'+
       '<div class="nb-draw-sep"></div>'+
-      '<div class="nb-draw-colors">'+
-        '<div class="nb-dcolor on" style="background:#2c2c2c" onclick="nbSetDrawColor(this,\'#2c2c2c\')"></div>'+
-        '<div class="nb-dcolor" style="background:#c9a961" onclick="nbSetDrawColor(this,\'#c9a961\')"></div>'+
-        '<div class="nb-dcolor" style="background:#e05a52" onclick="nbSetDrawColor(this,\'#e05a52\')"></div>'+
-        '<div class="nb-dcolor" style="background:#4a9eca" onclick="nbSetDrawColor(this,\'#4a9eca\')"></div>'+
-        '<div class="nb-dcolor" style="background:#2a7a3b" onclick="nbSetDrawColor(this,\'#2a7a3b\')"></div>'+
-        '<div class="nb-dcolor" style="background:#9b59b6" onclick="nbSetDrawColor(this,\'#9b59b6\')"></div>'+
-      '</div>'+
+      // Cores de pincel: mesma paleta segura (contraste ≥3:1 em fundo claro e escuro)
+      (function(){
+        var cs=[['#cc3333','Vermelho'],['#cc6600','Laranja'],['#aa8800','Âmbar'],
+                ['#228833','Verde'],['#3366bb','Azul'],['#7733bb','Roxo']];
+        return '<div class="nb-draw-colors">'+
+          cs.map(function(p,i){
+            return '<div class="nb-dcolor'+(i===0?' on':'')+'" style="background:'+p[0]+'" '+
+              'onclick="nbSetDrawColor(this,\''+p[0]+'\')" title="'+p[1]+'"></div>';
+          }).join('')+
+        '</div>';
+      })()+
       '<div class="nb-draw-sep"></div>'+
       '<select class="nb-dsize" onchange="nbDrawSizeSet(this.value)">'+
         '<option value="1">Fino</option><option value="2" selected>Normal</option>'+

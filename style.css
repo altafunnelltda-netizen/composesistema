@@ -757,17 +757,6 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .nb-size-sel{width:56px}
 .nb-font-sel:hover,.nb-size-sel:hover{border-color:var(--gold)}
 .nb-font-sel:focus,.nb-size-sel:focus{border-color:var(--gold)}
-.nb-color-wrap{
-  position:relative;width:30px;height:28px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  border:1px solid var(--border);border-radius:7px;
-  background:var(--white);cursor:pointer;overflow:hidden;transition:.12s;
-}
-.nb-color-wrap:hover{border-color:var(--gold)}
-.nb-color-wrap svg{width:13px;height:13px;color:var(--charcoal);pointer-events:none;position:relative;z-index:1}
-.nb-color-bar{width:16px;height:3px;border-radius:2px;background:#2c2c2c;position:relative;z-index:1;pointer-events:none}
-.nb-color-wrap input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
-
 /* ── Paleta de cores ── */
 .nb-pal-wrap{display:flex;align-items:center;gap:4px;padding:0 2px}
 .nb-pal-btn{
