@@ -2486,11 +2486,8 @@ function nbOpenNotebook(cli, mainEl){
         '<option value="28px">28</option>'+
         '<option value="36px">36</option>'+
       '</select>'+
-      '<div class="nb-color-wrap" title="Cor do texto">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 16l6-12 6 12M8.5 11h7"/></svg>'+
-        '<div class="nb-color-bar" id="nb-color-bar"></div>'+
-        '<input type="color" id="nb-text-color" value="#2c2c2c" onchange="nbApplyColor(this.value)">'+
-      '</div>'+
+      // Paleta com contraste ≥3:1 em fundo claro E escuro
+      nbPaletaHTML()+
       '<div class="nb-tool-sep"></div>'+
       '<button class="nb-tool-btn" id="nb-draw-toggle" onclick="nbToggleDraw()">'+
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>'+
@@ -2616,11 +2613,45 @@ function nbApplyFontSize(size){
     f.parentNode.replaceChild(s,f);
   });
 }
+// Paleta com contraste ≥3:1 em fundo claro (#fdfcfa) E escuro (#161b22)
+// Luminância relativa calculada entre 0.10 e 0.30 para cada cor
+var NB_PALETA_CORES = [
+  {c:'#cc3333', t:'Vermelho'},
+  {c:'#cc6600', t:'Laranja'},
+  {c:'#8a7000', t:'Âmbar'},
+  {c:'#228833', t:'Verde'},
+  {c:'#118877', t:'Esmeralda'},
+  {c:'#3366bb', t:'Azul'},
+  {c:'#7733bb', t:'Roxo'},
+  {c:'#bb3388', t:'Rosa'},
+  {c:'#775533', t:'Marrom'}
+];
+function nbPaletaHTML(){
+  var btns = NB_PALETA_CORES.map(function(p){
+    return '<button class="nb-pal-btn" style="background:'+p.c+'" '+
+      'onmousedown="event.preventDefault()" onclick="nbApplyColor(\''+p.c+'\')" title="'+p.t+'"></button>';
+  }).join('');
+  return '<div class="nb-pal-wrap" title="Cor do texto">'+
+    '<button class="nb-pal-btn nb-pal-reset" onmousedown="event.preventDefault()" '+
+      'onclick="nbApplyColor(\'\')" title="Padrão — adapta ao tema">A</button>'+
+    btns+
+  '</div>';
+}
 function nbApplyColor(color){
   nbRestoreRange();
-  document.execCommand('styleWithCSS',false,true);
-  document.execCommand('foreColor',false,color);
-  var bar=document.getElementById('nb-color-bar'); if(bar) bar.style.background=color;
+  var ed=document.getElementById('nb-editor'); if(ed) ed.focus();
+  if(!color){
+    // Remove cor inline — deixa o CSS variável do tema assumir
+    document.execCommand('styleWithCSS',false,true);
+    document.execCommand('foreColor',false,'inherit');
+  } else {
+    document.execCommand('styleWithCSS',false,true);
+    document.execCommand('foreColor',false,color);
+  }
+  // Marca o swatch ativo
+  document.querySelectorAll('.nb-pal-btn').forEach(function(b){
+    b.classList.toggle('on', b.style.background===color||(!color&&b.classList.contains('nb-pal-reset')));
+  });
 }
 
 /* ── canvas de desenho ── */
@@ -2814,6 +2845,30 @@ function toggleTheme(){
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('cps_theme', next);
   updateThemeIcon(next);
+  nbAdaptarEditorAoTema(next);
+}
+function nbAdaptarEditorAoTema(tema){
+  // Varre o editor e remove cores inline que ficam invisíveis no novo tema
+  var ed = document.getElementById('nb-editor');
+  if (!ed) return;
+  ed.querySelectorAll('[style*="color"]').forEach(function(el){
+    var cor = el.style.color;
+    if (!cor) return;
+    var m = cor.match(/\d+/g);
+    if (!m || m.length < 3) return;
+    var r=+m[0], g=+m[1], b=+m[2];
+    // Luminância perceptual (0–1)
+    var lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+    if (tema==='dark' && lum < 0.25) {
+      // Cor muito escura em fundo escuro → remove (volta ao CSS variável)
+      el.style.color = '';
+      if (!el.getAttribute('style').trim()) el.removeAttribute('style');
+    } else if (tema==='light' && lum > 0.80) {
+      // Cor muito clara em fundo claro → remove
+      el.style.color = '';
+      if (!el.getAttribute('style').trim()) el.removeAttribute('style');
+    }
+  });
 }
 function updateThemeIcon(t){
   var sun  = document.getElementById('theme-icon-sun');

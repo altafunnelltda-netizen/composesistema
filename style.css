@@ -768,6 +768,25 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .nb-color-bar{width:16px;height:3px;border-radius:2px;background:#2c2c2c;position:relative;z-index:1;pointer-events:none}
 .nb-color-wrap input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
 
+/* ── Paleta de cores ── */
+.nb-pal-wrap{display:flex;align-items:center;gap:4px;padding:0 2px}
+.nb-pal-btn{
+  width:20px;height:20px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;padding:0;flex-shrink:0;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s;
+  outline:none;
+}
+.nb-pal-btn:hover{transform:scale(1.3);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.nb-pal-btn.on{border-color:var(--charcoal);transform:scale(1.15)}
+.nb-pal-reset{
+  background:var(--cream-dark)!important;
+  border-color:var(--border)!important;border-radius:6px!important;
+  color:var(--charcoal);font-size:10px;font-weight:900;
+  font-family:inherit;width:22px;height:22px;
+}
+.nb-pal-reset:hover{border-color:var(--gold)!important}
+.nb-pal-reset.on{border-color:var(--gold)!important;background:rgba(201,169,97,.15)!important}
+
 .nb-tool-btn{
   background:none;border:1px solid transparent;border-radius:7px;
   padding:5px 9px;cursor:pointer;font-family:inherit;
