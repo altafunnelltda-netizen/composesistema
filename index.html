@@ -592,8 +592,11 @@
       <!-- Caderno -->
       <div class="nb-main" id="nb-main">
         <div class="nb-empty-state">
-          <div class="nb-empty-icon">📒</div>
-          <div class="nb-empty-txt">Selecione um cliente para abrir o caderno</div>
+          <div class="nb-empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 3 17 8 12 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          </div>
+          <div class="nb-empty-txt">Selecione um cliente</div>
+          <div class="nb-empty-sub">para abrir o caderno de anotações</div>
         </div>
       </div>
     </div>
@@ -2331,6 +2334,30 @@ function kbDelColOk(colId){
 var _nbClienteId = null;
 var _nbTimer = null;
 
+/* ── Helpers de anotações ── */
+var NB_PALETA=[
+  ['#6366f1','#4338ca'],['#10b981','#047857'],['#f59e0b','#b45309'],
+  ['#ef4444','#b91c1c'],['#8b5cf6','#6d28d9'],['#ec4899','#be185d'],
+  ['#14b8a6','#0f766e'],['#f97316','#c2410c'],['#0ea5e9','#0369a1'],
+  ['#c9a961','#a07828']
+];
+function nbGradiente(nome){
+  var s=0; for(var i=0;i<nome.length;i++) s+=nome.charCodeAt(i);
+  var p=NB_PALETA[s%NB_PALETA.length];
+  return 'linear-gradient(135deg,'+p[0]+','+p[1]+')';
+}
+function nbTempoAtras(ts){
+  if(!ts) return '';
+  var d=Date.now()-ts, m=Math.floor(d/60000);
+  if(m<1) return 'agora'; if(m<60) return m+'min';
+  var h=Math.floor(m/60); if(h<24) return h+'h';
+  var dd=Math.floor(h/24); if(dd<7) return dd+'d';
+  return new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
+function nbInitials(nome){
+  return nome.trim().split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+}
+
 function nbClientes(){
   var raw=db('notas'); if(!Array.isArray(raw)) return [];
   // migração do formato antigo (com entradas estruturadas)
@@ -2360,18 +2387,29 @@ function renderNotas(){
   lista.innerHTML='';
   var filtrados=q?clientes.filter(function(c){return(c.cliente||'').toLowerCase().includes(q);}):clientes;
   if(!filtrados.length){
-    lista.innerHTML='<div class="nb-empty-list">'+(clientes.length?'Nenhum resultado.':'Nenhum cliente ainda.')+'</div>';
+    lista.innerHTML=
+      '<div class="nb-empty-list">'+
+        '<div class="nb-empty-list-icon">'+
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 3 17 8 12 8"/></svg>'+
+        '</div>'+
+        '<p>'+(clientes.length?'Nenhum resultado encontrado.':'Nenhum cliente ainda.<br>Clique em + Novo Cliente para começar.')+'</p>'+
+      '</div>';
+    return;
   }
-  filtrados.forEach(function(c){
+  filtrados.forEach(function(c,idx){
     var btn=document.createElement('button');
     btn.className='nb-client-item'+(c.id===_nbClienteId?' on':'');
-    var initials=c.cliente.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
-    var preview=(c.texto||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,45)||(c.tel||'');
+    btn.style.setProperty('--nb-i', idx);
+    var initials=nbInitials(c.cliente);
+    var grad=nbGradiente(c.cliente);
+    var preview=(c.texto||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,46)||(c.tel||'');
+    var tempo=nbTempoAtras(c._ts);
     btn.innerHTML=
-      '<div class="nb-client-avatar">'+initials+'</div>'+
+      '<div class="nb-client-avatar" style="background:'+grad+'">'+initials+'</div>'+
       '<div class="nb-client-info">'+
         '<div class="nb-client-name">'+esc(c.cliente)+'</div>'+
         (preview?'<div class="nb-client-preview">'+esc(preview)+'</div>':'')+
+        (tempo?'<div class="nb-client-date">'+tempo+'</div>':'')+
       '</div>';
     btn.onclick=function(){ _nbClienteId=c.id; nbOpenNotebook(c,main); renderNotas(); };
     btn.addEventListener('contextmenu',function(e){
@@ -2487,15 +2525,22 @@ function nbOpenNotebook(cli, mainEl){
     // cabeçalho do cliente
     '<div class="nb-page-header">'+
       '<div class="nb-page-client-wrap">'+
-        '<div class="nb-page-client">'+esc(cli.cliente)+'</div>'+
-        (cli.tel?'<div class="nb-page-tel">📞 '+esc(cli.tel)+'</div>':'')+
+        '<div class="nb-page-avatar" style="background:'+nbGradiente(cli.cliente)+'">'+nbInitials(cli.cliente)+'</div>'+
+        '<div class="nb-page-client-info">'+
+          '<div class="nb-page-client">'+esc(cli.cliente)+'</div>'+
+          (cli.tel?
+            '<div class="nb-page-tel">'+
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1 19.79 19.79 0 0 1 1.61 4.5 2 2 0 0 1 3.6 2.32h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'+
+              esc(cli.tel)+
+            '</div>':'')+
+        '</div>'+
       '</div>'+
       '<div class="nb-page-actions">'+
-        '<button class="btn btn-s btn-xs" onclick="nbEditCliente(\''+cli.id+'\')">Editar</button>'+
-        '<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+cli.id+'\')">Excluir</button>'+
+        '<button class="btn btn-s btn-xs" onclick="nbEditCliente(\''+cli.id+'\')">✏️ Editar</button>'+
+        '<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+cli.id+'\')">🗑</button>'+
       '</div>'+
     '</div>'+
-    // papel
+    // editor limpo
     '<div class="nb-paper" id="nb-paper">'+
       '<div class="nb-paper-inner">'+
         '<div class="nb-margin-line"></div>'+
@@ -2504,7 +2549,7 @@ function nbOpenNotebook(cli, mainEl){
       '<canvas class="nb-draw-canvas" id="nb-draw-canvas"></canvas>'+
     '</div>'+
     '<div class="nb-footer">'+
-      '<span class="nb-status" id="nb-status"></span>'+
+      '<span class="nb-status" id="nb-status"><span class="nb-status-dot"></span><span id="nb-status-txt"></span></span>'+
       '<span class="nb-char-count" id="nb-char-count"></span>'+
     '</div>';
   mainEl.appendChild(page);
@@ -2667,7 +2712,8 @@ function nbClearDraw(){
 
 function nbAutoSave(cliId, html, desenho){
   var statusEl=document.getElementById('nb-status');
-  if(statusEl){ statusEl.textContent=''; statusEl.className='nb-status'; }
+  var txtEl=document.getElementById('nb-status-txt');
+  if(statusEl){ statusEl.className='nb-status saving'; if(txtEl) txtEl.textContent='Salvando…'; }
   clearTimeout(_nbTimer);
   _nbTimer=setTimeout(function(){
     var clientes=nbClientes();
@@ -2675,9 +2721,12 @@ function nbAutoSave(cliId, html, desenho){
     if(idx>=0){
       if(html!==null) clientes[idx].texto=html;
       if(desenho!==null) clientes[idx].desenho=desenho;
+      clientes[idx]._ts=Date.now();
       dbSave('notas',clientes);
+      renderNotas();
     }
-    if(statusEl){ statusEl.textContent='✓ Salvo'; statusEl.className='nb-status saved'; setTimeout(function(){if(statusEl){statusEl.textContent='';statusEl.className='nb-status';}},2500); }
+    if(statusEl){ statusEl.className='nb-status saved'; if(txtEl) txtEl.textContent='Salvo'; }
+    setTimeout(function(){if(statusEl){statusEl.className='nb-status';if(txtEl)txtEl.textContent='';}},2200);
   },700);
 }
 
