@@ -1028,6 +1028,76 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .orc-print-header-produto{display:none}
 .orc-print-footer{display:none}
 
+/* ── PIPELINE DASHBOARD ── */
+.pipeline{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:4px;
+}
+.pipe-col{
+  background:var(--cream-dark);
+  border-radius:10px;
+  padding:10px;
+  min-width:150px;
+  transition:background .15s,outline .15s;
+}
+.pipe-col.drag-over{
+  background:rgba(201,169,97,.07);
+  outline:2px dashed rgba(201,169,97,.5);
+  outline-offset:2px;
+}
+.pipe-col-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:10.5px;font-weight:800;
+  padding-bottom:8px;margin-bottom:6px;
+  border-bottom:2px solid;
+}
+.pipe-badge{
+  font-size:10px;font-weight:800;
+  padding:1px 7px;border-radius:20px;
+}
+.pipe-soma{
+  display:block;font-size:10px;font-weight:700;color:var(--mid);
+  margin-bottom:7px;
+}
+.pipe-cards{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
+.pipe-cards::-webkit-scrollbar{width:3px}
+.pipe-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.pipe-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:9px 10px;
+  cursor:grab;
+  user-select:none;
+  transition:transform .14s,box-shadow .14s,border-color .14s;
+}
+.pipe-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 14px rgba(0,0,0,.1);
+  border-color:rgba(201,169,97,.5);
+}
+.pipe-card.dragging{opacity:.35;cursor:grabbing;transform:scale(.97)}
+.pipe-card-client{
+  font-size:12.5px;font-weight:700;color:var(--charcoal);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;
+}
+.pipe-card-meta{
+  font-size:10.5px;color:var(--mid);
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+}
+.pipe-card-date{font-size:10px;color:var(--mid);opacity:.7;margin-left:auto}
+.pipe-empty{
+  text-align:center;font-size:11px;color:var(--border);
+  padding:14px 0;border:1.5px dashed var(--border);
+  border-radius:7px;
+}
+[data-theme=dark] .pipe-col{background:var(--cream-dark)}
+[data-theme=dark] .pipe-card{background:var(--white);border-color:var(--border)}
+@media(max-width:640px){.pipeline{grid-template-columns:repeat(2,1fr)}}
+
 /* ── STATUS ORÇAMENTO ── */
 .orc-status-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .orc-status-btn{

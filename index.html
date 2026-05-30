@@ -118,6 +118,10 @@
         <button class="btn btn-s" onclick="limparOsTapecaria();ir('os-tapecaria',document.getElementById('nav-os-tapecaria'))">+ OS Tapeçaria</button>
       </div>
     </div>
+    <div class="card no-print">
+      <div class="card-title">Pipeline de Orçamentos</div>
+      <div class="pipeline" id="dash-pipeline"></div>
+    </div>
     <div class="card">
       <div class="card-title">Documentos Recentes</div>
       <div id="d-recentes"><div class="empty">Nenhum documento salvo ainda.</div></div>
@@ -813,6 +817,99 @@ function brl(n){return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,ma
 function num2(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
 // ── DASHBOARD ─────────────────────────────────────────────
+var PIPE_COLS=[
+  {s:'pendente',     label:'⏳ Pendente',       color:'#888',    border:'rgba(136,136,136,.3)'},
+  {s:'em-negociacao',label:'🤝 Em Negociação',  color:'#3b82f6', border:'rgba(59,130,246,.4)'},
+  {s:'aprovado',     label:'✅ Aprovado',        color:'#1a7a3b', border:'rgba(26,122,59,.4)'},
+  {s:'perdido',      label:'❌ Perdido',         color:'#dc2626', border:'rgba(220,38,38,.35)'}
+];
+
+var _pipeDragId=null;
+
+function renderPipeline(){
+  var el=document.getElementById('dash-pipeline'); if(!el)return;
+  var orcs=db('orc');
+  el.innerHTML=PIPE_COLS.map(function(col){
+    var items=orcs.filter(function(o){return(o.status||'pendente')===col.s;});
+    var soma=items.reduce(function(s,o){return s+(o.total||0);},0);
+    var somaStr=soma?'<span class="pipe-soma">R$ '+soma.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>':'';
+    return '<div class="pipe-col" data-status="'+col.s+'" '+
+      'ondragover="pipeDragOver(event)" ondrop="pipeDrop(event,\''+col.s+'\')" ondragleave="pipeDragLeave(event)">'+
+      '<div class="pipe-col-hd" style="border-bottom-color:'+col.border+'">'+
+        '<span style="color:'+col.color+'">'+col.label+'</span>'+
+        '<span class="pipe-badge" style="background:'+col.border+';color:'+col.color+'">'+items.length+'</span>'+
+      '</div>'+
+      somaStr+
+      '<div class="pipe-cards">'+
+        (items.length?items.map(function(o){return pipeCardHTML(o,col.color);}).join('')
+          :'<div class="pipe-empty">Arraste aqui</div>')+
+      '</div>'+
+      '</div>';
+  }).join('');
+}
+
+function pipeCardHTML(o,color){
+  return '<div class="pipe-card" draggable="true" data-id="'+o.id+'" '+
+    'ondragstart="pipeDragStart(event,\''+o.id+'\')" ondragend="pipeDragEnd(event)" '+
+    'onclick="orcRestaurar(db(\'orc\').find(function(x){return x.id===\''+o.id+'\'}))" '+
+    'oncontextmenu="pipeCtx(event,\''+o.id+'\')" style="border-left:3px solid '+color+'">'+
+    '<div class="pipe-card-client">'+esc(o.cliente||'—')+'</div>'+
+    '<div class="pipe-card-meta">#'+esc(o.num||'—')+(o.total?' &nbsp;·&nbsp; R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'')+
+      (o.data?'<span class="pipe-card-date">'+fmt(o.data)+'</span>':'')+
+    '</div>'+
+    '</div>';
+}
+
+function pipeDragStart(e,id){
+  _pipeDragId=id;
+  setTimeout(function(){if(e.target)e.target.classList.add('dragging');},0);
+  e.dataTransfer.effectAllowed='move';
+}
+function pipeDragEnd(e){
+  if(e.target)e.target.classList.remove('dragging');
+  document.querySelectorAll('.pipe-col').forEach(function(c){c.classList.remove('drag-over');});
+}
+function pipeDragOver(e){
+  e.preventDefault(); e.dataTransfer.dropEffect='move';
+  e.currentTarget.classList.add('drag-over');
+}
+function pipeDragLeave(e){
+  if(!e.currentTarget.contains(e.relatedTarget))
+    e.currentTarget.classList.remove('drag-over');
+}
+function pipeDrop(e,status){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!_pipeDragId)return;
+  var arr=db('orc');
+  var idx=arr.findIndex(function(o){return o.id===_pipeDragId;});
+  if(idx>=0&&arr[idx].status!==status){
+    arr[idx].status=status; dbSave('orc',arr);
+    renderPipeline(); toast('Status atualizado!','ok');
+  }
+  _pipeDragId=null;
+}
+function pipeCtx(e,id){
+  e.preventDefault(); e.stopPropagation();
+  ctxShow(e,[
+    {icon:'✏️',label:'Abrir orçamento',fn:function(){
+      var o=db('orc').find(function(x){return x.id===id;}); if(o)orcRestaurar(o);
+    }},
+    {isLbl:true,label:'Mover para'},
+    ...PIPE_COLS.map(function(col){
+      return {label:col.label,fn:function(){
+        var arr=db('orc'),idx=arr.findIndex(function(o){return o.id===id;});
+        if(idx>=0){arr[idx].status=col.s;dbSave('orc',arr);renderPipeline();toast('Status atualizado!','ok');}
+      }};
+    }),
+    'sep',
+    {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
+      var obj=db('orc').find(function(o){return o.id===id;});
+      if(obj){trashAdd('orc',obj);renderPipeline();atualizarDash();toast('Movido para a lixeira.','ok');}
+    }}
+  ]);
+}
+
 function atualizarDash(){
   var orcs=db('orc'),cors=db('cor'),taps=db('tap');
   document.getElementById('d-n-orc').textContent=orcs.length;
@@ -838,14 +935,15 @@ function atualizarDash(){
     taps.map(function(o){return Object.assign({},o,{_tipo:'OS Tapeçaria',_key:'tap'});}))
     .sort(function(a,b){return (b._ts||0)-(a._ts||0);}).slice(0,7);
   var el=document.getElementById('d-recentes');
-  if(!todos.length){el.innerHTML='<div class="empty">Nenhum documento salvo ainda.</div>';return;}
-  el.innerHTML=todos.map(function(o){
+  if(!todos.length){el.innerHTML='<div class="empty">Nenhum documento salvo ainda.</div>';}
+  else{el.innerHTML=todos.map(function(o){
     return '<div class="hist-item" style="cursor:default" oncontextmenu="dashCtx(event,\''+o._key+'\',\''+o.id+'\')"><div class="hi-info">'+
       '<div style="display:flex;gap:6px;align-items:center;margin-bottom:2px"><span class="badge">'+o._tipo+'</span><span class="hi-num">#'+esc(o.num||'—')+'</span></div>'+
       '<div class="hi-client">'+esc(o.cliente||'—')+'</div>'+
       '<div class="hi-meta">'+fmt(o.data||'')+(o.total?' · R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'')+
       '</div></div></div>';
-  }).join('');
+  }).join('');}
+  renderPipeline();
 }
 function dashCtx(e,key,id){
   ctxShow(e,[
