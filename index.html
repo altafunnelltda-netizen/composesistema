@@ -194,7 +194,7 @@
       </div>
       <div class="btn-bar no-print">
         <button class="btn btn-p" onclick="salvarOrcamento()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="sincronizarPrintOrc();window.print()">🖨 Imprimir</button>
+        <button class="btn btn-s" onclick="printDoc(sincronizarPrintOrc)">🖨 Imprimir</button>
         <button class="btn btn-s" onclick="novoOrcamento()">🗒 Novo</button>
       </div>
     </div>
@@ -321,7 +321,7 @@
       <textarea id="cor-obs" style="min-height:70px"></textarea>
       <div class="btn-bar no-print">
         <button class="btn btn-p" onclick="salvarOsCortinas()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="window.print()">🖨 Imprimir</button>
+        <button class="btn btn-s" onclick="printDoc()">🖨 Imprimir</button>
         <button class="btn btn-s" onclick="limparOsCortinas()">🗒 Limpar</button>
       </div>
     </div>
@@ -383,7 +383,7 @@
       <textarea id="tap-obs" style="min-height:70px"></textarea>
       <div class="btn-bar no-print">
         <button class="btn btn-p" onclick="salvarOsTapecaria()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="window.print()">🖨 Imprimir</button>
+        <button class="btn btn-s" onclick="printDoc()">🖨 Imprimir</button>
         <button class="btn btn-s" onclick="limparOsTapecaria()">🗒 Limpar</button>
       </div>
     </div>
@@ -890,6 +890,53 @@ function orcSerializar(){
     cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
     prazo:v('orc-prazo'),pagamento:v('orc-pagamento'),validade:v('orc-validade'),obs:v('orc-obs'),
     itens:itens,total:orcCalc()};
+}
+
+function printDoc(syncFn) {
+  if (typeof syncFn === 'function') syncFn();
+  var pg = document.querySelector('.pg.on');
+  if (!pg) { window.print(); return; }
+
+  pg.querySelectorAll('input[type=text],input[type=number],input[type=date],input[type=tel]').forEach(function(el) {
+    el.setAttribute('value', el.value);
+  });
+  pg.querySelectorAll('input[type=checkbox],input[type=radio]').forEach(function(el) {
+    if (el.checked) el.setAttribute('checked','checked'); else el.removeAttribute('checked');
+  });
+  pg.querySelectorAll('select').forEach(function(el) {
+    Array.from(el.options).forEach(function(opt) {
+      if (opt.value === el.value) opt.setAttribute('selected','selected'); else opt.removeAttribute('selected');
+    });
+  });
+  pg.querySelectorAll('textarea').forEach(function(el) {
+    el.textContent = el.value;
+  });
+
+  var cssText = '';
+  try {
+    Array.from(document.styleSheets).forEach(function(ss) {
+      try { Array.from(ss.cssRules).forEach(function(r){ cssText += r.cssText+'\n'; }); } catch(e){}
+    });
+  } catch(e){}
+
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Composê</title><style>'+cssText+'</style></head><body><div class="main"><div class="wrap">'+pg.outerHTML+'</div></div></body></html>';
+
+  var w = window.open('','_blank');
+  if (!w) { window.print(); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
+  var done = false;
+  function doPrint() {
+    if (done) return; done = true;
+    w.focus();
+    w.print();
+    w.onafterprint = function(){ w.close(); };
+  }
+  if (w.document.readyState === 'complete') { doPrint(); }
+  else { w.onload = doPrint; }
+  setTimeout(doPrint, 900);
 }
 
 function sincronizarPrintOrc(){
