@@ -189,6 +189,16 @@
         <div class="f f1"><label>Validade</label><input type="text" id="orc-validade"></div>
       </div>
       <div class="f"><label>Observações</label><textarea id="orc-obs"></textarea></div>
+      <div class="f" style="margin-top:12px">
+        <label>Status do Orçamento</label>
+        <div class="orc-status-btns">
+          <button type="button" class="orc-status-btn on" data-s="pendente" onclick="setOrcStatus('pendente')">⏳ Pendente</button>
+          <button type="button" class="orc-status-btn" data-s="aprovado" onclick="setOrcStatus('aprovado')">✅ Aprovado</button>
+          <button type="button" class="orc-status-btn" data-s="em-negociacao" onclick="setOrcStatus('em-negociacao')">🤝 Em Negociação</button>
+          <button type="button" class="orc-status-btn" data-s="perdido" onclick="setOrcStatus('perdido')">❌ Perdido</button>
+        </div>
+        <input type="hidden" id="orc-status" value="pendente">
+      </div>
     </div>
     <div class="card">
       <div class="total-bar no-print">
@@ -851,6 +861,15 @@ function dashCtx(e,key,id){
 // ── ORÇAMENTO ─────────────────────────────────────────────
 var orcN=0, orcId=null;
 
+var ORC_STATUS_LABELS = {pendente:'⏳ Pendente', aprovado:'✅ Aprovado', 'em-negociacao':'🤝 Em Negociação', perdido:'❌ Perdido'};
+
+function setOrcStatus(s) {
+  sv('orc-status', s);
+  document.querySelectorAll('.orc-status-btn').forEach(function(btn) {
+    btn.classList.toggle('on', btn.getAttribute('data-s') === s);
+  });
+}
+
 function novoOrcamento(){
   orcId=null; orcN=0;
   document.getElementById('orc-titulo').textContent='Novo Orçamento';
@@ -859,6 +878,7 @@ function novoOrcamento(){
   sv('orc-cliente',''); sv('orc-fone',''); sv('orc-end',''); sv('orc-obs','');
   sv('orc-prazo','30 dias úteis'); sv('orc-pagamento','50% entrada + 50% na entrega'); sv('orc-validade','15 dias');
   sv('orc-intro','Segue abaixo o orçamento solicitado, conforme medidas enviadas. Todos os produtos serão instalados por nossas equipes especializadas.');
+  setOrcStatus('pendente');
   document.getElementById('orc-itens').innerHTML='';
   orcAddItem();
   sincronizarPrintOrc();
@@ -911,6 +931,7 @@ function orcSerializar(){
   return {id:orcId||uid(),_ts:Date.now(),num:v('orc-num'),data:v('orc-data'),consultor:v('orc-consultor'),
     cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
     prazo:v('orc-prazo'),pagamento:v('orc-pagamento'),validade:v('orc-validade'),obs:v('orc-obs'),
+    status:v('orc-status')||'pendente',
     itens:itens,total:orcCalc()};
 }
 
@@ -996,6 +1017,7 @@ function orcRestaurar(o){
   sv('orc-cliente',o.cliente);sv('orc-fone',o.fone);sv('orc-end',o.end);
   sv('orc-intro',o.intro);sv('orc-prazo',o.prazo);sv('orc-pagamento',o.pagamento);
   sv('orc-validade',o.validade);sv('orc-obs',o.obs);
+  setOrcStatus(o.status||'pendente');
   document.getElementById('orc-itens').innerHTML='';
   (o.itens||[]).forEach(function(item){
     orcN++; var n=orcN;
@@ -1344,9 +1366,14 @@ function histHTML(o,key){
   var sub=key==='orc'
     ?(o.total?'R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'')
     :(o.produto||o.tipo||'');
+  var statusBadge='';
+  if(key==='orc'){
+    var s=o.status||'pendente';
+    statusBadge=' <span class="orc-status-badge '+s+'">'+(ORC_STATUS_LABELS[s]||s)+'</span>';
+  }
   return '<div class="hist-item" oncontextmenu="histCtx(event,\''+key+'\',\''+o.id+'\')">'+
     '<div class="hi-info">'+
-      '<div class="hi-num">#'+esc(o.num||'—')+' · '+fmt(o.data||'')+'</div>'+
+      '<div class="hi-num" style="flex-wrap:wrap;gap:5px">#'+esc(o.num||'—')+' · '+fmt(o.data||'')+statusBadge+'</div>'+
       '<div class="hi-client">'+esc(o.cliente||'—')+'</div>'+
       '<div class="hi-meta">'+esc(o.consultor||'')+(sub?' · '+esc(sub):'')+
     '</div></div>'+
@@ -1356,14 +1383,26 @@ function histHTML(o,key){
     '</div></div>';
 }
 function histCtx(e,key,id){
-  ctxShow(e,[
+  var items=[
     {icon:'✏️',label:'Abrir / Carregar',fn:function(){abrirDoc(key,id);}},
-    'sep',
-    {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
-      var obj=db(key).find(function(o){return o.id===id;});
-      if(obj){trashAdd(key,obj);toast('Movido para a lixeira.','ok');renderHistorico();atualizarDash();}
-    }}
-  ]);
+    'sep'
+  ];
+  if(key==='orc'){
+    items.push({isLbl:true,label:'Alterar Status'});
+    ['pendente','aprovado','em-negociacao','perdido'].forEach(function(s){
+      items.push({label:ORC_STATUS_LABELS[s],fn:function(){
+        var arr=db('orc');
+        var idx=arr.findIndex(function(o){return o.id===id;});
+        if(idx>=0){arr[idx].status=s;dbSave('orc',arr);renderHistorico();toast('Status atualizado!','ok');}
+      }});
+    });
+    items.push('sep');
+  }
+  items.push({icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
+    var obj=db(key).find(function(o){return o.id===id;});
+    if(obj){trashAdd(key,obj);toast('Movido para a lixeira.','ok');renderHistorico();atualizarDash();}
+  }});
+  ctxShow(e,items);
 }
 
 function abrirDoc(key,id){

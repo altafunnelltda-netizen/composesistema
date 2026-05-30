@@ -1028,6 +1028,29 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .orc-print-header-produto{display:none}
 .orc-print-footer{display:none}
 
+/* ── STATUS ORÇAMENTO ── */
+.orc-status-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.orc-status-btn{
+  padding:5px 13px;border-radius:7px;border:1.5px solid transparent;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+  background:var(--cream-dark);color:var(--mid);transition:.13s;
+}
+.orc-status-btn:hover{border-color:var(--border)}
+.orc-status-btn[data-s=pendente].on{color:#888;border-color:#aaa;background:rgba(136,136,136,.1)}
+.orc-status-btn[data-s=aprovado].on{color:#1a7a3b;border-color:#1a7a3b;background:rgba(26,122,59,.1)}
+.orc-status-btn[data-s=em-negociacao].on{color:#3b82f6;border-color:#3b82f6;background:rgba(59,130,246,.1)}
+.orc-status-btn[data-s=perdido].on{color:#dc2626;border-color:#dc2626;background:rgba(220,38,38,.1)}
+.orc-status-badge{
+  display:inline-flex;align-items:center;
+  font-size:9.5px;font-weight:800;letter-spacing:.3px;
+  padding:2px 7px;border-radius:5px;white-space:nowrap;border:1px solid;
+}
+.orc-status-badge.pendente{color:#888;background:rgba(136,136,136,.1);border-color:rgba(136,136,136,.25)}
+.orc-status-badge.aprovado{color:#1a7a3b;background:rgba(26,122,59,.1);border-color:rgba(26,122,59,.25)}
+.orc-status-badge.em-negociacao{color:#3b82f6;background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25)}
+.orc-status-badge.perdido{color:#dc2626;background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.25)}
+[data-theme=dark] .orc-status-btn{background:var(--cream-dark);color:var(--mid)}
+
 /* ── CONTEXT MENU ── */
 .ctx-menu{
   position:fixed;z-index:9999;
