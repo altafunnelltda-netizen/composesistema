@@ -6,104 +6,242 @@
 <title>Composê — Acesso</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 body{
   font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  background:linear-gradient(135deg,#1a1814 0%,#252320 60%,#1e1c19 100%);
   min-height:100vh;
-  display:flex;align-items:center;justify-content:center;
-  padding:16px;
+  display:flex;
+  background:#0c0b08;
+  -webkit-font-smoothing:antialiased;
 }
-.card{
-  background:#fdfcfa;
-  border-radius:18px;
-  padding:40px 36px 36px;
-  width:100%;max-width:360px;
-  box-shadow:0 32px 80px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+
+/* Painel esquerdo — branding */
+.left{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:60px 48px;
+  background:linear-gradient(160deg,#141108 0%,#1a1610 50%,#111009 100%);
+  position:relative;
+  overflow:hidden;
 }
-.brand{
-  text-align:center;
-  margin-bottom:28px;
+.left::before{
+  content:'';
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 40% 40%, rgba(201,169,97,.07) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 70% 70%, rgba(201,169,97,.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+.left-inner{
+  position:relative;z-index:1;
+  max-width:420px;
+  width:100%;
+}
+.brand-logo{
+  width:90px;height:auto;
+  margin-bottom:32px;
+  display:block;
+  filter:drop-shadow(0 4px 24px rgba(201,169,97,.25));
 }
 .brand-name{
-  font-size:30px;font-weight:800;letter-spacing:.5px;
-  background:linear-gradient(135deg,#c9a961,#e8c97a);
+  font-size:48px;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(135deg,#c9a961 0%,#e8c97a 50%,#b8903a 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  display:block;line-height:1.1;margin-bottom:6px;
+  line-height:1;
+  margin-bottom:10px;
+  text-transform:uppercase;
 }
-.brand-line{
-  display:flex;align-items:center;gap:8px;margin:8px 0 4px;
+.brand-tagline{
+  font-size:9px;letter-spacing:5px;text-transform:uppercase;
+  color:rgba(201,169,97,.4);margin-bottom:24px;
 }
-.brand-line::before,.brand-line::after{content:'';flex:1;height:1px;background:#ddd5c8}
-.brand-line span{font-size:9px;letter-spacing:3px;color:#bbb;text-transform:uppercase;white-space:nowrap}
-.brand-sub{font-size:11px;color:#aaa;letter-spacing:.3px}
+.brand-divider{
+  width:48px;height:2px;
+  background:linear-gradient(90deg,#c9a961,#e8c97a);
+  border-radius:1px;
+  margin-bottom:24px;
+}
+.brand-desc{
+  font-size:14px;color:rgba(255,255,255,.3);
+  line-height:1.7;
+  max-width:300px;
+}
+.brand-city{
+  margin-top:20px;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(201,169,97,.3);
+}
 
-.erro{
-  background:rgba(176,0,0,.07);
-  border:1px solid rgba(176,0,0,.2);
-  color:#b00;border-radius:9px;
-  padding:10px 14px;font-size:12.5px;
-  margin-bottom:16px;text-align:center;
-  font-weight:600;
+/* Painel direito — formulário */
+.right{
+  width:420px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:48px 48px;
+  background:#0f0e0b;
+  border-left:1px solid rgba(201,169,97,.08);
 }
-label{
-  display:block;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.7px;
-  color:#888;margin-bottom:6px;
-}
-input[type=password]{
-  width:100%;border:1.5px solid #ddd5c8;
-  border-radius:10px;padding:12px 14px;
-  font-size:15px;font-family:inherit;
-  color:#2c2c2c;background:#fefdf8;
-  outline:none;transition:border-color .18s,box-shadow .18s;
-  margin-bottom:20px;
-}
-input[type=password]:focus{
-  border-color:#c9a961;
-  box-shadow:0 0 0 3.5px rgba(201,169,97,.14);
-}
-input[type=password]::placeholder{color:rgba(0,0,0,.22);font-size:20px;letter-spacing:3px}
-button{
-  width:100%;
-  background:linear-gradient(135deg,#c9a961 0%,#b8903a 100%);
-  color:#fff;border:none;border-radius:10px;
-  padding:13px;font-size:14px;font-weight:700;
-  font-family:inherit;cursor:pointer;
-  transition:opacity .18s,transform .18s,box-shadow .18s;
-  box-shadow:0 3px 12px rgba(201,169,97,.35);
+.form-box{width:100%;max-width:320px}
+
+.form-title{
+  font-size:22px;font-weight:800;
+  color:#fff;
+  margin-bottom:6px;
   letter-spacing:.3px;
 }
-button:hover{opacity:.93;transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,169,97,.45)}
-button:active{transform:translateY(0);opacity:1}
-.foot{
-  text-align:center;margin-top:20px;
-  font-size:10px;color:#ccc;letter-spacing:.3px;
+.form-sub{
+  font-size:12px;color:rgba(255,255,255,.3);
+  margin-bottom:36px;
+}
+
+.erro{
+  background:rgba(220,38,38,.1);
+  border:1px solid rgba(220,38,38,.25);
+  color:#f87171;border-radius:10px;
+  padding:11px 14px;font-size:12.5px;
+  margin-bottom:20px;text-align:center;
+  font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+
+label{
+  display:block;
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.2px;
+  color:rgba(201,169,97,.55);
+  margin-bottom:9px;
+}
+.input-wrap{position:relative;margin-bottom:20px}
+input[type=password]{
+  width:100%;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(201,169,97,.18);
+  border-radius:12px;
+  padding:14px 46px 14px 16px;
+  font-size:16px;letter-spacing:5px;
+  color:#fff;font-family:inherit;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+input[type=password]:focus{
+  border-color:rgba(201,169,97,.55);
+  background:rgba(255,255,255,.06);
+  box-shadow:0 0 0 3px rgba(201,169,97,.1);
+}
+input[type=password]::placeholder{
+  color:rgba(255,255,255,.15);
+  font-size:22px;letter-spacing:6px;
+}
+.toggle-pw{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,.25);padding:4px;line-height:0;
+  transition:color .15s;
+}
+.toggle-pw:hover{color:rgba(201,169,97,.6)}
+.toggle-pw svg{width:18px;height:18px}
+
+button[type=submit]{
+  width:100%;
+  background:linear-gradient(135deg,#c9a961 0%,#d4b468 50%,#b8903a 100%);
+  color:#1a1200;
+  border:none;border-radius:12px;
+  padding:15px;
+  font-size:12px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+  font-family:inherit;cursor:pointer;
+  transition:opacity .18s,transform .18s,box-shadow .18s;
+  box-shadow:0 4px 24px rgba(201,169,97,.25);
+}
+button[type=submit]:hover{
+  opacity:.92;transform:translateY(-1px);
+  box-shadow:0 8px 32px rgba(201,169,97,.4);
+}
+button[type=submit]:active{transform:translateY(0)}
+
+.form-foot{
+  margin-top:28px;
+  font-size:10px;color:rgba(255,255,255,.18);
+  text-align:center;letter-spacing:.5px;
+  line-height:1.8;
+}
+
+/* Mobile: empilha */
+@media(max-width:680px){
+  body{flex-direction:column}
+  .left{
+    padding:40px 28px 32px;
+    flex:none;
+  }
+  .brand-name{font-size:36px}
+  .brand-desc{display:none}
+  .right{
+    width:100%;flex:1;
+    border-left:none;border-top:1px solid rgba(201,169,97,.08);
+    padding:36px 28px;
+  }
 }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="brand">
-    <span class="brand-name">Composê</span>
-    <div class="brand-line"><span>Sistema Interno</span></div>
-    <div class="brand-sub">Santos — SP</div>
+
+<!-- Esquerda: branding -->
+<div class="left">
+  <div class="left-inner">
+    <img src="/logo.png" alt="Composê" class="brand-logo">
+    <div class="brand-name">Composê</div>
+    <div class="brand-tagline">Seu estilo · Seu conforto · Seu lugar</div>
+    <div class="brand-divider"></div>
+    <div class="brand-desc">
+      Sistema interno de gestão de orçamentos, ordens de serviço e atendimento ao cliente.
+    </div>
+    <div class="brand-city">Santos — SP</div>
   </div>
-
-  <div class="erro" id="msg-erro" style="display:none">Senha incorreta. Tente novamente.</div>
-
-  <form method="POST" action="/login">
-    <label for="senha">Senha de Acesso</label>
-    <input type="password" id="senha" name="senha" placeholder="••••••••" autofocus autocomplete="current-password">
-    <button type="submit">Entrar</button>
-  </form>
 </div>
 
-<div class="foot">Composê Home · composesantos.com.br</div>
+<!-- Direita: formulário -->
+<div class="right">
+  <div class="form-box">
+    <div class="form-title">Bem-vindo</div>
+    <div class="form-sub">Acesso restrito — equipe Composê</div>
+
+    <div class="erro" id="msg-erro" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Senha incorreta. Tente novamente.
+    </div>
+
+    <form method="POST" action="/login">
+      <label for="senha">Senha de acesso</label>
+      <div class="input-wrap">
+        <input type="password" id="senha" name="senha" placeholder="••••••" autofocus autocomplete="current-password">
+        <button type="button" class="toggle-pw" onclick="toggleSenha()" tabindex="-1" title="Mostrar senha">
+          <svg id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="ic-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+      <button type="submit">Entrar</button>
+    </form>
+
+    <div class="form-foot">
+      composesantos.com.br &nbsp;·&nbsp; (13) 9 8195-0001
+    </div>
+  </div>
+</div>
 
 <script>
-  if (new URLSearchParams(location.search).get('erro')) {
-    document.getElementById('msg-erro').style.display = 'block';
-  }
+if (new URLSearchParams(location.search).get('erro')) {
+  document.getElementById('msg-erro').style.display = 'flex';
+}
+function toggleSenha() {
+  var inp = document.getElementById('senha');
+  var isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  document.getElementById('ic-eye').style.display = isHidden ? 'none' : '';
+  document.getElementById('ic-eye-off').style.display = isHidden ? '' : 'none';
+}
 </script>
 </body>
 </html>

@@ -56,7 +56,7 @@ app.get('/style.css', auth, (req, res) => {
   res.sendFile(path.join(__dirname, 'style.css'));
 });
 
-app.get('/logo.png', auth, (req, res) => {
+app.get('/logo.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'logo_transp.png'));
 });
 
