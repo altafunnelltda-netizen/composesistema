@@ -211,7 +211,7 @@
       </div>
       <div class="btn-bar no-print">
         <button class="btn btn-p" onclick="salvarOrcamento()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="printDoc(sincronizarPrintOrc)">🖨 Imprimir</button>
+        <button class="btn btn-s" onclick="printDoc(sincronizarPrintOrc,'ORÇAMENTO - '+(v('orc-cliente')||'Cliente')+' - COMPOSÊ')">🖨 Imprimir</button>
         <button class="btn btn-s" onclick="novoOrcamento()">🗒 Novo</button>
       </div>
     </div>
@@ -1036,7 +1036,7 @@ function orcSerializar(){
     itens:itens,total:orcCalc()};
 }
 
-function printDoc(syncFn) {
+function printDoc(syncFn, titulo) {
   if (typeof syncFn === 'function') syncFn();
   var pg = document.querySelector('.pg.on');
   if (!pg) { window.print(); return; }
@@ -1063,7 +1063,8 @@ function printDoc(syncFn) {
     });
   } catch(e){}
 
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Composê</title><style>'+cssText+'</style></head><body><div class="main"><div class="wrap">'+pg.outerHTML+'</div></div></body></html>';
+  var docTitulo = titulo || 'Composê';
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+docTitulo+'</title><style>'+cssText+'</style></head><body><div class="main"><div class="wrap">'+pg.outerHTML+'</div></div></body></html>';
 
   var w = window.open('','_blank');
   if (!w) { window.print(); return; }
