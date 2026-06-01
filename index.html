@@ -6,6 +6,102 @@
 <title>Composê — Sistema</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="stylesheet" href="/style.css">
+<style>
+/* ─── AGENDA ─────────────────────────────────────── */
+.ag-pg { padding: 20px 24px; max-width: 860px; }
+.ag-topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.ag-filters { display:flex; gap:6px; flex-wrap:wrap; }
+.ag-fb { padding:5px 12px; border-radius:20px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt); font-size:13px; cursor:pointer; transition:.15s; }
+.ag-fb:hover { border-color:var(--acc); color:var(--acc); }
+.ag-fb-on { background:var(--acc); color:#fff; border-color:var(--acc); font-weight:600; }
+.ag-status-bar { display:flex; align-items:center; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+.ag-slbl { font-size:12px; color:var(--txt2); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+.ag-sb { padding:3px 10px; border-radius:12px; border:1.5px solid var(--brd); background:transparent; color:var(--txt2); font-size:12px; cursor:pointer; transition:.15s; }
+.ag-sb:hover { border-color:var(--acc); color:var(--acc); }
+.ag-sb-on { background:var(--acc); color:#fff; border-color:var(--acc); }
+.ag-list { display:flex; flex-direction:column; gap:20px; }
+.ag-empty { text-align:center; padding:60px 20px; color:var(--txt2); }
+.ag-day-group { display:flex; flex-direction:column; gap:8px; }
+.ag-day-hd { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--txt2); padding:0 2px 6px; border-bottom:1.5px solid var(--brd); }
+.ag-day-group.ag-hoje .ag-day-hd { color:var(--acc); border-color:var(--acc); }
+.ag-day-group.ag-past { opacity:.65; }
+.ag-card { display:flex; background:var(--bg2); border:1.5px solid var(--brd); border-radius:10px; cursor:pointer; transition:.15s; overflow:hidden; }
+.ag-card:hover { border-color:var(--acc); box-shadow:0 2px 10px rgba(0,0,0,.08); }
+.ag-card[data-status=concluido] { opacity:.7; }
+.ag-card[data-status=cancelado] { opacity:.5; }
+.ag-card-stripe { width:5px; flex-shrink:0; }
+.ag-card-body { flex:1; padding:12px 14px; }
+.ag-card-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.ag-tipo-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+.ag-status-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+.ag-s-pend { background:#f59e0b20; color:#d97706; }
+.ag-s-ok { background:#10b98120; color:#059669; }
+.ag-s-cancel { background:#ef444420; color:#dc2626; }
+.ag-card-cliente { font-size:15px; font-weight:600; color:var(--txt); margin-bottom:4px; }
+.ag-card-end { font-size:12px; color:var(--txt2); margin-bottom:6px; }
+.ag-card-foot { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ag-hora { font-size:12px; color:var(--txt2); font-weight:500; }
+.ag-colab-tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; background:var(--cc,#666)20; color:var(--cc,#666); display:inline-block; }
+.ag-colabs { display:flex; gap:4px; flex-wrap:wrap; }
+.ag-card-obs { margin-top:6px; font-size:12px; color:var(--txt2); font-style:italic; }
+
+/* Agenda modal */
+.ag-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.ag-overlay.on { display:flex; align-items:center; justify-content:center; }
+.ag-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:201; background:var(--bg); border:1.5px solid var(--brd); border-radius:14px; width:min(560px,95vw); max-height:90vh; overflow:hidden; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,.18); }
+.ag-modal.on { display:flex; }
+.ag-modal-hd { padding:18px 20px 14px; font-size:16px; font-weight:700; color:var(--txt); display:flex; align-items:center; justify-content:space-between; border-bottom:1.5px solid var(--brd); }
+.ag-modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--txt2); line-height:1; padding:0 4px; }
+.ag-modal-body { padding:18px 20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px; }
+.ag-modal-ft { padding:14px 20px; border-top:1.5px solid var(--brd); display:flex; align-items:center; justify-content:space-between; }
+.ag-form-row { display:flex; flex-direction:column; gap:5px; }
+.ag-form-row label { font-size:12px; font-weight:600; color:var(--txt2); text-transform:uppercase; letter-spacing:.04em; }
+.ag-form-row input, .ag-form-row select, .ag-form-row textarea { padding:8px 10px; border:1.5px solid var(--brd); border-radius:7px; background:var(--bg2); color:var(--txt); font-size:14px; outline:none; transition:.15s; }
+.ag-form-row input:focus, .ag-form-row select:focus, .ag-form-row textarea:focus { border-color:var(--acc); }
+.ag-form-row textarea { resize:vertical; min-height:60px; font-family:inherit; }
+.ag-form-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.ag-form-3col .ag-form-row { display:block; }
+.ag-form-3col label { display:block; font-size:12px; font-weight:600; color:var(--txt2); text-transform:uppercase; margin-bottom:5px; }
+.ag-colab-list { display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; padding:4px 0; }
+.ag-colab-opt { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px; border:1.5px solid var(--brd); cursor:pointer; font-size:13px; color:var(--txt); transition:.15s; user-select:none; }
+.ag-colab-opt:hover { border-color:var(--acc); }
+.ag-colab-opt-on { border-color:var(--acc); background:var(--acc)10; }
+.ag-colab-opt input { display:none; }
+.ag-colab-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ─── COLABORADORES ─────────────────────────────── */
+.colab-pg { padding:20px 24px; }
+.colab-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.colab-title-block { display:flex; align-items:baseline; gap:10px; }
+.colab-title-block h2 { font-size:18px; font-weight:700; color:var(--txt); margin:0; }
+.colab-count { font-size:12px; color:var(--txt2); }
+.colab-empty { text-align:center; padding:60px 20px; color:var(--txt2); }
+.colab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
+.colab-card { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; overflow:hidden; cursor:pointer; transition:.15s; display:flex; flex-direction:column; }
+.colab-card:hover { border-color:var(--acc); box-shadow:0 2px 10px rgba(0,0,0,.08); }
+.colab-card-color { height:5px; }
+.colab-card-body { padding:14px 16px; flex:1; }
+.colab-card-name { font-size:15px; font-weight:700; color:var(--txt); margin-bottom:2px; }
+.colab-card-funcao { font-size:12px; color:var(--txt2); font-weight:500; margin-bottom:8px; }
+.colab-card-tel { font-size:12px; color:var(--txt2); margin-bottom:8px; }
+.colab-card-stats { display:flex; gap:8px; flex-wrap:wrap; }
+.colab-stat { font-size:11px; background:var(--bg); border:1px solid var(--brd); border-radius:12px; padding:2px 8px; color:var(--txt2); }
+.colab-stat-pend { background:#f59e0b15; border-color:#f59e0b50; color:#d97706; }
+
+/* Colab modal */
+.colab-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.colab-overlay.on { display:flex; align-items:center; justify-content:center; }
+.colab-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:201; background:var(--bg); border:1.5px solid var(--brd); border-radius:14px; width:min(440px,95vw); overflow:hidden; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,.18); }
+.colab-modal.on { display:flex; }
+.colab-modal-hd { padding:18px 20px 14px; font-size:16px; font-weight:700; color:var(--txt); display:flex; align-items:center; justify-content:space-between; border-bottom:1.5px solid var(--brd); }
+.colab-modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--txt2); line-height:1; padding:0 4px; }
+.colab-modal-body { padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
+.colab-modal-ft { padding:14px 20px; border-top:1.5px solid var(--brd); display:flex; align-items:center; justify-content:space-between; }
+.colab-cores { display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+.colab-cor-btn { width:28px; height:28px; border-radius:50%; border:3px solid transparent; cursor:pointer; outline:none; transition:.15s; }
+.colab-cor-btn.on { border-color:var(--txt); transform:scale(1.15); }
+.colab-cor-btn:hover { transform:scale(1.1); }
+</style>
 <script>
   (function(){ var t=localStorage.getItem('cps_theme')||'light'; document.documentElement.setAttribute('data-theme',t); })();
 </script>
@@ -50,6 +146,14 @@
       <div class="sb-item" id="nav-notas" onclick="ir('notas',this);renderNotas()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Anotações
+      </div>
+      <div class="sb-item" id="nav-agenda" onclick="ir('agenda',this);renderAgenda()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Agenda
+      </div>
+      <div class="sb-item" id="nav-colaboradores" onclick="ir('colaboradores',this);renderColab()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Colaboradores
       </div>
       <div class="sb-lbl">Ferramentas</div>
       <div class="sb-item" id="nav-calculadoras" onclick="ir('calculadoras',this)">
@@ -212,6 +316,7 @@
       <div class="btn-bar no-print">
         <button class="btn btn-p" onclick="salvarOrcamento()">💾 Salvar</button>
         <button class="btn btn-s" onclick="printDoc(sincronizarPrintOrc,'ORÇAMENTO - '+(v('orc-cliente')||'Cliente')+' - COMPOSÊ')">🖨 Imprimir</button>
+        <button class="btn btn-s" onclick="orcGerarOS()" title="Criar OS a partir deste orçamento">📋 Gerar OS</button>
         <button class="btn btn-s" onclick="novoOrcamento()">🗒 Novo</button>
       </div>
     </div>
@@ -603,19 +708,37 @@
     <div class="nb-modal-overlay" id="nb-modal-overlay" style="display:none" onclick="if(event.target===this)nbCloseModal()"></div>
   </div>
 
+  <!-- AGENDA -->
+  <div id="pg-agenda" class="pg">
+    <div id="ag-wrap"></div>
+  </div>
+
+  <!-- COLABORADORES -->
+  <div id="pg-colaboradores" class="pg">
+    <div id="colab-wrap"></div>
+  </div>
+
   </div><!-- /wrap -->
+
+<!-- AGENDA MODAL -->
+<div class="ag-overlay" id="ag-overlay" onclick="if(event.target===this)agCloseModal()"></div>
+<div class="ag-modal" id="ag-modal"></div>
+
+<!-- COLABORADORES MODAL -->
+<div class="colab-overlay" id="colab-overlay" onclick="if(event.target===this)colabCloseModal()"></div>
+<div class="colab-modal" id="colab-modal"></div>
 </div><!-- /main -->
 
 <div class="toast" id="toast"></div>
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab' };
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   // Persiste no servidor em background
-  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira') };
+  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab') };
   payload[K[key]] = arr; // garante que o valor recém-salvo está incluído
   fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(function(){});
@@ -633,6 +756,8 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
     if(d.cps_kb) localStorage.setItem('cps_kb', JSON.stringify(d.cps_kb));
     if(d.cps_notas && d.cps_notas.length) localStorage.setItem('cps_notas', JSON.stringify(d.cps_notas));
     if(d.cps_lixeira) localStorage.setItem('cps_lixeira', JSON.stringify(d.cps_lixeira));
+    if(d.cps_agenda && d.cps_agenda.length) localStorage.setItem('cps_agenda', JSON.stringify(d.cps_agenda));
+    if(d.cps_colab && d.cps_colab.length) localStorage.setItem('cps_colab', JSON.stringify(d.cps_colab));
     if(typeof atualizarDash === 'function') atualizarDash();
     if(typeof atualizarTrashBadge === 'function') atualizarTrashBadge();
     // Navega para a seção do hash após carregar os dados
@@ -642,7 +767,7 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
 })();
 
 // ── NAV ───────────────────────────────────────────────────
-var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes' };
+var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores' };
 function ir(id,el) {
   var pg = document.getElementById('pg-'+id);
   if (!pg) return;
@@ -663,6 +788,8 @@ function ir(id,el) {
   if(id==='quadro') renderQuadro();
   if(id==='notas') renderNotas();
   if(id==='historico' && typeof renderHistorico==='function') renderHistorico();
+  if(id==='agenda') renderAgenda();
+  if(id==='colaboradores') renderColab();
 }
 
 // Roteamento por hash — back/forward e URL direta (ex: /#historico)
@@ -2956,6 +3083,274 @@ window.addEventListener('load',function(){
   novoOrcamento();
   gerarDesenho();
 });
+
+// ── AGENDA ────────────────────────────────────────────────
+var AG_TIPOS = [
+  {id:'manutencao',  label:'Manutenção',     color:'#f59e0b', icon:'🔧'},
+  {id:'visita',      label:'Visita Técnica',  color:'#3b82f6', icon:'🔍'},
+  {id:'instalacao',  label:'Instalação',      color:'#10b981', icon:'🔨'},
+  {id:'medicao',     label:'Medição',         color:'#8b5cf6', icon:'📏'}
+];
+var _agFiltroTipo = '';
+var _agFiltroStatus = '';
+
+function renderAgenda() {
+  var wrap = document.getElementById('ag-wrap');
+  if (!wrap) return;
+  var eventos = db('agenda');
+  if (_agFiltroTipo) eventos = eventos.filter(function(e){ return e.tipo===_agFiltroTipo; });
+  if (_agFiltroStatus) eventos = eventos.filter(function(e){ return e.status===_agFiltroStatus; });
+  eventos.sort(function(a,b){ return (a.data+a.horaInicio).localeCompare(b.data+b.horaInicio); });
+
+  var html = '<div class="ag-pg">';
+  // topbar
+  html += '<div class="ag-topbar"><div class="ag-filters">';
+  html += '<button class="ag-fb'+(!_agFiltroTipo?' ag-fb-on':'')+'" onclick="agFiltroTipo(\'\')">Todos</button>';
+  AG_TIPOS.forEach(function(t){
+    html += '<button class="ag-fb'+(_agFiltroTipo===t.id?' ag-fb-on':'')+'" onclick="agFiltroTipo(\''+t.id+'\')">'+t.icon+' '+t.label+'</button>';
+  });
+  html += '</div><button class="btn btn-p" onclick="agOpenModal(null)">+ Novo Evento</button></div>';
+  // status bar
+  html += '<div class="ag-status-bar"><span class="ag-slbl">Status:</span>';
+  [['','Todos'],['agendado','Agendado'],['concluido','Concluído'],['cancelado','Cancelado']].forEach(function(s){
+    html += '<button class="ag-sb'+(_agFiltroStatus===s[0]?' ag-sb-on':'')+'" onclick="agFiltroStatus(\''+s[0]+'\')">'+s[1]+'</button>';
+  });
+  html += '</div>';
+  // list
+  html += '<div class="ag-list">';
+  if (!eventos.length) {
+    html += '<div class="ag-empty"><div style="font-size:40px;margin-bottom:12px">📅</div><div>Nenhum evento'+((_agFiltroTipo||_agFiltroStatus)?' com esse filtro':' cadastrado')+'</div><div style="font-size:13px;opacity:.6;margin-top:6px">Clique em "+ Novo Evento" para começar</div></div>';
+  } else {
+    var byDate = {};
+    eventos.forEach(function(e){ if(!byDate[e.data]) byDate[e.data]=[]; byDate[e.data].push(e); });
+    var hoje = new Date(); hoje.setHours(0,0,0,0);
+    Object.keys(byDate).sort().forEach(function(data){
+      var d = new Date(data+'T12:00:00');
+      var isHoje = d.toDateString()===hoje.toDateString();
+      var isPast = d < hoje && !isHoje;
+      var days=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'], months=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      var dayLabel = (isHoje?'📍 Hoje — ':'')+days[d.getDay()]+', '+d.getDate()+' de '+months[d.getMonth()]+' de '+d.getFullYear();
+      html += '<div class="ag-day-group'+(isPast?' ag-past':isHoje?' ag-hoje':'')+'">';
+      html += '<div class="ag-day-hd">'+dayLabel+'</div>';
+      byDate[data].forEach(function(ev){
+        var tipo = AG_TIPOS.find(function(t){return t.id===ev.tipo;})||AG_TIPOS[0];
+        var colabs = db('colab');
+        var colabTags = (ev.colaboradores||[]).map(function(cid){
+          var c=colabs.find(function(x){return x.id===cid;});
+          return c?'<span class="ag-colab-tag" style="--cc:'+c.cor+'">'+esc(c.nome.split(' ')[0])+'</span>':'';
+        }).join('');
+        html += '<div class="ag-card" onclick="agEditModal(\''+ev.id+'\''+')" data-status="'+ev.status+'">';
+        html += '<div class="ag-card-stripe" style="background:'+tipo.color+'"></div>';
+        html += '<div class="ag-card-body">';
+        html += '<div class="ag-card-top">';
+        html += '<span class="ag-tipo-badge" style="background:'+tipo.color+'20;color:'+tipo.color+'">'+tipo.icon+' '+tipo.label+'</span>';
+        if(ev.status==='agendado')  html += '<span class="ag-status-badge ag-s-pend">⏰ Agendado</span>';
+        if(ev.status==='concluido') html += '<span class="ag-status-badge ag-s-ok">✓ Concluído</span>';
+        if(ev.status==='cancelado') html += '<span class="ag-status-badge ag-s-cancel">✕ Cancelado</span>';
+        html += '</div>';
+        html += '<div class="ag-card-cliente">'+esc(ev.cliente||'—')+'</div>';
+        if(ev.endereco) html += '<div class="ag-card-end">📍 '+esc(ev.endereco)+'</div>';
+        html += '<div class="ag-card-foot">';
+        if(ev.horaInicio) html += '<span class="ag-hora">🕐 '+ev.horaInicio+(ev.horaFim?' — '+ev.horaFim:'')+'</span>';
+        if(colabTags) html += '<span class="ag-colabs">'+colabTags+'</span>';
+        html += '</div>';
+        if(ev.obs) html += '<div class="ag-card-obs">'+esc(ev.obs)+'</div>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+    });
+  }
+  html += '</div></div>';
+  wrap.innerHTML = html;
+}
+
+function agFiltroTipo(t){ _agFiltroTipo=t; renderAgenda(); }
+function agFiltroStatus(s){ _agFiltroStatus=s; renderAgenda(); }
+
+function agOpenModal(ev) {
+  var isEdit = !!ev;
+  var today = new Date().toISOString().split('T')[0];
+  ev = ev || {id:uid(), tipo:'instalacao', cliente:'', endereco:'', data:today, horaInicio:'08:00', horaFim:'', colaboradores:[], obs:'', status:'agendado'};
+  var colabs = db('colab');
+  var modal = document.getElementById('ag-modal');
+
+  var tipoOpts = AG_TIPOS.map(function(t){
+    return '<option value="'+t.id+'"'+(ev.tipo===t.id?' selected':'')+'>'+t.icon+' '+t.label+'</option>';
+  }).join('');
+  var statusOpts = [['agendado','Agendado'],['concluido','Concluído'],['cancelado','Cancelado']].map(function(s){
+    return '<option value="'+s[0]+'"'+(ev.status===s[0]?' selected':'')+'>'+s[1]+'</option>';
+  }).join('');
+  var colabOpts = colabs.length
+    ? colabs.map(function(c){
+        var chk = (ev.colaboradores||[]).indexOf(c.id)>-1;
+        return '<label class="ag-colab-opt'+(chk?' ag-colab-opt-on':'')+'" onclick="agToggleColab(this)">'+
+          '<input type="checkbox" value="'+c.id+'"'+(chk?' checked':'')+'>'+
+          '<span class="ag-colab-dot" style="background:'+c.cor+'"></span>'+
+          esc(c.nome)+' <small style="opacity:.6">('+esc(c.funcao)+')</small>'+
+          '</label>';
+      }).join('')
+    : '<div style="opacity:.5;font-size:13px;padding:6px 0">Nenhum colaborador cadastrado ainda</div>';
+
+  modal.innerHTML =
+    '<div class="ag-modal-hd"><span>'+(isEdit?'Editar Evento':'Novo Evento')+'</span>'+
+    '<button class="ag-modal-close" onclick="agCloseModal()">×</button></div>'+
+    '<div class="ag-modal-body">'+
+      '<div class="ag-form-row"><label>Tipo</label><select id="ag-f-tipo">'+tipoOpts+'</select></div>'+
+      '<div class="ag-form-row"><label>Cliente / Descrição</label><input id="ag-f-cliente" type="text" placeholder="Nome do cliente" value="'+esc(ev.cliente||'')+'"></div>'+
+      '<div class="ag-form-row"><label>Endereço</label><input id="ag-f-end" type="text" placeholder="Rua, número, bairro" value="'+esc(ev.endereco||'')+'"></div>'+
+      '<div class="ag-form-3col">'+
+        '<div class="ag-form-row"><label>Data</label><input id="ag-f-data" type="date" value="'+(ev.data||today)+'"></div>'+
+        '<div class="ag-form-row"><label>Início</label><input id="ag-f-hinicio" type="time" value="'+(ev.horaInicio||'')+'"></div>'+
+        '<div class="ag-form-row"><label>Fim</label><input id="ag-f-hfim" type="time" value="'+(ev.horaFim||'')+'"></div>'+
+      '</div>'+
+      '<div class="ag-form-row"><label>Status</label><select id="ag-f-status">'+statusOpts+'</select></div>'+
+      '<div class="ag-form-row"><label>Colaboradores</label><div class="ag-colab-list">'+colabOpts+'</div></div>'+
+      '<div class="ag-form-row"><label>Observações</label><textarea id="ag-f-obs" rows="2" placeholder="Detalhes adicionais...">'+esc(ev.obs||'')+'</textarea></div>'+
+    '</div>'+
+    '<div class="ag-modal-ft">'+
+      (isEdit?'<button class="btn btn-d" onclick="agDelete(\''+ev.id+'\')">🗑 Excluir</button>':'<span></span>')+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-s" onclick="agCloseModal()">Cancelar</button>'+
+        '<button class="btn btn-p" onclick="agSave(\''+ev.id+'\','+isEdit+')">'+(isEdit?'Salvar':'Criar Evento')+'</button>'+
+      '</div></div>';
+
+  document.getElementById('ag-overlay').classList.add('on');
+  modal.classList.add('on');
+}
+
+function agToggleColab(lbl){
+  setTimeout(function(){ lbl.classList.toggle('ag-colab-opt-on', lbl.querySelector('input').checked); }, 0);
+}
+function agEditModal(id){ var ev=db('agenda').find(function(e){return e.id===id;}); if(ev) agOpenModal(ev); }
+function agCloseModal(){ document.getElementById('ag-overlay').classList.remove('on'); document.getElementById('ag-modal').classList.remove('on'); }
+
+function agSave(id, isEdit){
+  var tipo    = document.getElementById('ag-f-tipo').value;
+  var cliente = document.getElementById('ag-f-cliente').value.trim();
+  var end     = document.getElementById('ag-f-end').value.trim();
+  var data    = document.getElementById('ag-f-data').value;
+  var hini    = document.getElementById('ag-f-hinicio').value;
+  var hfim    = document.getElementById('ag-f-hfim').value;
+  var status  = document.getElementById('ag-f-status').value;
+  var obs     = document.getElementById('ag-f-obs').value.trim();
+  if (!data)    { toast('Informe a data do evento','err'); return; }
+  if (!cliente) { toast('Informe o cliente ou descrição','err'); return; }
+  var colaboradores = [];
+  document.querySelectorAll('.ag-colab-list input[type=checkbox]:checked').forEach(function(inp){ colaboradores.push(inp.value); });
+  var arr = db('agenda');
+  var orig = isEdit ? (arr.find(function(x){return x.id===id;})||{}) : {};
+  var ev = {id:id, tipo:tipo, cliente:cliente, endereco:end, data:data, horaInicio:hini, horaFim:hfim, colaboradores:colaboradores, obs:obs, status:status, criadoEm:orig.criadoEm||Date.now()};
+  dbSave('agenda', isEdit ? arr.map(function(e){return e.id===id?ev:e;}) : [ev].concat(arr));
+  agCloseModal();
+  renderAgenda();
+  toast(isEdit?'Evento atualizado!':'Evento criado!','ok');
+}
+
+function agDelete(id){
+  if(!confirm('Excluir este evento?')) return;
+  dbSave('agenda', db('agenda').filter(function(e){return e.id!==id;}));
+  agCloseModal();
+  renderAgenda();
+  toast('Evento excluído.','ok');
+}
+
+// ── COLABORADORES ─────────────────────────────────────────
+var COLAB_FUNCOES = ['Instalador','Medidor','Técnico','Costureira','Vendedor','Gerente','Outro'];
+var COLAB_CORES   = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+
+function renderColab(){
+  var wrap = document.getElementById('colab-wrap');
+  if (!wrap) return;
+  var colabs = db('colab');
+  var html = '<div class="colab-pg">';
+  html += '<div class="colab-topbar"><div class="colab-title-block"><h2>Colaboradores</h2><span class="colab-count">'+colabs.length+' cadastrado'+(colabs.length!==1?'s':'')+'</span></div>';
+  html += '<button class="btn btn-p" onclick="colabOpenModal(null)">+ Novo Colaborador</button></div>';
+  if (!colabs.length) {
+    html += '<div class="colab-empty"><div style="font-size:40px;margin-bottom:12px">👥</div><div>Nenhum colaborador cadastrado</div><div style="font-size:13px;opacity:.6;margin-top:6px">Adicione os membros da equipe para atribuí-los nas visitas e instalações</div></div>';
+  } else {
+    html += '<div class="colab-grid">';
+    colabs.forEach(function(c){
+      var eventos   = db('agenda').filter(function(e){return (e.colaboradores||[]).indexOf(c.id)>-1;});
+      var pendentes = eventos.filter(function(e){return e.status==='agendado';}).length;
+      html += '<div class="colab-card" onclick="colabEditModal(\''+c.id+'\')">'+
+        '<div class="colab-card-color" style="background:'+c.cor+'"></div>'+
+        '<div class="colab-card-body">'+
+          '<div class="colab-card-name">'+esc(c.nome)+'</div>'+
+          '<div class="colab-card-funcao">'+esc(c.funcao)+'</div>'+
+          (c.telefone?'<div class="colab-card-tel">📱 '+esc(c.telefone)+'</div>':'')+
+          '<div class="colab-card-stats">'+
+            '<span class="colab-stat">📅 '+eventos.length+' evento'+(eventos.length!==1?'s':'')+'</span>'+
+            (pendentes?'<span class="colab-stat colab-stat-pend">⏰ '+pendentes+' pendente'+(pendentes>1?'s':'')+'</span>':'')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function colabOpenModal(c){
+  var isEdit = !!c;
+  c = c || {id:uid(), nome:'', funcao:'Instalador', telefone:'', cor:COLAB_CORES[0]};
+  var modal = document.getElementById('colab-modal');
+  var funcaoOpts = COLAB_FUNCOES.map(function(f){ return '<option value="'+f+'"'+(c.funcao===f?' selected':'')+'>'+f+'</option>'; }).join('');
+  var coresHtml = COLAB_CORES.map(function(cor){
+    return '<button type="button" class="colab-cor-btn'+(c.cor===cor?' on':'')+'" data-cor="'+cor+'" style="background:'+cor+'" onclick="colabSelecionarCor(this,\''+cor+'\')"></button>';
+  }).join('');
+  modal.innerHTML =
+    '<div class="colab-modal-hd"><span>'+(isEdit?'Editar Colaborador':'Novo Colaborador')+'</span>'+
+    '<button class="colab-modal-close" onclick="colabCloseModal()">×</button></div>'+
+    '<div class="colab-modal-body">'+
+      '<div class="ag-form-row"><label>Nome</label><input id="colab-f-nome" type="text" placeholder="Nome completo" value="'+esc(c.nome||'')+'"></div>'+
+      '<div class="ag-form-row"><label>Função</label><select id="colab-f-funcao">'+funcaoOpts+'</select></div>'+
+      '<div class="ag-form-row"><label>Telefone / WhatsApp</label><input id="colab-f-tel" type="tel" placeholder="(13) 9 0000-0000" value="'+esc(c.telefone||'')+'"></div>'+
+      '<div class="ag-form-row"><label>Cor de identificação</label><input type="hidden" id="colab-f-cor" value="'+c.cor+'"><div class="colab-cores">'+coresHtml+'</div></div>'+
+    '</div>'+
+    '<div class="colab-modal-ft">'+
+      (isEdit?'<button class="btn btn-d" onclick="colabDelete(\''+c.id+'\')">🗑 Excluir</button>':'<span></span>')+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-s" onclick="colabCloseModal()">Cancelar</button>'+
+        '<button class="btn btn-p" onclick="colabSave(\''+c.id+'\','+isEdit+')">'+(isEdit?'Salvar':'Adicionar')+'</button>'+
+      '</div></div>';
+  document.getElementById('colab-overlay').classList.add('on');
+  modal.classList.add('on');
+}
+
+function colabEditModal(id){ var c=db('colab').find(function(x){return x.id===id;}); if(c) colabOpenModal(c); }
+function colabCloseModal(){ document.getElementById('colab-overlay').classList.remove('on'); document.getElementById('colab-modal').classList.remove('on'); }
+function colabSelecionarCor(btn,cor){
+  document.querySelectorAll('.colab-cor-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  document.getElementById('colab-f-cor').value = cor;
+}
+
+function colabSave(id, isEdit){
+  var nome    = document.getElementById('colab-f-nome').value.trim();
+  var funcao  = document.getElementById('colab-f-funcao').value;
+  var tel     = document.getElementById('colab-f-tel').value.trim();
+  var cor     = document.getElementById('colab-f-cor').value;
+  if (!nome) { toast('Informe o nome do colaborador','err'); return; }
+  var arr = db('colab');
+  var c = {id:id, nome:nome, funcao:funcao, telefone:tel, cor:cor};
+  dbSave('colab', isEdit ? arr.map(function(x){return x.id===id?c:x;}) : arr.concat([c]));
+  colabCloseModal();
+  renderColab();
+  toast(isEdit?'Colaborador atualizado!':'Colaborador adicionado!','ok');
+}
+
+function colabDelete(id){
+  if(!confirm('Excluir este colaborador? Ele será removido dos eventos associados.')) return;
+  dbSave('agenda', db('agenda').map(function(e){
+    e.colaboradores = (e.colaboradores||[]).filter(function(cid){return cid!==id;});
+    return e;
+  }));
+  dbSave('colab', db('colab').filter(function(x){return x.id!==id;}));
+  colabCloseModal();
+  renderColab();
+  toast('Colaborador removido.','ok');
+}
 </script>
 </body>
 </html>
