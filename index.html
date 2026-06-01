@@ -1964,7 +1964,16 @@ function renderQuadro(){
   var board = document.getElementById('kb-board');
   board.innerHTML = '';
   var cols = filterCol ? d.cols.filter(function(c){return c.id===filterCol;}) : d.cols;
-  var pinnedLeft = 14; // padding do board
+
+  // Calcula posição right para cada coluna fixada (direita)
+  var pinnedRightPos = {};
+  var _rp = 0;
+  cols.filter(function(c){return !!c.pinned;}).slice().reverse().forEach(function(c){
+    pinnedRightPos[c.id] = _rp;
+    _rp += 272 + 14;
+  });
+  var normalEls = [], pinnedEls = [];
+
   cols.forEach(function(col){
     var colCards = d.cards.filter(function(c){
       if(c.col!==col.id) return false;
@@ -1980,8 +1989,8 @@ function renderQuadro(){
     colEl.dataset.col = col.id;
     if(isPinned){
       colEl.style.position='sticky';
-      colEl.style.left=pinnedLeft+'px';
-      pinnedLeft+=272+14;
+      colEl.style.right=pinnedRightPos[col.id]+'px';
+      colEl.style.zIndex='4';
     }
     colEl.innerHTML =
       '<div class="kb-col-strip" style="background:'+col.color+'"></div>'+
@@ -2070,19 +2079,27 @@ function renderQuadro(){
         }}
       ]);
     });
+    // Separa em normais e fixadas
+    if(isPinned) pinnedEls.push(colEl);
+    else normalEls.push(colEl);
   });
-  // botão nova coluna
+
+  // Ordem de renderização: normais → botão → fixadas (direita)
+  normalEls.forEach(function(el){ board.appendChild(el); });
+
   var addCol = document.createElement('div');
   addCol.className = 'kb-add-col';
   addCol.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>Nova coluna</span>';
   addCol.onclick = kbNewCol;
   board.appendChild(addCol);
+
+  pinnedEls.forEach(function(el){ board.appendChild(el); });
 }
 
 function kbMakeCard(card){
   var el=document.createElement('div');
   var pri=card.prioridade||'normal';
-  el.className='kb-card kb-pri-'+pri;
+  el.className='kb-card kb-pri-'+pri+(card.status==='ok'?' kb-done':'');
   el.draggable=true; el.dataset.id=card.id;
   var col=dbKb().cols.find(function(c){return c.id===card.col;})||{color:'#94a3b8'};
   var avatarHtml=card.cliente
