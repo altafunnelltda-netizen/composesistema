@@ -1913,9 +1913,7 @@ var KB_PRIS = {
   alta:   {label:'Alta',    color:'#f59e0b'},
   urgente:{label:'Urgente', color:'#ef4444'}
 };
-var _kbDrag=null, _kbDragCol=null, _kbDragColReady=null, _kbScrollTimer=null, _kbScrollDir=0;
-// Limpa _kbDragColReady se o usuário soltou o mouse sem arrastar
-document.addEventListener('mouseup',function(){ if(!_kbDragCol) _kbDragColReady=null; });
+var _kbDrag=null, _kbDragCol=null, _kbScrollTimer=null, _kbScrollDir=0;
 
 document.addEventListener('dragover',function(e){
   if(!_kbDrag && !_kbDragCol) return;
@@ -1988,6 +1986,13 @@ function renderQuadro(){
       '<div class="kb-col-strip" style="background:'+col.color+'"></div>'+
       (isPinned?'<div class="kb-pinned-label">📌 fixada</div>':'')+
       '<div class="kb-col-hd">'+
+        '<div class="kb-drag-handle" title="Arrastar coluna">'+
+          '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">'+
+            '<circle cx="3" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/>'+
+            '<circle cx="3" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/>'+
+            '<circle cx="3" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/>'+
+          '</svg>'+
+        '</div>'+
         '<div class="kb-col-dot" style="background:'+col.color+'"></div>'+
         '<span class="kb-col-title">'+esc(col.label)+'</span>'+
         '<span class="kb-count">'+colCards.length+'</span>'+
@@ -2033,8 +2038,20 @@ function renderQuadro(){
       if(idx>=0) d2.cards[idx].col=col.id;
       dbKbSave(d2); renderQuadro();
     });
-    // drag de coluna: pega pelo cabeçalho
-    colEl.querySelector('.kb-col-hd').addEventListener('mousedown',function(){_kbDragColReady=col.id;});
+    // drag de coluna: SOMENTE pela alça dedicada (sem conflito com cards)
+    var handle = colEl.querySelector('.kb-drag-handle');
+    handle.setAttribute('draggable','true');
+    handle.addEventListener('dragstart',function(e){
+      _kbDragCol=col.id; colEl.classList.add('col-dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain','col:'+col.id);
+      e.stopPropagation();
+      _kbScrollStart();
+    });
+    handle.addEventListener('dragend',function(){
+      _kbDragCol=null; colEl.classList.remove('col-dragging'); _kbScrollStop();
+      document.querySelectorAll('.kb-col').forEach(function(c){c.classList.remove('drag-over');});
+    });
     colEl.querySelector('.kb-col-hd').addEventListener('contextmenu',function(e){
       e.stopPropagation();
       var n=dbKb().cards.filter(function(c){return c.col===col.id;}).length;
@@ -2048,20 +2065,6 @@ function renderQuadro(){
           kbDelColOk(col.id);
         }}
       ]);
-    });
-    colEl.setAttribute('draggable','true');
-    colEl.addEventListener('dragstart',function(e){
-      if(_kbDrag) return; // card sendo arrastado — não interfere
-      if(!_kbDragColReady){ e.preventDefault(); return; }
-      _kbDragCol=col.id; colEl.classList.add('col-dragging');
-      e.dataTransfer.effectAllowed='move';
-      e.dataTransfer.setData('text/plain','col:'+col.id);
-      _kbScrollStart();
-    });
-    colEl.addEventListener('dragend',function(e){
-      if(_kbDrag) return; // era drag de card
-      _kbDragCol=null; _kbDragColReady=null; colEl.classList.remove('col-dragging'); _kbScrollStop();
-      document.querySelectorAll('.kb-col').forEach(function(c){c.classList.remove('drag-over');});
     });
   });
   // botão nova coluna

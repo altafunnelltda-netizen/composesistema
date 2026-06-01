@@ -403,7 +403,15 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   transform:translateY(-2px);
 }
 .kb-card.dragging{opacity:.45;cursor:grabbing;transform:rotate(2deg) scale(1.02)}
-.kb-col-hd{cursor:grab}
+.kb-drag-handle{
+  cursor:grab;color:var(--border);
+  padding:6px 6px;border-radius:5px;
+  transition:color .12s,background .12s;
+  flex-shrink:0;display:flex;align-items:center;
+  margin-right:2px;
+}
+.kb-drag-handle:hover{color:var(--mid);background:var(--cream-dark)}
+.kb-drag-handle:active{cursor:grabbing}
 .kb-col.col-dragging{opacity:.5;transform:scale(.97) rotate(-1deg);transition:.15s;box-shadow:0 8px 32px rgba(0,0,0,.18)}
 .kb-col.drag-over .kb-cards{
   outline:2px dashed rgba(201,169,97,.5);outline-offset:3px;
