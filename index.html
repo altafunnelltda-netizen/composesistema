@@ -2116,9 +2116,8 @@ function kbMakeCard(card){
       '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'+
       esc(card.data)+'</span>':'')+'</div>';
   el.innerHTML=
-    '<div class="kb-card-pri-bar"></div>'+
-    '<div class="kb-card-label" style="background:'+col.color+'"></div>'+
     '<div class="kb-card-body">'+
+      (card.status==='ok'?'<div class="kb-done-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Concluído</div>':'')+
       '<div class="kb-card-title">'+esc(card.titulo||'Sem título')+'</div>'+
       (card.cliente?'<div style="font-size:12px;color:var(--mid);margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+esc(card.cliente)+'</div>':'')+
       valorHtml+obsHtml+metaHtml+

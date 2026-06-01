@@ -388,36 +388,39 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .kb-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 /* Card */
 .kb-card{
-  background:var(--cream);
+  background:var(--white);
   border:1px solid var(--border);
+  border-left:3px solid var(--border);
   border-radius:8px;overflow:hidden;
   cursor:pointer;user-select:none;
-  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+  transition:transform .16s ease,box-shadow .15s ease,border-color .15s ease;
   position:relative;
-  flex-shrink:0; /* impede compressão — card mantém tamanho natural */
+  flex-shrink:0;
 }
 .kb-card:hover{
-  border-color:var(--gold);
-  box-shadow:0 4px 16px rgba(0,0,0,.1);
-  transform:translateY(-2px);
+  box-shadow:0 3px 12px rgba(0,0,0,.1);
+  transform:translateY(-1px);
 }
+/* Barra de prioridade — border-left colorida */
+.kb-pri-baixa  {border-left-color:#94a3b8}
+.kb-pri-normal {border-left-color:#3b82f6}
+.kb-pri-alta   {border-left-color:#f59e0b}
+.kb-pri-urgente{border-left-color:#ef4444}
 .kb-card.dragging{opacity:.45;cursor:grabbing;transform:rotate(2deg) scale(1.02)}
 /* Card concluído */
 .kb-card.kb-done{
-  background:rgba(26,122,59,.04);
-  border-color:rgba(26,122,59,.25);
+  border-left-color:#1a7a3b;
+  opacity:.82;
 }
 .kb-card.kb-done .kb-card-title{
   text-decoration:line-through;
   color:var(--mid);
-  opacity:.75;
 }
-.kb-card.kb-done::after{
-  content:'✓ Concluído';
-  position:absolute;top:6px;right:8px;
-  font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+.kb-done-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
   color:#1a7a3b;background:rgba(26,122,59,.1);
-  padding:2px 6px;border-radius:4px;
+  padding:2px 7px;border-radius:4px;margin-bottom:6px;
 }
 .kb-drag-handle{
   cursor:grab;
@@ -433,15 +436,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   outline:2px dashed rgba(201,169,97,.5);outline-offset:3px;
   border-radius:6px;background:rgba(201,169,97,.04);
 }
-/* Faixa de prioridade (borda esquerda colorida) */
-.kb-card-pri-bar{position:absolute;left:0;top:0;bottom:0;width:3px}
-.kb-pri-baixa  .kb-card-pri-bar{background:#94a3b8}
-.kb-pri-normal .kb-card-pri-bar{background:#3b82f6}
-.kb-pri-alta   .kb-card-pri-bar{background:#f59e0b}
-.kb-pri-urgente .kb-card-pri-bar{background:#ef4444}
-/* Faixa de cor da coluna no card */
-.kb-card-label{height:4px;border-radius:0;width:100%;margin:0}
-.kb-card-body{padding:11px 13px 11px 16px}
+.kb-card-body{padding:11px 13px 11px 13px}
 .kb-card-title{
   font-size:13.5px;font-weight:700;line-height:1.4;
   color:var(--charcoal);margin-bottom:6px;
