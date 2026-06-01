@@ -3977,97 +3977,108 @@ function agGerarOS() {
   var p=_agOsParams();
   if(!p.de||!p.ate){toast('Informe o período','err');return;}
   if(p.de>p.ate){toast('Data inicial maior que a final','err');return;}
-  var evs=_agBuildOS(p);
-  if(!evs||!evs.length){toast('Nenhum evento neste período','err');return;}
   agCloseModal();
-  var periodStr=_agFmtDate(p.de)+(p.de!==p.ate?' a '+_agFmtDate(p.ate):'');
-  var bodyHtml=_agOsHtml(evs,p);
-  var fullHtml='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>OS '+periodStr+' — Composê</title><style>'+_agOsCSS+'</style></head><body><div class="doc">'+
-    '<div class="hd"><div class="hd-logo"><img src="/logo.png" alt=""><div><div class="hd-name">Composê <span class="hd-home">home</span></div><div class="hd-period">Período: '+periodStr+'</div></div></div>'+
-    '<div class="hd-right"><div class="hd-doc">ORDEM DE SERVIÇO</div><div class="hd-contact">composesantos.com.br<br>(13) 9 8195-0001<br>Santos — SP</div></div></div>'+
-    bodyHtml+'<div class="ft">Composê Home &middot; Santos, SP &middot; (13) 9 8195-0001 &middot; composesantos.com.br</div></div></body></html>';
-  var w=window.open('','_blank');
-  if(!w){toast('Permita popups para imprimir a OS','err');return;}
-  w.document.open(); w.document.write(fullHtml); w.document.close();
-  var done=false;
-  function doPrint(){if(done)return;done=true;w.focus();w.print();w.onafterprint=function(){w.close();};}
-  if(w.document.readyState==='complete') doPrint(); else w.onload=doPrint;
-  setTimeout(doPrint,900);
+  // Sync com servidor antes de gerar — garante dados atualizados
+  _agSyncAntesDe(function(){
+    var evs=_agBuildOS(p);
+    if(!evs||!evs.length){toast('Nenhum evento neste período','err');return;}
+    var periodStr=_agFmtDate(p.de)+(p.de!==p.ate?' a '+_agFmtDate(p.ate):'');
+    var fullHtml='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>OS '+periodStr+' — Composê</title><style>'+_agOsCSS+'</style></head><body><div class="doc">'+
+      '<div class="hd"><div class="hd-logo"><img src="/logo.png" alt=""><div><div class="hd-name">Composê <span class="hd-home">home</span></div><div class="hd-period">Período: '+periodStr+'</div></div></div>'+
+      '<div class="hd-right"><div class="hd-doc">ORDEM DE SERVIÇO</div><div class="hd-contact">composesantos.com.br<br>(13) 9 8195-0001<br>Santos — SP</div></div></div>'+
+      _agOsHtml(evs,p)+'<div class="ft">Composê Home &middot; Santos, SP &middot; (13) 9 8195-0001 &middot; composesantos.com.br</div></div></body></html>';
+    var w=window.open('','_blank');
+    if(!w){toast('Permita popups para imprimir a OS','err');return;}
+    w.document.open(); w.document.write(fullHtml); w.document.close();
+    var done=false;
+    function doPrint(){if(done)return;done=true;w.focus();w.print();w.onafterprint=function(){w.close();};}
+    if(w.document.readyState==='complete') doPrint(); else w.onload=doPrint;
+    setTimeout(doPrint,900);
+  });
 }
 
 function agCopiarImagem() {
   var p=_agOsParams();
   if(!p.de||!p.ate){toast('Informe o período','err');return;}
   if(p.de>p.ate){toast('Data inicial maior que a final','err');return;}
-  var evs=_agBuildOS(p);
-  if(!evs||!evs.length){toast('Nenhum evento neste período','err');return;}
   agCloseModal();
-  toast('Gerando imagem...','');
-  var periodStr=_agFmtDate(p.de)+(p.de!==p.ate?' a '+_agFmtDate(p.ate):'');
-  var bodyHtml=_agOsHtml(evs,p);
-  // Injeta CSS no <head> temporariamente para html2canvas funcionar
-  var tmpStyle=document.createElement('style');
-  tmpStyle.id='_ag-os-tmp'; tmpStyle.textContent=_agOsCSS;
-  document.head.appendChild(tmpStyle);
-
-  // container off-screen para html2canvas
-  var wrap=document.createElement('div');
-  wrap.className='doc';
-  wrap.style.cssText='position:fixed;left:-9999px;top:0;width:820px;background:#fff;z-index:-9999;';
-  wrap.innerHTML=
-    '<div class="hd">'+
-      '<div class="hd-logo">'+
-        '<img src="/logo.png" style="height:46px;object-fit:contain" crossorigin="anonymous" alt="">'+
-        '<div>'+
-          '<div class="hd-name">Composê <span class="hd-home">home</span></div>'+
-          '<div class="hd-period">Período: '+periodStr+'</div>'+
+  toast('Sincronizando...','');
+  _agSyncAntesDe(function(){
+    var evs=_agBuildOS(p);
+    if(!evs||!evs.length){toast('Nenhum evento neste período','err');return;}
+    toast('Gerando imagem...','');
+    var periodStr=_agFmtDate(p.de)+(p.de!==p.ate?' a '+_agFmtDate(p.ate):'');
+    var bodyHtml=_agOsHtml(evs,p);
+    var tmpStyle=document.createElement('style');
+    tmpStyle.id='_ag-os-tmp'; tmpStyle.textContent=_agOsCSS;
+    document.head.appendChild(tmpStyle);
+    var wrap=document.createElement('div');
+    wrap.className='doc';
+    wrap.style.cssText='position:fixed;left:-9999px;top:0;width:820px;background:#fff;z-index:-9999;';
+    wrap.innerHTML=
+      '<div class="hd">'+
+        '<div class="hd-logo">'+
+          '<img src="/logo.png" style="height:46px;object-fit:contain" crossorigin="anonymous" alt="">'+
+          '<div><div class="hd-name">Composê <span class="hd-home">home</span></div>'+
+          '<div class="hd-period">Período: '+periodStr+'</div></div>'+
+        '</div>'+
+        '<div class="hd-right">'+
+          '<div class="hd-doc">ORDEM DE SERVIÇO</div>'+
+          '<div class="hd-contact">composesantos.com.br<br>(13) 9 8195-0001<br>Santos — SP</div>'+
         '</div>'+
       '</div>'+
-      '<div class="hd-right">'+
-        '<div class="hd-doc">ORDEM DE SERVIÇO</div>'+
-        '<div class="hd-contact">composesantos.com.br<br>(13) 9 8195-0001<br>Santos — SP</div>'+
-      '</div>'+
-    '</div>'+
-    bodyHtml+
-    '<div class="ft">Composê Home · Santos, SP · (13) 9 8195-0001 · composesantos.com.br</div>';
-  document.body.appendChild(wrap);
-
-  function capturar(){
-    html2canvas(wrap,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false}).then(function(canvas){
-      document.head.removeChild(tmpStyle);
-      document.body.removeChild(wrap);
-      canvas.toBlob(function(blob){
-        if(!blob){toast('Erro ao gerar imagem','err');return;}
-        if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
-          navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
-            toast('Imagem copiada! Cole direto no WhatsApp ou mensagem.','ok');
-          }).catch(function(){_agFallbackImagem(canvas);});
-        } else {
-          _agFallbackImagem(canvas);
-        }
-      },'image/png');
-    }).catch(function(e){
-      if(document.getElementById('_ag-os-tmp')) document.head.removeChild(tmpStyle);
-      if(wrap.parentNode) document.body.removeChild(wrap);
-      toast('Erro ao gerar imagem: '+e.message,'err');
-    });
-  }
-
-  if(window.html2canvas){capturar();}
-  else{
-    var s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload=capturar;
-    s.onerror=function(){document.body.removeChild(wrap);toast('Erro ao carregar gerador de imagem','err');};
-    document.head.appendChild(s);
-  }
+      bodyHtml+
+      '<div class="ft">Composê Home · Santos, SP · (13) 9 8195-0001 · composesantos.com.br</div>';
+    document.body.appendChild(wrap);
+    function capturar(){
+      html2canvas(wrap,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false}).then(function(canvas){
+        if(document.getElementById('_ag-os-tmp')) document.head.removeChild(tmpStyle);
+        if(wrap.parentNode) document.body.removeChild(wrap);
+        canvas.toBlob(function(blob){
+          if(!blob){toast('Erro ao gerar imagem','err');return;}
+          if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+            navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
+              toast('Imagem copiada! Cole direto no WhatsApp.','ok');
+            }).catch(function(){_agFallbackImagem(canvas);});
+          } else {
+            _agFallbackImagem(canvas);
+          }
+        },'image/png');
+      }).catch(function(e){
+        if(document.getElementById('_ag-os-tmp')) document.head.removeChild(tmpStyle);
+        if(wrap.parentNode) document.body.removeChild(wrap);
+        toast('Erro ao gerar imagem: '+e.message,'err');
+      });
+    }
+    if(window.html2canvas){capturar();}
+    else{
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload=capturar;
+      s.onerror=function(){if(wrap.parentNode)document.body.removeChild(wrap);toast('Erro ao carregar gerador','err');};
+      document.head.appendChild(s);
+    }
+  });
 }
+
 function _agFallbackImagem(canvas){
-  // fallback: abre a imagem em nova aba para o user salvar
   var url=canvas.toDataURL('image/png');
   var w=window.open('','_blank');
   if(w){w.document.write('<img src="'+url+'" style="max-width:100%"><p style="font-family:sans-serif;color:#888;font-size:13px;margin:12px">Clique com botão direito → Copiar imagem</p>');}
   else toast('Permita popups para visualizar a imagem','err');
+}
+
+function _agSyncAntesDe(cb){
+  fetch('/dados')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      _syncLM = d._lastModified || _syncLM;
+      ['cps_agenda','cps_colab'].forEach(function(k){
+        if(d[k]!==undefined) localStorage.setItem(k,JSON.stringify(d[k]));
+      });
+      cb();
+    })
+    .catch(function(){ cb(); }); // se falhar, usa dados locais
 }
 
 function _agFmtDate(ds) {
