@@ -1914,6 +1914,8 @@ var KB_PRIS = {
   urgente:{label:'Urgente', color:'#ef4444'}
 };
 var _kbDrag=null, _kbDragCol=null, _kbDragColReady=null, _kbScrollTimer=null, _kbScrollDir=0;
+// Limpa _kbDragColReady se o usuário soltou o mouse sem arrastar
+document.addEventListener('mouseup',function(){ if(!_kbDragCol) _kbDragColReady=null; });
 
 document.addEventListener('dragover',function(e){
   if(!_kbDrag && !_kbDragCol) return;
@@ -1997,7 +1999,10 @@ function renderQuadro(){
     } else {
       colCards.forEach(function(card){ cardsEl.appendChild(kbMakeCard(card)); });
     }
-    colEl.addEventListener('dragover',function(e){e.preventDefault();colEl.classList.add('drag-over');});
+    colEl.addEventListener('dragover',function(e){
+      if(_kbDragCol===col.id) return; // não higlight a própria coluna
+      e.preventDefault(); colEl.classList.add('drag-over');
+    });
     colEl.addEventListener('dragleave',function(e){if(!colEl.contains(e.relatedTarget))colEl.classList.remove('drag-over');});
     colEl.addEventListener('drop',function(e){
       e.preventDefault(); colEl.classList.remove('drag-over');
@@ -2033,11 +2038,15 @@ function renderQuadro(){
     });
     colEl.setAttribute('draggable','true');
     colEl.addEventListener('dragstart',function(e){
+      if(_kbDrag) return; // card sendo arrastado — não interfere
       if(!_kbDragColReady){ e.preventDefault(); return; }
       _kbDragCol=col.id; colEl.classList.add('col-dragging');
-      e.dataTransfer.effectAllowed='move'; _kbScrollStart();
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain','col:'+col.id);
+      _kbScrollStart();
     });
-    colEl.addEventListener('dragend',function(){
+    colEl.addEventListener('dragend',function(e){
+      if(_kbDrag) return; // era drag de card
       _kbDragCol=null; _kbDragColReady=null; colEl.classList.remove('col-dragging'); _kbScrollStop();
       document.querySelectorAll('.kb-col').forEach(function(c){c.classList.remove('drag-over');});
     });
@@ -2109,8 +2118,18 @@ function kbMakeCard(card){
     }});
     ctxShow(e,items);
   });
-  el.addEventListener('dragstart',function(){_kbDrag=card.id;el.classList.add('dragging');_kbScrollStart();});
-  el.addEventListener('dragend',function(){_kbDrag=null;el.classList.remove('dragging');_kbScrollStop();});
+  el.addEventListener('dragstart',function(e){
+    _kbDrag=card.id; el.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain', card.id);
+    e.stopPropagation(); // impede a coluna de cancelar este drag
+    _kbScrollStart();
+  });
+  el.addEventListener('dragend',function(e){
+    _kbDrag=null; el.classList.remove('dragging');
+    e.stopPropagation();
+    _kbScrollStop();
+  });
   return el;
 }
 
