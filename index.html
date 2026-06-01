@@ -95,7 +95,7 @@
 .ag-wk-col-hoje { background:color-mix(in srgb,var(--acc) 4%,transparent); }
 .ag-wk-slot { height:52px; border-bottom:1px solid color-mix(in srgb,var(--brd) 60%,transparent); box-sizing:border-box; }
 .ag-wk-slot:nth-child(odd) { border-bottom-color:var(--brd); }
-.ag-wk-ev { position:absolute; left:2px; right:2px; border-radius:5px; padding:3px 6px; cursor:pointer; overflow:hidden; transition:.12s; box-sizing:border-box; }
+.ag-wk-ev { position:absolute; border-radius:5px; padding:3px 6px; cursor:pointer; overflow:hidden; transition:.12s; box-sizing:border-box; min-width:0; }
 .ag-wk-ev:hover { filter:brightness(.88); z-index:2; }
 .ag-wk-ev-name { font-size:11px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3; }
 .ag-wk-ev-time { font-size:10px; color:rgba(255,255,255,.8); }
@@ -106,7 +106,7 @@
 .ag-dv-col { flex:1; position:relative; }
 .ag-dv-slot { height:52px; border-bottom:1px solid color-mix(in srgb,var(--brd) 60%,transparent); box-sizing:border-box; }
 .ag-dv-slot:nth-child(odd) { border-bottom-color:var(--brd); }
-.ag-dv-ev { position:absolute; left:10px; right:10px; border-radius:8px; padding:7px 11px; cursor:grab; overflow:hidden; transition:.12s; box-sizing:border-box; user-select:none; }
+.ag-dv-ev { position:absolute; border-radius:8px; padding:7px 11px; cursor:grab; overflow:hidden; transition:.12s; box-sizing:border-box; user-select:none; min-width:0; }
 .ag-dv-ev:active { cursor:grabbing; }
 .ag-dv-ev:hover { filter:brightness(.88); }
 .ag-dv-ev-tipo { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:rgba(255,255,255,.75); margin-bottom:3px; }
@@ -3476,7 +3476,7 @@ function _agSemanaHtml() {
   html+='</div>';
   days.forEach(function(d){
     var ds=_ds(d), isH=d.toDateString()===hoje.toDateString();
-    var dayEvs=evs.filter(function(e){return e.data===ds&&e.horaInicio;});
+    var dayEvs=_agLayoutEvs(evs.filter(function(e){return e.data===ds&&e.horaInicio;}));
     html+='<div class="ag-wk-col'+(isH?' ag-wk-col-hoje':'')+'" onclick="agWkClick(\''+ds+'\',event)">';
     for(var h=0;h<24;h++) html+='<div class="ag-wk-slot"></div>';
     dayEvs.forEach(function(ev){
@@ -3484,7 +3484,10 @@ function _agSemanaHtml() {
       var p=ev.horaInicio.split(':'),sm=parseInt(p[0])*60+parseInt(p[1]);
       var em=ev.horaFim?(function(){var q=ev.horaFim.split(':');return parseInt(q[0])*60+parseInt(q[1]);}()):sm+60;
       var top=(sm/60)*52, ht=Math.max(((em-sm)/60)*52,20);
-      html+='<div class="ag-wk-ev" style="top:'+top+'px;height:'+ht+'px;background:'+t.color+';opacity:'+(ev.status==='cancelado'?.45:1)+'" onclick="event.stopPropagation();agEditModal(\''+ev.id+'\')">';
+      var cols=ev._cols||1, col=ev._col||0, gap=2;
+      var w=((100/cols)-gap)+' %'.replace(' ','');
+      var l=(col*(100/cols)+gap/2)+'%';
+      html+='<div class="ag-wk-ev" style="top:'+top+'px;height:'+ht+'px;left:'+l+';width:calc('+w+');background:'+t.color+';opacity:'+(ev.status==='cancelado'?.45:1)+'" onclick="event.stopPropagation();agEditModal(\''+ev.id+'\')">';
       html+='<div class="ag-wk-ev-name">'+esc(ev.cliente||'—')+'</div>';
       if(ht>36) html+='<div class="ag-wk-ev-time">'+ev.horaInicio+(ev.horaFim?' – '+ev.horaFim:'')+'</div>';
       html+='</div>';
@@ -3492,6 +3495,33 @@ function _agSemanaHtml() {
     html+='</div>';
   });
   return html+'</div></div></div></div>';
+}
+
+function _agLayoutEvs(evs) {
+  if(!evs.length) return evs;
+  function toMin(t){ var p=(t||'00:00').split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+  evs = evs.slice().sort(function(a,b){ return toMin(a.horaInicio)-toMin(b.horaInicio); });
+  // Assign columns greedily
+  var cols = []; // cols[i] = end-time of last event in col i
+  evs.forEach(function(ev){
+    var s=toMin(ev.horaInicio), e=ev.horaFim?toMin(ev.horaFim):s+60;
+    ev._emin=e;
+    var c=-1;
+    for(var i=0;i<cols.length;i++){ if(cols[i]<=s){c=i;break;} }
+    if(c===-1){c=cols.length;cols.push(0);}
+    ev._col=c; cols[c]=e;
+  });
+  // Find _cols = max simultaneous columns for each event's overlap group
+  evs.forEach(function(ev){
+    var s=toMin(ev.horaInicio), maxC=ev._col;
+    evs.forEach(function(o){
+      if(o===ev) return;
+      var os=toMin(o.horaInicio);
+      if(s < o._emin && ev._emin > os) maxC=Math.max(maxC,o._col);
+    });
+    ev._cols=maxC+1;
+  });
+  return evs;
 }
 
 function _agPendColabHtml() {
@@ -3545,13 +3575,17 @@ function _agDiaHtml() {
   html+='</div><div class="ag-dv-col">';
   for(var h=0;h<24;h++) html+='<div class="ag-dv-slot"></div>';
   if(isH){var now=new Date(),cm=now.getHours()*60+now.getMinutes();html+='<div style="position:absolute;left:0;right:0;top:'+(cm/60*52)+'px;height:2px;background:var(--acc);z-index:2;pointer-events:none"><div style="position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--acc)"></div></div>';}
-  timed.forEach(function(ev){
+  var timedLayout=_agLayoutEvs(timed);
+  timedLayout.forEach(function(ev){
     var t=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
     var p=ev.horaInicio.split(':'),sm=parseInt(p[0])*60+parseInt(p[1]);
     var em=ev.horaFim?(function(){var q=ev.horaFim.split(':');return parseInt(q[0])*60+parseInt(q[1]);}()):sm+60;
     var top=(sm/60)*52, ht=Math.max(((em-sm)/60)*52,26);
+    var cols=ev._cols||1, col=ev._col||0, gap=6;
+    var wPct=100/cols, lPct=col*wPct;
+    var leftCss='calc('+lPct+'% + '+gap+'px)', widthCss='calc('+wPct+'% - '+(gap*2)+'px)';
     var cn=(ev.colaboradores||[]).map(function(cid){var c=colabs.find(function(x){return x.id===cid;});return c?esc(c.nome.split(' ')[0]):'';}).filter(Boolean).join(', ');
-    html+='<div class="ag-dv-ev" style="top:'+top+'px;height:'+ht+'px;background:'+t.color+';opacity:'+(ev.status==='cancelado'?.45:1)+'" onclick="if(!_agDragMoved)agEditModal(\''+ev.id+'\')" onmousedown="agDvDragStart(event,\''+ev.id+'\')">';
+    html+='<div class="ag-dv-ev" style="top:'+top+'px;height:'+ht+'px;left:'+leftCss+';width:'+widthCss+';background:'+t.color+';opacity:'+(ev.status==='cancelado'?.45:1)+'" onclick="if(!_agDragMoved)agEditModal(\''+ev.id+'\')" onmousedown="agDvDragStart(event,\''+ev.id+'\')">';
     html+='<div class="ag-dv-ev-tipo">'+t.label+'</div>';
     html+='<div class="ag-dv-ev-nome">'+esc(ev.cliente||'—')+'</div>';
     html+='<div class="ag-dv-ev-time">'+ev.horaInicio+(ev.horaFim?' – '+ev.horaFim:'')+'</div>';
@@ -3781,26 +3815,27 @@ function agDeleteDirect(id){
 // ── EXPORTAR OS ───────────────────────────────────────────
 function agExportOSModal() {
   var hoje=_ds(new Date()), colabs=db('colab');
+  // Colaboradores como tags clicáveis (sem checkbox nativa)
   var colabsHtml='';
   if(colabs.length){
-    colabsHtml='<div class="ag-form-row"><label>Colaboradores</label>'+
-      '<div style="display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;padding:2px 0">'+
-        '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:600">'+
-          '<input type="checkbox" id="ag-os-todos" checked onchange="agOsToggleTodos(this)"> Todos os colaboradores'+
-        '</label>'+
-        colabs.map(function(c){
-          return '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding-left:16px">'+
-            '<input type="checkbox" class="ag-os-colab-cb" value="'+c.id+'" checked>'+
-            '<span style="width:9px;height:9px;border-radius:50%;background:'+c.cor+';flex-shrink:0;display:inline-block"></span>'+
-            esc(c.nome)+' <span style="opacity:.55;font-size:11px">('+esc(c.funcao)+')</span></label>';
-        }).join('')+
-      '</div></div>';
+    var tagTodos='<div id="ag-os-tag-todos" class="ag-os-tag ag-os-tag-on" onclick="agOsTagTodos()" style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:7px;border:1.5px solid var(--acc);background:var(--acc)18;font-size:12px;font-weight:700;cursor:pointer;color:var(--acc)">'+
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Todos</div>';
+    var tagItems=colabs.map(function(c){
+      return '<div class="ag-os-tag ag-os-tag-on" data-colab-id="'+c.id+'" onclick="agOsTagColab(this,\''+c.id+'\')" style="display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:7px;border:1.5px solid '+c.cor+';background:'+_hexRgba(c.cor,.1)+';font-size:12px;font-weight:600;cursor:pointer;color:var(--txt)">'+
+        '<span style="width:8px;height:8px;border-radius:50%;background:'+c.cor+';flex-shrink:0"></span>'+
+        esc(c.nome.split(' ')[0])+'</div>';
+    }).join('');
+    colabsHtml='<div class="ag-form-row">'+
+      '<label>Colaboradores</label>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">'+tagTodos+tagItems+'</div>'+
+      '<div style="font-size:11px;color:var(--txt2);margin-top:4px">Clique para selecionar/deselecionar</div>'+
+    '</div>';
   }
   var modal=document.getElementById('ag-modal');
   modal.innerHTML=
     '<div class="ag-modal-hd">'+_SVG.print+'<span class="ag-modal-hd-title">Exportar Ordem de Serviço</span>'+
     '<button class="ag-modal-close" onclick="agCloseModal()">'+_SVG.xmark+'</button></div>'+
-    '<div class="ag-modal-body" style="gap:14px">'+
+    '<div class="ag-modal-body" style="gap:16px">'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
         '<div class="ag-form-row"><label>De</label><input id="ag-os-de" type="date" value="'+hoje+'"></div>'+
         '<div class="ag-form-row"><label>Até</label><input id="ag-os-ate" type="date" value="'+hoje+'"></div>'+
@@ -3815,21 +3850,56 @@ function agExportOSModal() {
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
       '<button class="btn btn-s" onclick="agCloseModal()">Cancelar</button>'+
       '<button class="btn btn-s" style="display:flex;align-items:center;gap:6px" onclick="agCopiarImagem()">'+_SVG.copy+' Copiar imagem</button>'+
-      '<button class="btn btn-p" style="display:flex;align-items:center;gap:6px" onclick="agGerarOS(true)">'+_SVG.print+' Gerar PDF</button>'+
+      '<button class="btn btn-p" style="display:flex;align-items:center;gap:6px" onclick="agGerarOS()">'+_SVG.print+' Gerar PDF</button>'+
     '</div></div>';
   document.getElementById('ag-overlay').classList.add('on');
   modal.classList.add('on');
 }
-function agOsToggleTodos(cb){document.querySelectorAll('.ag-os-colab-cb').forEach(function(i){i.checked=cb.checked;});}
+function agOsTagTodos(){
+  var todos=document.getElementById('ag-os-tag-todos');
+  var isOn=todos.classList.contains('ag-os-tag-on');
+  var nowOn=!isOn;
+  // toggle todos
+  todos.classList.toggle('ag-os-tag-on',nowOn);
+  todos.style.borderColor=nowOn?'var(--acc)':'var(--brd)';
+  todos.style.background=nowOn?'var(--acc)18':'transparent';
+  todos.style.color=nowOn?'var(--acc)':'var(--txt2)';
+  // sync individual
+  document.querySelectorAll('.ag-os-tag[data-colab-id]').forEach(function(t){ _agOsTagSetOn(t,nowOn); });
+}
+function agOsTagColab(el,cid){
+  var isOn=el.classList.contains('ag-os-tag-on');
+  _agOsTagSetOn(el,!isOn);
+  // update "todos" state
+  var all=document.querySelectorAll('.ag-os-tag[data-colab-id]');
+  var allOn=Array.from(all).every(function(t){return t.classList.contains('ag-os-tag-on');});
+  var todosEl=document.getElementById('ag-os-tag-todos');
+  if(todosEl) _agOsTagSetOn(todosEl,allOn);
+}
+function _agOsTagSetOn(el,on){
+  el.classList.toggle('ag-os-tag-on',on);
+  var cid=el.dataset.colabId;
+  var c=cid?db('colab').find(function(x){return x.id===cid;}):null;
+  if(c){
+    el.style.borderColor=on?c.cor:'var(--brd)';
+    el.style.background=on?_hexRgba(c.cor,.1):'transparent';
+    el.style.color=on?'var(--txt)':'var(--txt2)';
+  } else {
+    el.style.borderColor=on?'var(--acc)':'var(--brd)';
+    el.style.background=on?'var(--acc)18':'transparent';
+    el.style.color=on?'var(--acc)':'var(--txt2)';
+  }
+}
 function _agOsParams(){
   var de=document.getElementById('ag-os-de').value;
   var ate=document.getElementById('ag-os-ate').value;
-  var tipo=document.getElementById('ag-os-tipo')?document.getElementById('ag-os-tipo').value:'';
-  var colabCbs=document.querySelectorAll('.ag-os-colab-cb');
+  var tipoEl=document.getElementById('ag-os-tipo');
+  var tipo=tipoEl?tipoEl.value:'';
+  var tags=document.querySelectorAll('.ag-os-tag[data-colab-id]');
   var colabIds=null;
-  if(colabCbs.length){
-    var checked=Array.from(colabCbs).filter(function(c){return c.checked;}).map(function(c){return c.value;});
-    if(checked.length<colabCbs.length) colabIds=checked;
+  if(tags.length){
+    var sel=Array.from(tags).filter(function(t){return t.classList.contains('ag-os-tag-on');}).map(function(t){return t.dataset.colabId;});
+    if(sel.length<tags.length) colabIds=sel;
   }
   return {de:de,ate:ate,tipo:tipo,colabIds:colabIds};
 }
