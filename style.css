@@ -421,49 +421,50 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .kb-pri-normal .kb-card-pri-bar{background:#3b82f6}
 .kb-pri-alta   .kb-card-pri-bar{background:#f59e0b}
 .kb-pri-urgente .kb-card-pri-bar{background:#ef4444}
-/* Pastilha de cor da coluna */
-.kb-card-label{height:6px;width:40px;border-radius:3px;margin:10px 10px 0 14px}
-.kb-card-body{padding:6px 10px 10px 14px}
+/* Faixa de cor da coluna no card */
+.kb-card-label{height:4px;border-radius:0;width:100%;margin:0}
+.kb-card-body{padding:11px 13px 11px 16px}
 .kb-card-title{
-  font-size:13px;font-weight:600;line-height:1.45;
-  color:var(--charcoal);margin-bottom:5px;
+  font-size:13.5px;font-weight:700;line-height:1.4;
+  color:var(--charcoal);margin-bottom:6px;
+  word-break:break-word;
 }
 .kb-card-valor{
-  font-size:11px;font-weight:700;color:var(--gold-dark);
+  font-size:11.5px;font-weight:700;color:var(--gold-dark);
   display:inline-flex;align-items:center;gap:3px;
-  background:rgba(201,169,97,.1);padding:1px 7px;border-radius:4px;
-  margin-bottom:5px;
+  background:rgba(201,169,97,.12);padding:2px 8px;border-radius:5px;
+  margin-bottom:6px;
 }
 .kb-card-obs{
-  font-size:11px;color:var(--mid);line-height:1.45;
+  font-size:11.5px;color:var(--mid);line-height:1.5;
   display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  margin-bottom:7px;
+  margin-bottom:8px;
 }
 .kb-card-meta{
-  display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:7px;
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;
 }
 .kb-pri-chip{
-  font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
-  padding:2px 6px;border-radius:4px;
+  font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+  padding:2px 7px;border-radius:5px;
 }
 .kb-pri-chip.baixa  {color:#64748b;background:rgba(100,116,139,.1)}
 .kb-pri-chip.normal {color:#3b82f6;background:rgba(59,130,246,.1)}
-.kb-pri-chip.alta   {color:#d97706;background:rgba(245,158,11,.1)}
+.kb-pri-chip.alta   {color:#d97706;background:rgba(245,158,11,.12)}
 .kb-pri-chip.urgente{color:#dc2626;background:rgba(239,68,68,.1)}
-.kb-card-date{font-size:10px;color:var(--mid);display:flex;align-items:center;gap:3px}
+.kb-card-date{font-size:10.5px;color:var(--mid);display:flex;align-items:center;gap:3px}
 .kb-card-footer{
   display:flex;align-items:center;justify-content:space-between;gap:6px;
-  padding-top:6px;border-top:1px solid var(--border);
+  padding-top:8px;border-top:1px solid var(--border);margin-top:2px;
 }
 .kb-card-chips{display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex:1}
 .kb-chip-status{
-  width:18px;height:18px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;
   border:1.5px solid var(--border);transition:.15s;
 }
 .kb-chip-status.ok{background:#1a7a3b;border-color:#1a7a3b;color:#fff}
 .kb-chip-avatar{
-  width:26px;height:26px;border-radius:8px;
+  width:28px;height:28px;border-radius:8px;
   background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;
   font-size:10px;font-weight:800;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;

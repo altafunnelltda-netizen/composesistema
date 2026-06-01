@@ -2103,7 +2103,7 @@ function kbMakeCard(card){
     '<div class="kb-card-label" style="background:'+col.color+'"></div>'+
     '<div class="kb-card-body">'+
       '<div class="kb-card-title">'+esc(card.titulo||'Sem título')+'</div>'+
-      (card.cliente?'<div style="font-size:11px;color:var(--mid);margin-bottom:4px">👤 '+esc(card.cliente)+'</div>':'')+
+      (card.cliente?'<div style="font-size:12px;color:var(--mid);margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+esc(card.cliente)+'</div>':'')+
       valorHtml+obsHtml+metaHtml+
       '<div class="kb-card-footer">'+
         '<div class="kb-card-chips">'+statusHtml+'</div>'+
@@ -2184,14 +2184,14 @@ function kbOpenModal(cardId, defaultColId){
       '</div>'+
       '<div class="kb-modal-body">'+
         '<div class="f"><label>Título</label>'+
-          '<input id="kbm-titulo" value="'+esc(card.titulo)+'" placeholder="Ex: ORÇAMENTO FULANO" />'+
+          '<input type="text" id="kbm-titulo" value="'+esc(card.titulo)+'" placeholder="Ex: ORÇAMENTO FULANO" />'+
         '</div>'+
         '<div class="f"><label>Cliente</label>'+
-          '<input id="kbm-cliente" value="'+esc(card.cliente)+'" placeholder="Nome do cliente" />'+
+          '<input type="text" id="kbm-cliente" value="'+esc(card.cliente)+'" placeholder="Nome do cliente" />'+
         '</div>'+
         '<div style="display:flex;gap:8px">'+
           '<div class="f" style="flex:1"><label>Valor</label>'+
-            '<input id="kbm-valor" value="'+esc(card.valor)+'" placeholder="Ex: 1.200,00" />'+
+            '<input type="text" id="kbm-valor" value="'+esc(card.valor)+'" placeholder="Ex: 1.200,00" />'+
           '</div>'+
           '<div class="f" style="flex:1"><label>Coluna</label>'+
             '<select id="kbm-col">'+colOpts+'</select>'+
