@@ -2016,8 +2016,9 @@ function renderQuadro(){
       colCards.forEach(function(card){ cardsEl.appendChild(kbMakeCard(card)); });
     }
     colEl.addEventListener('dragover',function(e){
-      if(_kbDragCol===col.id) return; // não higlight a própria coluna
-      e.preventDefault(); colEl.classList.add('drag-over');
+      if(!_kbDrag && !_kbDragCol) return;
+      e.preventDefault(); // SEMPRE aceita — evita cursor "proibido"
+      if(_kbDragCol!==col.id) colEl.classList.add('drag-over');
     });
     colEl.addEventListener('dragleave',function(e){if(!colEl.contains(e.relatedTarget))colEl.classList.remove('drag-over');});
     colEl.addEventListener('drop',function(e){
@@ -2045,6 +2046,8 @@ function renderQuadro(){
       _kbDragCol=col.id; colEl.classList.add('col-dragging');
       e.dataTransfer.effectAllowed='move';
       e.dataTransfer.setData('text/plain','col:'+col.id);
+      // Usa a coluna inteira como imagem de arrasto (não a alça minúscula)
+      e.dataTransfer.setDragImage(colEl, 20, 20);
       e.stopPropagation();
       _kbScrollStart();
     });

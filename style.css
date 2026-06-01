@@ -297,9 +297,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 #pg-quadro.on{
   margin:-20px -22px;padding:0;
   background:var(--cream-dark);
-  height:calc(100vh - 48px);
-  overflow:hidden;
-  display:flex;flex-direction:column;
+  min-height:calc(100vh - 48px);
 }
 /* Toolbar */
 .kb-toolbar{
@@ -307,7 +305,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   padding:14px 18px;
   background:var(--white);
   border-bottom:1px solid var(--border);
-  flex-shrink:0;z-index:10;
+  position:sticky;top:52px;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 .kb-search-wrap{position:relative;flex:1;min-width:180px}
@@ -315,13 +313,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .kb-search-wrap input{padding-left:34px!important;width:100%;border-radius:24px!important}
 .kb-search-wrap input:focus{border-radius:10px!important}
 .kb-toolbar .btn-s{white-space:nowrap}
-/* Board — preenche o espaço restante */
+/* Board */
 .kb-board{
-  flex:1;min-height:0;
-  display:flex;gap:14px;
-  overflow-x:auto;overflow-y:hidden;
-  padding:14px 14px 14px;
-  align-items:stretch;
+  display:flex;gap:14px;overflow-x:auto;
+  padding:14px 14px 24px;
+  align-items:flex-start;
+  min-height:calc(100vh - 122px);
 }
 .kb-board::-webkit-scrollbar{height:7px}
 .kb-board::-webkit-scrollbar-track{background:var(--cream-dark);border-radius:4px}
@@ -334,6 +331,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   border-radius:12px;
   width:272px;flex-shrink:0;
   display:flex;flex-direction:column;
+  max-height:calc(100vh - 122px);
   overflow:hidden;
   box-shadow:0 2px 8px rgba(0,0,0,.06);
   transition:box-shadow .18s,border-color .18s;
@@ -381,10 +379,10 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   font-size:16px;line-height:1;transition:.12s;flex-shrink:0;
 }
 .kb-col-btn:hover{background:var(--cream-dark);color:var(--charcoal)}
-/* Cards area — min-height:0 é ESSENCIAL para o scroll funcionar no flex */
+/* Cards area — min-height:0 é ESSENCIAL: permite que o flex encolha e ative o scroll */
 .kb-cards{
   padding:8px;display:flex;flex-direction:column;gap:7px;
-  flex:1;min-height:0;overflow-y:auto;
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
 }
 .kb-cards::-webkit-scrollbar{width:4px}
 .kb-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -404,14 +402,14 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 }
 .kb-card.dragging{opacity:.45;cursor:grabbing;transform:rotate(2deg) scale(1.02)}
 .kb-drag-handle{
-  cursor:grab;color:var(--border);
-  padding:6px 6px;border-radius:5px;
+  cursor:grab;
+  color:var(--mid);
+  padding:7px 8px;border-radius:6px;
   transition:color .12s,background .12s;
   flex-shrink:0;display:flex;align-items:center;
-  margin-right:2px;
 }
-.kb-drag-handle:hover{color:var(--mid);background:var(--cream-dark)}
-.kb-drag-handle:active{cursor:grabbing}
+.kb-drag-handle:hover{color:var(--charcoal);background:var(--cream-dark)}
+.kb-drag-handle:active{cursor:grabbing;background:var(--cream-dark)}
 .kb-col.col-dragging{opacity:.5;transform:scale(.97) rotate(-1deg);transition:.15s;box-shadow:0 8px 32px rgba(0,0,0,.18)}
 .kb-col.drag-over .kb-cards{
   outline:2px dashed rgba(201,169,97,.5);outline-offset:3px;
