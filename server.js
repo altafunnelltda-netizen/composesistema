@@ -129,10 +129,22 @@ app.get('/dados', auth, async (req, res) => {
   }
 });
 
+// Endpoint leve — só retorna o timestamp da última modificação
+app.get('/dados/status', auth, async (req, res) => {
+  try {
+    const d = await lerDados();
+    res.json({ lastModified: d._lastModified || 0 });
+  } catch (e) {
+    res.json({ lastModified: 0 });
+  }
+});
+
 app.post('/dados', auth, async (req, res) => {
   try {
-    await salvarDados(req.body);
-    res.json({ ok: true });
+    const lm = Date.now();
+    const data = Object.assign({}, req.body, { _lastModified: lm });
+    await salvarDados(data);
+    res.json({ ok: true, lastModified: lm });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
   }

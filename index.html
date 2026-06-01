@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="/style.css">
 <style>
 .wrap-nopad { padding:0 !important; }
+/* sync badge */
+.sync-badge { display:none; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--acc); background:var(--acc)18; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.sync-badge.on { display:flex; animation:syncFade 3s ease forwards; }
+@keyframes syncFade { 0%{opacity:0;transform:translateY(-4px)} 15%{opacity:1;transform:translateY(0)} 70%{opacity:1} 100%{opacity:0} }
 
 /* aliases para o sistema de variáveis do projeto */
 :root {
@@ -316,6 +320,10 @@
     <span class="topbar-title" id="topbar-title">Dashboard</span>
     <div style="display:flex;align-items:center;gap:12px">
       <span class="topbar-date" id="topbar-date"></span>
+      <span class="sync-badge" id="sync-badge" title="Dados atualizados">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Sincronizado
+      </span>
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
         <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
         <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -855,17 +863,79 @@ var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cp
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
-  // Persiste no servidor em background
   var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab') };
-  payload[K[key]] = arr; // garante que o valor recém-salvo está incluído
+  payload[K[key]] = arr;
   fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d.lastModified) _syncLM = d.lastModified; })
     .catch(function(){});
 }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
+// ── SYNC AUTOMÁTICO ──────────────────────────────────────
+var _syncLM = 0;
+var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab'];
+
+function _syncAplicar(d) {
+  var changed = false;
+  _syncKeys.forEach(function(k){
+    if(d[k] === undefined) return;
+    var cur = localStorage.getItem(k);
+    var nov = JSON.stringify(d[k]);
+    if(cur !== nov){ localStorage.setItem(k, nov); changed = true; }
+  });
+  return changed;
+}
+
+function _syncRefresh() {
+  var pgEl = document.querySelector('.pg.on');
+  var id = pgEl ? pgEl.id.replace('pg-','') : 'dashboard';
+  if(id==='dashboard') { if(typeof atualizarDash==='function') atualizarDash(); }
+  else if(id==='agenda') { if(typeof renderAgenda==='function') renderAgenda(); }
+  else if(id==='quadro') { if(typeof renderQuadro==='function') renderQuadro(); }
+  else if(id==='notas') { if(typeof renderNotas==='function') renderNotas(); }
+  else if(id==='colaboradores') { if(typeof renderColab==='function') renderColab(); }
+  else if(id==='historico') { if(typeof renderHistorico==='function') renderHistorico(); }
+  if(typeof atualizarTrashBadge==='function') atualizarTrashBadge();
+}
+
+function _syncPull() {
+  fetch('/dados/status')
+    .then(function(r){ return r.json(); })
+    .then(function(s){
+      var lm = s.lastModified || 0;
+      if(lm > _syncLM && _syncLM > 0) {
+        fetch('/dados')
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            _syncLM = d._lastModified || lm;
+            if(_syncAplicar(d)) {
+              _syncRefresh();
+              _syncBadge();
+            }
+          }).catch(function(){});
+      } else if(_syncLM === 0) {
+        _syncLM = lm || Date.now();
+      }
+    }).catch(function(){});
+}
+
+function _syncBadge() {
+  var el = document.getElementById('sync-badge');
+  if(!el) return;
+  el.classList.add('on');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.classList.remove('on'); }, 3000);
+}
+
+// Inicia polling: a cada 12s quando aba visível, verifica ao volcar visibilidade
+setInterval(function(){ if(!document.hidden) _syncPull(); }, 12000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) _syncPull(); });
+
 // ── INIT: carrega dados do servidor no localStorage ───────
 (function(){
   fetch('/dados').then(function(r){ return r.json(); }).then(function(d){
+    _syncLM = d._lastModified || Date.now();
     if(d.cps_orc && d.cps_orc.length) localStorage.setItem('cps_orc', JSON.stringify(d.cps_orc));
     if(d.cps_cor && d.cps_cor.length) localStorage.setItem('cps_cor', JSON.stringify(d.cps_cor));
     if(d.cps_tap && d.cps_tap.length) localStorage.setItem('cps_tap', JSON.stringify(d.cps_tap));
@@ -878,7 +948,6 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
     if(d.cps_colab && d.cps_colab.length) localStorage.setItem('cps_colab', JSON.stringify(d.cps_colab));
     if(typeof atualizarDash === 'function') atualizarDash();
     if(typeof atualizarTrashBadge === 'function') atualizarTrashBadge();
-    // Navega para a seção do hash após carregar os dados
     var _hid = window.location.hash.replace('#','') || 'dashboard';
     if (_hid !== 'dashboard' && document.getElementById('pg-'+_hid)) ir(_hid, null);
   }).catch(function(){});
