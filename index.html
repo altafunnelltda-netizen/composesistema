@@ -2266,7 +2266,7 @@ function kbNewCol(){
       '</div>'+
       '<div class="kb-modal-body">'+
         '<div class="f"><label>Nome da coluna</label>'+
-          '<input id="kbn-nome" placeholder="Ex: Em andamento" onkeydown="if(event.key===\'Enter\')kbSaveNewCol()" />'+
+          '<input type="text" id="kbn-nome" placeholder="Ex: Em andamento" onkeydown="if(event.key===\'Enter\')kbSaveNewCol()" />'+
         '</div>'+
         '<input type="hidden" id="kbn-cor" value="'+cores[0]+'" />'+
         '<div class="f"><label>Cor</label><div id="kbn-sw" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px">'+swatches+'</div></div>'+
@@ -2307,7 +2307,7 @@ function kbEditCol(colId, e){
         '<button class="kb-modal-close" onclick="kbCloseModal()">×</button>'+
       '</div>'+
       '<div class="kb-modal-body">'+
-        '<div class="f"><label>Nome</label><input id="kbec-nome" value="'+esc(col.label)+'" /></div>'+
+        '<div class="f"><label>Nome</label><input type="text" id="kbec-nome" value="'+esc(col.label)+'" /></div>'+
         '<input type="hidden" id="kbec-cor" value="'+col.color+'" />'+
         '<div class="f"><label>Cor</label><div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px">'+swatches+'</div></div>'+
       '</div>'+
