@@ -252,18 +252,39 @@
 .colab-empty svg { color:var(--txt2); opacity:.2; }
 .colab-empty-ttl { font-size:15px; font-weight:600; color:var(--txt2); }
 .colab-empty-sub { font-size:13px; color:var(--txt2); opacity:.55; }
-.colab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
-.colab-card { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; overflow:hidden; cursor:pointer; transition:.18s; display:flex; flex-direction:column; }
-.colab-card:hover { border-color:var(--acc); transform:translateY(-1px); box-shadow:0 4px 18px rgba(0,0,0,.09); }
-.colab-card-top { height:5px; }
-.colab-card-body { padding:16px; flex:1; display:flex; gap:14px; align-items:flex-start; }
-.colab-av { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; }
+.colab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+.colab-card { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; overflow:hidden; transition:.18s; display:flex; flex-direction:column; cursor:default; }
+.colab-card:hover { box-shadow:0 4px 18px rgba(0,0,0,.09); }
+.colab-card-top { height:5px; flex-shrink:0; }
+.colab-card-body { padding:14px 16px 10px; display:flex; gap:12px; align-items:flex-start; }
+.colab-av { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:#fff; flex-shrink:0; }
 .colab-info { flex:1; min-width:0; }
-.colab-card-name { font-size:15px; font-weight:700; color:var(--txt); margin:0 0 2px; }
-.colab-card-funcao { font-size:12px; color:var(--txt2); margin:0 0 8px; }
-.colab-card-tel { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--txt2); margin:0 0 10px; }
+.colab-card-name { font-size:15px; font-weight:700; color:var(--txt); margin:0 0 1px; }
+.colab-card-funcao { font-size:12px; color:var(--txt2); margin:0 0 5px; }
+.colab-card-tel { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--txt2); }
 .colab-card-tel svg { width:12px; height:12px; opacity:.6; }
-.colab-stats { display:flex; gap:6px; flex-wrap:wrap; }
+.colab-card-edit { background:none; border:none; font-size:12px; font-weight:600; color:var(--acc); cursor:pointer; padding:3px 8px; border-radius:5px; transition:.15s; font-family:inherit; flex-shrink:0; align-self:flex-start; margin-top:2px; }
+.colab-card-edit:hover { background:var(--acc)18; }
+/* Pendências */
+.colab-pend-section { border-top:1.5px solid var(--brd); }
+.colab-pend-hd { padding:8px 16px 4px; display:flex; align-items:center; justify-content:space-between; }
+.colab-pend-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--txt2); }
+.colab-pend-count { font-size:11px; font-weight:700; padding:1px 7px; border-radius:12px; }
+.colab-pend-count-zero  { color:var(--txt2); }
+.colab-pend-count-some  { background:rgba(245,158,11,.15); color:#b45309; }
+.colab-pend-list { padding:0 16px 10px; display:flex; flex-direction:column; }
+.colab-ev-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--brd); cursor:pointer; transition:.1s; }
+.colab-ev-row:last-child { border-bottom:none; }
+.colab-ev-row:hover { opacity:.8; }
+.colab-ev-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.colab-ev-date { font-size:11px; font-weight:700; color:var(--txt2); min-width:60px; white-space:nowrap; }
+.colab-ev-date.vencido { color:#ef4444; }
+.colab-ev-hora { font-size:11px; color:var(--txt2); min-width:40px; font-variant-numeric:tabular-nums; }
+.colab-ev-tipo { font-size:10px; font-weight:700; padding:1px 7px; border-radius:4px; white-space:nowrap; flex-shrink:0; }
+.colab-ev-cliente { font-size:12px; font-weight:600; color:var(--txt); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.colab-pend-vazio { font-size:12px; color:var(--txt2); opacity:.55; padding:6px 0 2px; text-align:center; }
+/* Footer */
+.colab-card-ft { padding:8px 16px 12px; border-top:1.5px solid var(--brd); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .colab-stat { font-size:11px; background:var(--bg); border:1px solid var(--brd); border-radius:5px; padding:2px 8px; color:var(--txt2); display:flex; align-items:center; gap:4px; }
 .colab-stat svg { width:10px; height:10px; }
 .colab-stat-pend { background:#f59e0b12; border-color:#f59e0b40; color:#b45309; }
@@ -4332,31 +4353,80 @@ function renderColab(){
   var wrap=document.getElementById('colab-wrap');
   if(!wrap) return;
   var colabs=db('colab');
+  var todosEvs=db('agenda');
+  var hoje=new Date(); hoje.setHours(0,0,0,0);
+  var MS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
   var html='<div class="colab-pg">';
   html+='<div class="colab-topbar"><div><div class="colab-title">Colaboradores</div><div class="colab-sub">'+colabs.length+' membro'+(colabs.length!==1?'s':'')+' da equipe</div></div>';
   html+='<button class="btn btn-p" style="display:flex;align-items:center;gap:6px" onclick="colabOpenModal(null)">'+_SVG.plus+' Novo Colaborador</button></div>';
+
   if(!colabs.length){
     html+='<div class="colab-empty">'+_SVG.users.replace('viewBox','width="48" height="48" viewBox')+'<div class="colab-empty-ttl">Nenhum colaborador cadastrado</div><div class="colab-empty-sub">Adicione os membros da equipe para atribuí-los nos eventos</div></div>';
   } else {
     html+='<div class="colab-grid">';
     colabs.forEach(function(c){
-      var evs=db('agenda').filter(function(e){return(e.colaboradores||[]).indexOf(c.id)>-1;});
-      var pend=evs.filter(function(e){return e.status==='agendado';}).length;
-      html+='<div class="colab-card" onclick="colabEditModal(\''+c.id+'\')">'+
-        '<div class="colab-card-top" style="background:'+c.cor+'"></div>'+
-        '<div class="colab-card-body">'+
-          '<div class="colab-av" style="background:'+c.cor+'">'+_initials(c.nome)+'</div>'+
-          '<div class="colab-info">'+
-            '<div class="colab-card-name">'+esc(c.nome)+'</div>'+
-            '<div class="colab-card-funcao">'+esc(c.funcao)+'</div>'+
-            (c.telefone?'<div class="colab-card-tel">'+_SVG.phone+' '+esc(c.telefone)+'</div>':'')+
-            '<div class="colab-stats">'+
-              '<span class="colab-stat">'+_SVG.cal+' '+evs.length+' evento'+(evs.length!==1?'s':'')+'</span>'+
-              (pend?'<span class="colab-stat colab-stat-pend">'+_SVG.clock+' '+pend+' pendente'+(pend>1?'s':'')+'</span>':'')+
-            '</div>'+
-          '</div>'+
-        '</div>'+
-      '</div>';
+      var meusEvs=todosEvs.filter(function(e){return(e.colaboradores||[]).indexOf(c.id)>-1;});
+      var pendentes=meusEvs.filter(function(e){return e.status==='agendado';})
+        .sort(function(a,b){return(a.data+(a.horaInicio||'')).localeCompare(b.data+(b.horaInicio||''));});
+      var concluidos=meusEvs.filter(function(e){return e.status==='concluido';}).length;
+
+      html+='<div class="colab-card">';
+      html+='<div class="colab-card-top" style="background:'+c.cor+'"></div>';
+
+      // Header
+      html+='<div class="colab-card-body">';
+      html+='<div class="colab-av" style="background:'+c.cor+'">'+_initials(c.nome)+'</div>';
+      html+='<div class="colab-info">';
+      html+='<div class="colab-card-name">'+esc(c.nome)+'</div>';
+      html+='<div class="colab-card-funcao">'+esc(c.funcao)+'</div>';
+      if(c.telefone) html+='<div class="colab-card-tel">'+_SVG.phone+' '+esc(c.telefone)+'</div>';
+      html+='</div>';
+      html+='<button class="colab-card-edit" onclick="colabEditModal(\''+c.id+'\')">Editar</button>';
+      html+='</div>';
+
+      // Pendências
+      html+='<div class="colab-pend-section">';
+      html+='<div class="colab-pend-hd">';
+      html+='<span class="colab-pend-lbl">Pendências</span>';
+      if(pendentes.length){
+        html+='<span class="colab-pend-count colab-pend-count-some">'+pendentes.length+' agendado'+(pendentes.length>1?'s':'')+'</span>';
+      } else {
+        html+='<span class="colab-pend-count colab-pend-count-zero">Nenhuma</span>';
+      }
+      html+='</div>';
+      html+='<div class="colab-pend-list">';
+      if(!pendentes.length){
+        html+='<div class="colab-pend-vazio">Sem pendências</div>';
+      } else {
+        pendentes.slice(0,6).forEach(function(ev){
+          var t=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
+          var d=new Date(ev.data+'T12:00:00');
+          var isH=d.toDateString()===hoje.toDateString();
+          var isPast=d<hoje&&!isH;
+          var dateStr=isH?'Hoje':DS[d.getDay()]+' '+d.getDate()+' '+MS[d.getMonth()];
+          html+='<div class="colab-ev-row" onclick="agCellClick(\''+ev.data+'\')">';
+          html+='<div class="colab-ev-dot" style="background:'+t.color+'"></div>';
+          html+='<span class="colab-ev-date'+(isPast?' vencido':'')+'">'+dateStr+'</span>';
+          html+='<span class="colab-ev-hora">'+(ev.horaInicio||'—')+'</span>';
+          html+='<span class="colab-ev-tipo" style="background:'+_hexRgba(t.color,.12)+';color:'+t.color+'">'+t.label+'</span>';
+          html+='<span class="colab-ev-cliente">'+esc(ev.cliente||'—')+'</span>';
+          html+='</div>';
+        });
+        if(pendentes.length>6){
+          html+='<div style="font-size:11px;color:var(--txt2);padding:4px 0 2px;opacity:.7">+'+(pendentes.length-6)+' mais</div>';
+        }
+      }
+      html+='</div></div>';
+
+      // Footer stats
+      html+='<div class="colab-card-ft">';
+      html+='<span class="colab-stat">'+_SVG.cal+' '+meusEvs.length+' evento'+(meusEvs.length!==1?'s':'')+'</span>';
+      if(concluidos) html+='<span class="colab-stat">'+_SVG.check+' '+concluidos+' concluído'+(concluidos>1?'s':'')+'</span>';
+      html+='</div>';
+
+      html+='</div>'; // card
     });
     html+='</div>';
   }
