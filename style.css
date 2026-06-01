@@ -394,6 +394,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   cursor:pointer;user-select:none;
   transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
   position:relative;
+  flex-shrink:0; /* impede compressão — card mantém tamanho natural */
 }
 .kb-card:hover{
   border-color:var(--gold);
