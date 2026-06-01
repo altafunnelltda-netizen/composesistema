@@ -331,7 +331,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   border-radius:12px;
   width:272px;flex-shrink:0;
   display:flex;flex-direction:column;
-  max-height:calc(100vh - 122px);
+  height:calc(100vh - 122px);
   overflow:hidden;
   box-shadow:0 2px 8px rgba(0,0,0,.06);
   transition:box-shadow .18s,border-color .18s;
