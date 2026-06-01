@@ -295,10 +295,11 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
    KANBAN — tema claro premium
 ══════════════════════════════════════════ */
 #pg-quadro.on{
-  margin:-20px -22px;
-  padding:0;
+  margin:-20px -22px;padding:0;
   background:var(--cream-dark);
-  min-height:calc(100vh - 48px);
+  height:calc(100vh - 48px);
+  overflow:hidden;
+  display:flex;flex-direction:column;
 }
 /* Toolbar */
 .kb-toolbar{
@@ -306,7 +307,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   padding:14px 18px;
   background:var(--white);
   border-bottom:1px solid var(--border);
-  position:sticky;top:52px;z-index:10;
+  flex-shrink:0;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 .kb-search-wrap{position:relative;flex:1;min-width:180px}
@@ -314,12 +315,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .kb-search-wrap input{padding-left:34px!important;width:100%;border-radius:24px!important}
 .kb-search-wrap input:focus{border-radius:10px!important}
 .kb-toolbar .btn-s{white-space:nowrap}
-/* Board */
+/* Board — preenche o espaço restante */
 .kb-board{
-  display:flex;gap:14px;overflow-x:auto;
-  padding:16px 16px 24px;
-  align-items:flex-start;
-  min-height:calc(100vh - 175px);
+  flex:1;min-height:0;
+  display:flex;gap:14px;
+  overflow-x:auto;overflow-y:hidden;
+  padding:14px 14px 14px;
+  align-items:stretch;
 }
 .kb-board::-webkit-scrollbar{height:7px}
 .kb-board::-webkit-scrollbar-track{background:var(--cream-dark);border-radius:4px}
@@ -332,9 +334,29 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   border-radius:12px;
   width:272px;flex-shrink:0;
   display:flex;flex-direction:column;
-  max-height:calc(100vh - 175px);
   overflow:hidden;
   box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:box-shadow .18s,border-color .18s;
+}
+/* Coluna fixada */
+.kb-col.kb-pinned{
+  border-color:rgba(201,169,97,.45);
+  box-shadow:4px 0 18px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
+  z-index:4;
+}
+.kb-pin-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--border);padding:3px 5px;border-radius:5px;
+  font-size:12px;line-height:1;transition:.12s;flex-shrink:0;
+  opacity:0;
+}
+.kb-col-hd:hover .kb-pin-btn{opacity:1}
+.kb-col.kb-pinned .kb-pin-btn{opacity:1;color:var(--gold)}
+.kb-pin-btn:hover{background:var(--cream-dark);color:var(--gold)!important;opacity:1!important}
+.kb-pinned-label{
+  font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--gold);padding:2px 8px;background:rgba(201,169,97,.1);
+  border-bottom:1px solid rgba(201,169,97,.2);text-align:center;flex-shrink:0;
 }
 .kb-col-strip{height:4px;border-radius:12px 12px 0 0;flex-shrink:0}
 .kb-col-hd{
@@ -359,10 +381,10 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   font-size:16px;line-height:1;transition:.12s;flex-shrink:0;
 }
 .kb-col-btn:hover{background:var(--cream-dark);color:var(--charcoal)}
-/* Cards area */
+/* Cards area — min-height:0 é ESSENCIAL para o scroll funcionar no flex */
 .kb-cards{
   padding:8px;display:flex;flex-direction:column;gap:7px;
-  flex:1;overflow-y:auto;min-height:30px;
+  flex:1;min-height:0;overflow-y:auto;
 }
 .kb-cards::-webkit-scrollbar{width:4px}
 .kb-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}

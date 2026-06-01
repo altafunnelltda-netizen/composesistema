@@ -1965,6 +1965,7 @@ function renderQuadro(){
   var board = document.getElementById('kb-board');
   board.innerHTML = '';
   var cols = filterCol ? d.cols.filter(function(c){return c.id===filterCol;}) : d.cols;
+  var pinnedLeft = 14; // padding do board
   cols.forEach(function(col){
     var colCards = d.cards.filter(function(c){
       if(c.col!==col.id) return false;
@@ -1975,14 +1976,24 @@ function renderQuadro(){
       return true;
     });
     var colEl = document.createElement('div');
-    colEl.className = 'kb-col';
+    var isPinned = !!col.pinned;
+    colEl.className = 'kb-col'+(isPinned?' kb-pinned':'');
     colEl.dataset.col = col.id;
+    if(isPinned){
+      colEl.style.position='sticky';
+      colEl.style.left=pinnedLeft+'px';
+      pinnedLeft+=272+14;
+    }
     colEl.innerHTML =
       '<div class="kb-col-strip" style="background:'+col.color+'"></div>'+
+      (isPinned?'<div class="kb-pinned-label">📌 fixada</div>':'')+
       '<div class="kb-col-hd">'+
         '<div class="kb-col-dot" style="background:'+col.color+'"></div>'+
         '<span class="kb-col-title">'+esc(col.label)+'</span>'+
         '<span class="kb-count">'+colCards.length+'</span>'+
+        '<button class="kb-pin-btn" title="'+(isPinned?'Desafixar':'Fixar')+' coluna" onclick="kbTogglePin(\''+col.id+'\',event)">'+
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2z"/></svg>'+
+        '</button>'+
         '<button class="kb-col-btn" title="Editar coluna" onclick="kbEditCol(\''+col.id+'\',event)">⋯</button>'+
       '</div>'+
       '<div class="kb-cards" id="kbc-'+col.id+'"></div>'+
@@ -2027,8 +2038,10 @@ function renderQuadro(){
     colEl.querySelector('.kb-col-hd').addEventListener('contextmenu',function(e){
       e.stopPropagation();
       var n=dbKb().cards.filter(function(c){return c.col===col.id;}).length;
+      var pinned=!!(dbKb().cols.find(function(c){return c.id===col.id;})||{}).pinned;
       ctxShow(e,[
         {icon:'✏️',label:'Renomear / Editar',fn:function(){kbEditCol(col.id,{stopPropagation:function(){}});}},
+        {icon:'📌',label:pinned?'Desafixar coluna':'Fixar coluna na tela',fn:function(){kbTogglePin(col.id,{stopPropagation:function(){}});}},
         'sep',
         {icon:'🗑️',label:'Excluir coluna'+(n?' ('+n+' card'+(n>1?'s':'')+')':''),danger:true,fn:function(){
           if(n>0&&!confirm('Esta coluna tem '+n+' cartão(ões). Excluir tudo?'))return;
@@ -2286,8 +2299,17 @@ function kbSaveNewCol(){
   var nome=(document.getElementById('kbn-nome')||{}).value||''; nome=nome.trim();
   if(!nome){ document.getElementById('kbn-nome').style.borderColor='#ef4444'; return; }
   var cor=document.getElementById('kbn-cor').value||'#3b82f6';
-  var d=dbKb(); d.cols.push({id:uid(),label:nome,color:cor});
+  var d=dbKb(); d.cols.push({id:uid(),label:nome,color:cor,pinned:false});
   dbKbSave(d); kbCloseModal(); renderQuadro();
+}
+function kbTogglePin(colId,e){
+  if(e&&e.stopPropagation) e.stopPropagation();
+  var d=dbKb();
+  var idx=d.cols.findIndex(function(c){return c.id===colId;});
+  if(idx<0) return;
+  d.cols[idx].pinned=!d.cols[idx].pinned;
+  dbKbSave(d); renderQuadro();
+  toast(d.cols[idx].pinned?'Coluna fixada na tela!':'Coluna desafixada.','ok');
 }
 function kbEditCol(colId, e){
   e.stopPropagation();
