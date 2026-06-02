@@ -512,10 +512,10 @@
       <div class="f" style="margin-top:12px">
         <label>Status do Orçamento</label>
         <div class="orc-status-btns">
-          <button type="button" class="orc-status-btn on" data-s="pendente" onclick="setOrcStatus('pendente')">⏳ Pendente</button>
-          <button type="button" class="orc-status-btn" data-s="aprovado" onclick="setOrcStatus('aprovado')">✅ Aprovado</button>
-          <button type="button" class="orc-status-btn" data-s="em-negociacao" onclick="setOrcStatus('em-negociacao')">🤝 Em Negociação</button>
-          <button type="button" class="orc-status-btn" data-s="perdido" onclick="setOrcStatus('perdido')">❌ Perdido</button>
+          <button type="button" class="orc-status-btn on" data-s="pendente" onclick="setOrcStatus('pendente')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pendente</button>
+          <button type="button" class="orc-status-btn" data-s="aprovado" onclick="setOrcStatus('aprovado')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Aprovado</button>
+          <button type="button" class="orc-status-btn" data-s="em-negociacao" onclick="setOrcStatus('em-negociacao')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Em Negociação</button>
+          <button type="button" class="orc-status-btn" data-s="perdido" onclick="setOrcStatus('perdido')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Perdido</button>
         </div>
         <input type="hidden" id="orc-status" value="pendente">
       </div>
@@ -526,10 +526,10 @@
         <div class="total-val" id="orc-total">R$ 0,00</div>
       </div>
       <div class="btn-bar no-print">
-        <button class="btn btn-p" onclick="salvarOrcamento()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="printDoc(sincronizarPrintOrc,'ORÇAMENTO - '+(v('orc-cliente')||'Cliente')+' - COMPOSÊ')">🖨 Imprimir</button>
-        <button class="btn btn-s" onclick="orcGerarOS()" title="Criar OS a partir deste orçamento">📋 Gerar OS</button>
-        <button class="btn btn-s" onclick="novoOrcamento()">🗒 Novo</button>
+        <button class="btn btn-p" onclick="salvarOrcamento()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
+        <button class="btn btn-s" onclick="printDoc(sincronizarPrintOrc,'ORÇAMENTO - '+(v('orc-cliente')||'Cliente')+' - COMPOSÊ')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>
+        <button class="btn btn-s" onclick="orcGerarOS()" title="Criar OS a partir deste orçamento"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Gerar OS</button>
+        <button class="btn btn-s" onclick="novoOrcamento()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Novo</button>
       </div>
     </div>
 
@@ -654,9 +654,9 @@
       <div class="card-title">Observações</div>
       <textarea id="cor-obs" style="min-height:70px"></textarea>
       <div class="btn-bar no-print">
-        <button class="btn btn-p" onclick="salvarOsCortinas()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="printDoc()">🖨 Imprimir</button>
-        <button class="btn btn-s" onclick="limparOsCortinas()">🗒 Limpar</button>
+        <button class="btn btn-p" onclick="salvarOsCortinas()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
+        <button class="btn btn-s" onclick="printDoc()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>
+        <button class="btn btn-s" onclick="limparOsCortinas()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
       </div>
     </div>
   </div>
@@ -716,9 +716,9 @@
       <div class="card-title">Observações</div>
       <textarea id="tap-obs" style="min-height:70px"></textarea>
       <div class="btn-bar no-print">
-        <button class="btn btn-p" onclick="salvarOsTapecaria()">💾 Salvar</button>
-        <button class="btn btn-s" onclick="printDoc()">🖨 Imprimir</button>
-        <button class="btn btn-s" onclick="limparOsTapecaria()">🗒 Limpar</button>
+        <button class="btn btn-p" onclick="salvarOsTapecaria()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar</button>
+        <button class="btn btn-s" onclick="printDoc()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>
+        <button class="btn btn-s" onclick="limparOsTapecaria()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
       </div>
     </div>
   </div>
@@ -764,24 +764,24 @@
       </div>
       <div class="calc-res" id="cc-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-p" onclick="salvarCalcCortina()" style="flex:1">💾 Salvar Cálculo</button>
-        <button class="btn btn-s" onclick="limparCalcCortina()">🗒 Limpar</button>
+        <button class="btn btn-p" onclick="salvarCalcCortina()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Cálculo</button>
+        <button class="btn btn-s" onclick="limparCalcCortina()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
       </div>
     </div>
 
     <!-- Histórico de Cálculos de Cortina -->
     <div class="calc-card" id="cc-hist-card" style="display:none">
       <div class="calc-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>📋 Histórico — Cálculos de Cortina</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Histórico — Cálculos de Cortina</span>
         <button class="btn btn-s" style="font-size:11px;padding:4px 10px" onclick="toggleHistCalcCortina()">Fechar</button>
       </div>
       <div id="cc-hist-lista"></div>
     </div>
-    <button class="btn btn-s" id="cc-hist-btn" onclick="toggleHistCalcCortina()" style="margin-top:-4px;margin-bottom:12px;width:100%">📋 Ver Histórico de Cálculos de Cortina</button>
+    <button class="btn btn-s" id="cc-hist-btn" onclick="toggleHistCalcCortina()" style="margin-top:-4px;margin-bottom:12px;width:100%"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Ver Histórico de Cálculos de Cortina</button>
 
     <!-- Calculadora de Piso -->
     <div class="calc-card">
-      <div class="calc-title">🪵 Calculadora de Piso</div>
+      <div class="calc-title" style="display:flex;align-items:center;gap:7px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Calculadora de Piso</div>
 
       <!-- Cliente -->
       <div class="row">
@@ -841,20 +841,20 @@
 
       <div class="calc-res" id="cp-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-p" onclick="salvarCalcPiso()" style="flex:1">💾 Salvar Cálculo</button>
-        <button class="btn btn-s" onclick="limparCalcPiso()">🗒 Limpar</button>
+        <button class="btn btn-p" onclick="salvarCalcPiso()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Cálculo</button>
+        <button class="btn btn-s" onclick="limparCalcPiso()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
       </div>
     </div>
 
     <!-- Histórico de Cálculos de Piso -->
     <div class="calc-card" id="cp-hist-card" style="display:none">
       <div class="calc-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>📋 Histórico — Cálculos de Piso</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Histórico — Cálculos de Piso</span>
         <button class="btn btn-s" style="font-size:11px;padding:4px 10px" onclick="toggleHistCalcPiso()">Fechar</button>
       </div>
       <div id="cp-hist-lista"></div>
     </div>
-    <button class="btn btn-s" id="cp-hist-btn" onclick="toggleHistCalcPiso()" style="margin-top:-4px;margin-bottom:12px;width:100%">📋 Ver Histórico de Cálculos de Piso</button>
+    <button class="btn btn-s" id="cp-hist-btn" onclick="toggleHistCalcPiso()" style="margin-top:-4px;margin-bottom:12px;width:100%"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Ver Histórico de Cálculos de Piso</button>
 
   </div>
 
@@ -1233,10 +1233,10 @@ function num2(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximu
 
 // ── DASHBOARD ─────────────────────────────────────────────
 var PIPE_COLS=[
-  {s:'pendente',     label:'⏳ Pendente',       color:'#888',    border:'rgba(136,136,136,.3)'},
-  {s:'em-negociacao',label:'🤝 Em Negociação',  color:'#3b82f6', border:'rgba(59,130,246,.4)'},
-  {s:'aprovado',     label:'✅ Aprovado',        color:'#1a7a3b', border:'rgba(26,122,59,.4)'},
-  {s:'perdido',      label:'❌ Perdido',         color:'#dc2626', border:'rgba(220,38,38,.35)'}
+  {s:'pendente',     label:'Pendente',       color:'#888',    border:'rgba(136,136,136,.3)'},
+  {s:'em-negociacao',label:'Em Negociação',  color:'#3b82f6', border:'rgba(59,130,246,.4)'},
+  {s:'aprovado',     label:'Aprovado',       color:'#1a7a3b', border:'rgba(26,122,59,.4)'},
+  {s:'perdido',      label:'Perdido',        color:'#dc2626', border:'rgba(220,38,38,.35)'}
 ];
 
 var _pipeDragId=null;
@@ -1374,7 +1374,7 @@ function dashCtx(e,key,id){
 // ── ORÇAMENTO ─────────────────────────────────────────────
 var orcN=0, orcId=null;
 
-var ORC_STATUS_LABELS = {pendente:'⏳ Pendente', aprovado:'✅ Aprovado', 'em-negociacao':'🤝 Em Negociação', perdido:'❌ Perdido'};
+var ORC_STATUS_LABELS = {pendente:'Pendente', aprovado:'Aprovado', 'em-negociacao':'Em Negociação', perdido:'Perdido'};
 
 function setOrcStatus(s) {
   sv('orc-status', s);
@@ -2245,7 +2245,8 @@ function toggleHistCalcPiso(){
   var btn=document.getElementById('cp-hist-btn');
   var vis=card.style.display==='none'||!card.style.display;
   card.style.display=vis?'block':'none';
-  btn.textContent=vis?'📋 Ocultar Histórico':'📋 Ver Histórico de Cálculos de Piso';
+  var _svgClip='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> ';
+  btn.innerHTML=_svgClip+(vis?'Ocultar Histórico':'Ver Histórico de Cálculos de Piso');
   if(vis) renderHistCalcPiso();
 }
 

@@ -318,7 +318,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   display:flex;gap:14px;overflow-x:auto;
   padding:14px 14px 24px;
   align-items:flex-start;
-  min-height:calc(100vh - 122px);
+  min-height:calc(100vh - 165px);
 }
 .kb-board::-webkit-scrollbar{height:7px}
 .kb-board::-webkit-scrollbar-track{background:var(--cream-dark);border-radius:4px}
@@ -331,7 +331,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   border-radius:12px;
   width:300px;flex-shrink:0;
   display:flex;flex-direction:column;
-  height:calc(100vh - 122px);
+  height:calc(100vh - 165px);
   overflow:hidden;
   box-shadow:0 2px 8px rgba(0,0,0,.06);
   transition:box-shadow .18s,border-color .18s;
@@ -1234,6 +1234,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 /* ── STATUS ORÇAMENTO ── */
 .orc-status-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .orc-status-btn{
+  display:inline-flex;align-items:center;gap:5px;
   padding:5px 13px;border-radius:7px;border:1.5px solid transparent;
   font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
   background:var(--cream-dark);color:var(--mid);transition:.13s;
