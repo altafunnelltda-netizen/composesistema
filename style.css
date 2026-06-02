@@ -145,6 +145,12 @@ body{
   font-size:10px;color:rgba(255,255,255,.18);line-height:1.7;
   display:flex;flex-direction:column;gap:7px;
 }
+.sb-backup-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  color:rgba(255,255,255,.35);font-size:10.5px;font-weight:600;
+  text-decoration:none;transition:.15s;padding:4px 0;
+}
+.sb-backup-btn:hover{color:var(--gold)}
 .sb-logout{
   display:inline-flex;align-items:center;justify-content:center;
   color:rgba(255,255,255,.35);font-size:10px;font-weight:700;

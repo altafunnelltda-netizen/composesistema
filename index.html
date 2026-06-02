@@ -382,6 +382,10 @@
     </div>
   </nav>
   <div class="sb-foot">
+    <a href="/backup" class="sb-backup-btn" title="Baixar backup de todos os dados em JSON">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Backup
+    </a>
     Composê Home · composesantos.com.br
     <a href="/logout" class="sb-logout" onclick="return confirm('Sair do sistema?')">Sair</a>
   </div>
@@ -954,15 +958,26 @@
 <script>
 // ── STORAGE ──────────────────────────────────────────────
 var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf' };
+var _initDone = false;
+var _saveQueue = [];
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
+function _flushQueue() {
+  var q = _saveQueue.slice(); _saveQueue = [];
+  q.forEach(function(fn){ fn(); });
+}
 function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
-  var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf') };
-  payload[K[key]] = arr;
-  fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
-    .then(function(r){ return r.json(); })
-    .then(function(d){ if(d.lastModified) _syncLM = d.lastModified; })
-    .catch(function(){});
+  var changedKey = K[key];
+  var doSave = function() {
+    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), _changed: changedKey };
+    payload[changedKey] = arr;
+    fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if(d.lastModified) _syncLM = d.lastModified; })
+      .catch(function(){});
+  };
+  if(!_initDone) { _saveQueue.push(doSave); return; }
+  doSave();
 }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
@@ -974,6 +989,12 @@ function _syncAplicar(d) {
   var changed = false;
   _syncKeys.forEach(function(k){
     if(d[k] === undefined) return;
+    // Não sobrescreve dado local com array vazio vindo do servidor
+    // (proteção contra race condition no init de outro computador)
+    if(Array.isArray(d[k]) && d[k].length === 0) {
+      var local = localStorage.getItem(k);
+      try { if(JSON.parse(local||'[]').length > 0) return; } catch(e){}
+    }
     var cur = localStorage.getItem(k);
     var nov = JSON.stringify(d[k]);
     if(cur !== nov){ localStorage.setItem(k, nov); changed = true; }
@@ -1042,11 +1063,13 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) _
     if(d.cps_agenda && d.cps_agenda.length) localStorage.setItem('cps_agenda', JSON.stringify(d.cps_agenda));
     if(d.cps_colab && d.cps_colab.length) localStorage.setItem('cps_colab', JSON.stringify(d.cps_colab));
     if(d.cps_conf && d.cps_conf.length) localStorage.setItem('cps_conf', JSON.stringify(d.cps_conf));
+    _initDone = true;
+    _flushQueue();
     if(typeof atualizarDash === 'function') atualizarDash();
     if(typeof atualizarTrashBadge === 'function') atualizarTrashBadge();
     var _hid = window.location.hash.replace('#','') || 'dashboard';
     if (_hid !== 'dashboard' && document.getElementById('pg-'+_hid)) ir(_hid, null);
-  }).catch(function(){});
+  }).catch(function(){ _initDone = true; _flushQueue(); });
 })();
 
 // ── NAV ───────────────────────────────────────────────────

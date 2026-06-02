@@ -141,12 +141,48 @@ app.get('/dados/status', auth, async (req, res) => {
 
 app.post('/dados', auth, async (req, res) => {
   try {
+    const existing = await lerDados();
+    const incoming = req.body;
+    const changedKey = incoming._changed || null;
     const lm = Date.now();
-    const data = Object.assign({}, req.body, { _lastModified: lm });
-    await salvarDados(data);
+
+    // Merge inteligente: protege arrays existentes de serem apagados por arrays vazios
+    // A chave explicitamente alterada (_changed) sempre é aplicada — inclusive se vazia (deleção intencional)
+    const merged = Object.assign({}, existing);
+    for (const [k, v] of Object.entries(incoming)) {
+      if (k.startsWith('_')) continue;
+      if (k === changedKey) { merged[k] = v; continue; } // deleção intencional permitida
+      if (Array.isArray(v) && v.length === 0 && Array.isArray(existing[k]) && existing[k].length > 0) continue;
+      merged[k] = v;
+    }
+    merged._lastModified = lm;
+
+    // Backup automático diário (mantém o último do dia em dados_backup_YYYY-MM-DD.json)
+    if (!pool) {
+      const today = new Date().toISOString().slice(0, 10);
+      const backupPath = path.join(process.env.DADOS_DIR || __dirname, `dados_backup_${today}.json`);
+      if (!fs.existsSync(backupPath) && fs.existsSync(DADOS_PATH)) {
+        try { fs.copyFileSync(DADOS_PATH, backupPath); } catch (_) {}
+      }
+    }
+
+    await salvarDados(merged);
     res.json({ ok: true, lastModified: lm });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
+// Endpoint de backup — download do JSON completo
+app.get('/backup', auth, async (req, res) => {
+  try {
+    const d = await lerDados();
+    const filename = `compose_backup_${new Date().toISOString().slice(0,10)}.json`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(d, null, 2));
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
   }
 });
 
