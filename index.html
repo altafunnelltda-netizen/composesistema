@@ -200,7 +200,20 @@
 .ag-day-detail-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:10px; }
 .ag-day-detail-btn { padding:8px 14px; border-radius:999px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt); font-size:13px; cursor:pointer; transition:.15s; }
 .ag-day-detail-btn:hover { border-color:var(--acc); color:var(--txt); }
-.ag-pend-more { margin-top:4px; padding:5px 8px; font-size:11px; color:var(--acc); border:none; background:none; cursor:pointer; text-decoration:underline; } 
+.ag-summary { display:grid; grid-template-columns:1fr; gap:10px; padding:10px 18px; border-bottom:1.5px solid var(--brd); background:var(--bg2); }
+.ag-summary-period { font-size:12px; font-weight:700; color:var(--txt2); letter-spacing:.06em; text-transform:uppercase; }
+.ag-summary-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+.ag-metric { min-width:0; padding:12px 14px; border:1.5px solid var(--brd); border-radius:12px; background:var(--bg); display:flex; flex-direction:column; gap:6px; }
+.ag-filter-label { font-size:11px; font-weight:700; color:var(--txt2); text-transform:uppercase; letter-spacing:.07em; white-space:nowrap; }
+.ag-filters { display:flex; flex-direction:column; gap:10px; padding:0 18px 18px; }
+.ag-filter-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; width:100%; }
+.ag-filter-actions { width:100%; justify-content:flex-end; }
+.ag-filter-chip { padding:6px 11px; border-radius:999px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt2); font-size:12px; cursor:pointer; transition:.15s; white-space:nowrap; }
+.ag-filter-chip:hover { background:var(--bg); border-color:var(--acc); color:var(--txt); }
+.ag-filter-chip-on { background:var(--acc); border-color:var(--acc); color:#fff; }
+.ag-filter-chip-clear { border-color:rgba(156,163,175,.65); color:var(--txt2); }
+.ag-filter-chip-clear:hover { background:rgba(156,163,175,.14); color:var(--txt); }
+.ag-pend-more { margin-top:4px; padding:5px 8px; font-size:11px; color:var(--acc); border:none; background:none; cursor:pointer; text-decoration:underline; }
 .ag-pend-more:hover { color:var(--txt); }
 .ag-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:201; background:var(--bg); border:1.5px solid var(--brd); border-radius:14px; width:min(580px,96vw); max-height:92vh; overflow:hidden; flex-direction:column; box-shadow:0 16px 56px rgba(0,0,0,.22); }
 .ag-modal.on { display:flex; }
@@ -3546,7 +3559,7 @@ function _agEvs(){
 
 function agToggleFilter(type,val){_agFilters[type]=val;_agRefreshContent();}
 function _agSummaryHtml(){
-  var evs=db('agenda');
+  var evs=_agEvs();
   var total=evs.length;
   var pend=evs.filter(function(e){return e.status==='agendado';}).length;
   var done=evs.filter(function(e){return e.status==='concluido';}).length;
@@ -3554,18 +3567,30 @@ function _agSummaryHtml(){
   var hoje=new Date(); hoje.setHours(0,0,0,0);
   var today=evs.filter(function(e){var d=new Date((e.data||'')+'T12:00:00'); return d.toDateString()===hoje.toDateString();}).length;
   return '<div class="ag-summary">'+
-    '<div class="ag-metric"><span class="ag-metric-label">Total de eventos</span><span class="ag-metric-value">'+total+'</span></div>'+ 
-    '<div class="ag-metric"><span class="ag-metric-label">Agendados</span><span class="ag-metric-value">'+pend+'</span></div>'+ 
-    '<div class="ag-metric"><span class="ag-metric-label">Concluídos</span><span class="ag-metric-value">'+done+'</span></div>'+ 
-    '<div class="ag-metric"><span class="ag-metric-label">Cancelados</span><span class="ag-metric-value">'+cancel+'</span></div>'+ 
-    '<div class="ag-metric"><span class="ag-metric-label">Hoje</span><span class="ag-metric-value">'+today+'</span></div>'+ 
+    '<div class="ag-summary-period">Período: '+agTitleStr()+'</div>'+ 
+    '<div class="ag-summary-metrics">'+
+      '<div class="ag-metric"><span class="ag-metric-label">Total no período</span><span class="ag-metric-value">'+total+'</span></div>'+ 
+      '<div class="ag-metric"><span class="ag-metric-label">Agendados</span><span class="ag-metric-value">'+pend+'</span></div>'+ 
+      '<div class="ag-metric"><span class="ag-metric-label">Concluídos</span><span class="ag-metric-value">'+done+'</span></div>'+ 
+      '<div class="ag-metric"><span class="ag-metric-label">Cancelados</span><span class="ag-metric-value">'+cancel+'</span></div>'+ 
+      '<div class="ag-metric"><span class="ag-metric-label">Hoje</span><span class="ag-metric-value">'+today+'</span></div>'+ 
+    '</div>'+ 
   '</div>'; }
 function _agFilterBarHtml(){
   var html='<div class="ag-filters">';
-  html+='<div class="ag-filter-group"><span class="ag-filter-group-label">Status</span>';
+  html+='<div class="ag-filter-row"><span class="ag-filter-label">Status</span>';
   Object.keys(_agStatusLabels).forEach(function(key){html+='<button class="ag-filter-chip'+(_agFilters.status===key?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'status\',\''+key+'\')">'+_agStatusLabels[key]+'</button>';});
   html+='</div>';
-  html+='<div class="ag-filter-group"><span class="ag-filter-group-label">Tipo</span>';
+  html+='<div class="ag-filter-row"><span class="ag-filter-label">Tipo</span>';
+  html+='<button class="ag-filter-chip'+(_agFilters.tipo==='todos'?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'tipo\',\'todos\')">Todos</button>';
+  AG_TIPOS.forEach(function(t){html+='<button class="ag-filter-chip'+(_agFilters.tipo===t.id?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'tipo\',\''+t.id+'\')">'+esc(t.label)+'</button>';});
+  html+='</div>';
+  if(_agFilters.status!=='todos'||_agFilters.tipo!=='todos'){
+    html+='<div class="ag-filter-row ag-filter-actions"><button class="ag-filter-chip ag-filter-chip-clear" onclick="agClearFilters()">Limpar filtros</button></div>';
+  }
+  html+='</div>';
+  return html;
+
   html+='<button class="ag-filter-chip'+(_agFilters.tipo==='todos'?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'tipo\',\'todos\')">Todos</button>';
   AG_TIPOS.forEach(function(t){html+='<button class="ag-filter-chip'+(_agFilters.tipo===t.id?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'tipo\',\''+t.id+'\')">'+esc(t.label)+'</button>';});
   html+='</div>';
