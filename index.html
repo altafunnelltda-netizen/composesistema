@@ -180,6 +180,28 @@
 /* Modal */
 .ag-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; }
 .ag-overlay.on { display:block; }
+.ag-day-detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:220; }
+.ag-day-detail-overlay.on { display:block; }
+.ag-day-detail-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:221; width:min(760px,96vw); max-height:90vh; overflow:hidden; background:var(--bg); border:1.5px solid var(--brd); border-radius:18px; box-shadow:0 24px 56px rgba(0,0,0,.24); flex-direction:column; }
+.ag-day-detail-modal.on { display:flex; }
+.ag-day-detail-hd { padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1.5px solid var(--brd); }
+.ag-day-detail-title { font-size:18px; font-weight:800; color:var(--txt); }
+.ag-day-detail-sub { font-size:13px; color:var(--txt2); }
+.ag-day-detail-close { width:36px; height:36px; border-radius:12px; border:none; background:var(--bg2); color:var(--txt2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; }
+.ag-day-detail-close:hover { background:var(--bg); color:var(--txt); }
+.ag-day-detail-body { padding:16px 22px 20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px; }
+.ag-day-detail-item { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border:1px solid var(--brd); border-radius:14px; background:var(--bg2); transition:.15s; }
+.ag-day-detail-item:hover { border-color:var(--acc); }
+.ag-day-detail-meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:var(--txt2); font-size:12px; }
+.ag-day-detail-pill { padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.15); color:var(--txt); font-size:12px; font-weight:700; }
+.ag-day-detail-name { font-size:15px; font-weight:700; color:var(--txt); }
+.ag-day-detail-desc { font-size:13px; color:var(--txt2); line-height:1.5; }
+.ag-day-detail-empty { display:flex; align-items:center; justify-content:center; min-height:180px; color:var(--txt2); font-size:14px; }
+.ag-day-detail-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:10px; }
+.ag-day-detail-btn { padding:8px 14px; border-radius:999px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt); font-size:13px; cursor:pointer; transition:.15s; }
+.ag-day-detail-btn:hover { border-color:var(--acc); color:var(--txt); }
+.ag-pend-more { margin-top:4px; padding:5px 8px; font-size:11px; color:var(--acc); border:none; background:none; cursor:pointer; text-decoration:underline; } 
+.ag-pend-more:hover { color:var(--txt); }
 .ag-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:201; background:var(--bg); border:1.5px solid var(--brd); border-radius:14px; width:min(580px,96vw); max-height:92vh; overflow:hidden; flex-direction:column; box-shadow:0 16px 56px rgba(0,0,0,.22); }
 .ag-modal.on { display:flex; }
 .ag-modal-hd { padding:18px 20px; font-size:15px; font-weight:700; color:var(--txt); display:flex; align-items:center; gap:10px; border-bottom:1.5px solid var(--brd); flex-shrink:0; }
@@ -980,6 +1002,9 @@
 <!-- AGENDA MODAL -->
 <div class="ag-overlay" id="ag-overlay" onclick="if(event.target===this)agCloseModal()"></div>
 <div class="ag-modal" id="ag-modal"></div>
+
+<div class="ag-day-detail-overlay" id="ag-day-detail-overlay" onclick="if(event.target===this)agHideDayDetail()"></div>
+<div class="ag-day-detail-modal" id="ag-day-detail-modal"></div>
 
 <!-- COLABORADORES MODAL -->
 <div class="colab-overlay" id="colab-overlay" onclick="if(event.target===this)colabCloseModal()"></div>
@@ -3483,6 +3508,8 @@ AG_TIPOS[3].svg = _SVG.ruler;
 var _agView = 'mes';
 var _agDate = new Date();
 var _agSearch = '';
+var _agFilters = { status:'todos', tipo:'todos' };
+var _agStatusLabels = { todos:'Todos', agendado:'Agendados', concluido:'Concluídos', cancelado:'Cancelados' };
 var _MONTHS  = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var _MONTHS_S= ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 var _DAYS    = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -3506,12 +3533,47 @@ function agHoje(){_agDate=new Date();renderAgenda();}
 function agSetView(v){_agView=v;renderAgenda();}
 function agSearch(val){_agSearch=val;_agRefreshContent();}
 function agCellClick(ds){_agDate=new Date(ds+'T12:00:00');_agView='dia';renderAgenda();}
+function agClearFilters(){_agFilters={status:'todos',tipo:'todos'};_agRefreshContent();}
 function agYrMonthClick(m){_agDate=new Date(_agDate.getFullYear(),m,1);_agView='mes';renderAgenda();}
 
 function _agEvs(){
   var evs=db('agenda');
   if(_agSearch){var q=_agSearch.toLowerCase();evs=evs.filter(function(e){return(e.cliente||'').toLowerCase().indexOf(q)>-1||(e.obs||'').toLowerCase().indexOf(q)>-1||(e.endereco||'').toLowerCase().indexOf(q)>-1;});}
+  if(_agFilters.status && _agFilters.status!=='todos'){evs=evs.filter(function(e){return e.status===_agFilters.status;});}
+  if(_agFilters.tipo && _agFilters.tipo!=='todos'){evs=evs.filter(function(e){return e.tipo===_agFilters.tipo;});}
   return evs;
+}
+
+function agToggleFilter(type,val){_agFilters[type]=val;_agRefreshContent();}
+function _agSummaryHtml(){
+  var evs=db('agenda');
+  var total=evs.length;
+  var pend=evs.filter(function(e){return e.status==='agendado';}).length;
+  var done=evs.filter(function(e){return e.status==='concluido';}).length;
+  var cancel=evs.filter(function(e){return e.status==='cancelado';}).length;
+  var hoje=new Date(); hoje.setHours(0,0,0,0);
+  var today=evs.filter(function(e){var d=new Date((e.data||'')+'T12:00:00'); return d.toDateString()===hoje.toDateString();}).length;
+  return '<div class="ag-summary">'+
+    '<div class="ag-metric"><span class="ag-metric-label">Total de eventos</span><span class="ag-metric-value">'+total+'</span></div>'+ 
+    '<div class="ag-metric"><span class="ag-metric-label">Agendados</span><span class="ag-metric-value">'+pend+'</span></div>'+ 
+    '<div class="ag-metric"><span class="ag-metric-label">Concluídos</span><span class="ag-metric-value">'+done+'</span></div>'+ 
+    '<div class="ag-metric"><span class="ag-metric-label">Cancelados</span><span class="ag-metric-value">'+cancel+'</span></div>'+ 
+    '<div class="ag-metric"><span class="ag-metric-label">Hoje</span><span class="ag-metric-value">'+today+'</span></div>'+ 
+  '</div>'; }
+function _agFilterBarHtml(){
+  var html='<div class="ag-filters">';
+  html+='<div class="ag-filter-group"><span class="ag-filter-group-label">Status</span>';
+  Object.keys(_agStatusLabels).forEach(function(key){html+='<button class="ag-filter-chip'+(_agFilters.status===key?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'status\',\''+key+'\')">'+_agStatusLabels[key]+'</button>';});
+  html+='</div>';
+  html+='<div class="ag-filter-group"><span class="ag-filter-group-label">Tipo</span>';
+  html+='<button class="ag-filter-chip'+(_agFilters.tipo==='todos'?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'tipo\',\'todos\')">Todos</button>';
+  AG_TIPOS.forEach(function(t){html+='<button class="ag-filter-chip'+(_agFilters.tipo===t.id?' ag-filter-chip-on':'')+'" onclick="agToggleFilter(\'tipo\',\''+t.id+'\')">'+esc(t.label)+'</button>';});
+  html+='</div>';
+  if(_agFilters.status!=='todos'||_agFilters.tipo!=='todos'){
+    html+='<button class="ag-filter-chip ag-filter-chip-clear" onclick="agClearFilters()">Limpar filtros</button>';
+  }
+  html+='</div>';
+  return html;
 }
 
 function renderAgenda() {
@@ -3524,7 +3586,7 @@ function renderAgenda() {
   html += '<div class="ag-nav"><button class="ag-nav-btn" onclick="agNavPrev()">'+_SVG.chevL+'</button><button class="ag-nav-btn" onclick="agNavNext()">'+_SVG.chevR+'</button></div>';
   html += '<span class="ag-tb-title">'+agTitleStr()+'</span>';
   html += '</div>';
-  html += '<div class="ag-tb-c"><div class="ag-search">'+_SVG.search+'<input id="ag-search-inp" type="text" placeholder="Pesquisar eventos..." oninput="agSearch(this.value)" value="'+esc(_agSearch)+'"></div></div>';
+  html += '<div class="ag-tb-c"><div class="ag-search">'+_SVG.search+'<input id="ag-search-inp" type="text" placeholder="Pesquisar eventos, cliente ou endereço..." oninput="agSearch(this.value)" value="'+esc(_agSearch)+'"></div></div>';
   html += '<div class="ag-tb-r"><div class="ag-views">';
   [{v:'dia',l:'Dia'},{v:'semana',l:'Semana'},{v:'mes',l:'Mês'},{v:'ano',l:'Ano'}].forEach(function(x){
     html += '<button class="ag-vb'+(_agView===x.v?' ag-vb-on':'')+'" onclick="agSetView(\''+x.v+'\')">'+x.l+'</button>';
@@ -3533,6 +3595,8 @@ function renderAgenda() {
   html += '<button class="btn btn-s" style="display:flex;align-items:center;gap:6px;white-space:nowrap" onclick="agExportOSModal()">'+_SVG.print+' Exportar OS</button>';
   html += '<button class="btn btn-p" style="display:flex;align-items:center;gap:6px;white-space:nowrap" onclick="agOpenModal(null)">'+_SVG.plus+' Novo Evento</button></div>';
   html += '</div>';
+  html += _agSummaryHtml();
+  html += _agFilterBarHtml();
   // Content
   html += '<div class="ag-content" id="ag-ci">'+_agViewHtml()+'</div>';
   // Pending by collaborator
@@ -3595,7 +3659,7 @@ function _agMesHtml() {
         '>'+
         '<span class="ag-m-ev-label">'+label+'</span>'+avsHtml+'</div>';
     }
-    if(dayEvs.length>3) html+='<div class="ag-m-ev-more" onclick="event.stopPropagation();agCellClick(\''+ds+'\')">+'+(dayEvs.length-3)+' mais</div>';
+    if(dayEvs.length>3) html+='<div class="ag-m-ev-more" onclick="event.stopPropagation();agShowDayTasks(\''+ds+'\')">+'+(dayEvs.length-3)+' mais</div>';
     html+='</div>';
     cur.setDate(cur.getDate()+1);
   }
@@ -3706,7 +3770,7 @@ function _agPendColabHtml() {
         '<div class="ag-pend-ev-info"><div class="ag-pend-ev-name">'+esc(ev.cliente||'—')+'</div>'+
         '<div class="ag-pend-ev-date">'+dateStr+(ev.horaInicio?' · '+ev.horaInicio:'')+'</div></div></div>';
     });
-    if(ce.length>5) html+='<div style="font-size:11px;color:var(--txt2);padding-top:4px">+' +(ce.length-5)+' mais</div>';
+    if(ce.length>5) html+='<button class="ag-pend-more" onclick="agShowCollaboratorTasks(\''+c.id+'\')">+' +(ce.length-5)+' mais</button>';
     html+='</div>';
   });
   return html+'</div></div>';
@@ -3842,6 +3906,62 @@ function agTipoChg(inp){
 function agToggleColab(lbl){setTimeout(function(){lbl.classList.toggle('ag-colab-opt-on',lbl.querySelector('input').checked);},0);}
 function agEditModal(id){var ev=db('agenda').find(function(e){return e.id===id;});if(ev)agOpenModal(ev);}
 function agCloseModal(){document.getElementById('ag-overlay').classList.remove('on');document.getElementById('ag-modal').classList.remove('on');}
+function agHideDayDetail(){document.getElementById('ag-day-detail-overlay').classList.remove('on');document.getElementById('ag-day-detail-modal').classList.remove('on');}
+function agShowDayTasks(ds){
+  var evs=_agEvs().filter(function(e){return e.data===ds;});
+  var d=new Date(ds+'T12:00:00');
+  var title=_DAYS[d.getDay()]+', '+d.getDate()+' de '+_MONTHS[d.getMonth()]+' de '+d.getFullYear();
+  var modal=document.getElementById('ag-day-detail-modal');
+  var html='<div class="ag-day-detail-hd"><div><div class="ag-day-detail-title">'+title+'</div><div class="ag-day-detail-sub">'+evs.length+' tarefa'+(evs.length===1?'':'s')+'</div></div><button class="ag-day-detail-close" onclick="agHideDayDetail()">'+_SVG.xmark+'</button></div>';
+  html+='<div class="ag-day-detail-body">';
+  if(!evs.length){html+='<div class="ag-day-detail-empty">Nenhuma tarefa agendada para este dia.</div>';} else {
+    evs.sort(function(a,b){var da=a.horaInicio||'00:00', db=b.horaInicio||'00:00'; return a.data.localeCompare(b.data)||da.localeCompare(db);});
+    evs.forEach(function(ev){
+      var tipo=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
+      var status=ev.status==='concluido'?'Concluído':ev.status==='cancelado'?'Cancelado':'Agendado';
+      var colabs=(ev.colaboradores||[]).map(function(cid){var c=db('colab').find(function(x){return x.id===cid;});return c?esc(c.nome):'';}).filter(Boolean).join(' · ');
+      html+='<div class="ag-day-detail-item" onclick="agEditModal(\''+ev.id+'\')">';
+      html+='<div class="ag-day-detail-meta"><span class="ag-day-detail-pill" style="background:'+tipo.color+'20;color:'+tipo.color+'">'+esc(tipo.label)+'</span><span class="ag-day-detail-pill">'+status+'</span>'+(ev.horaInicio?'<span>'+ev.horaInicio+(ev.horaFim?' – '+ev.horaFim:'')+'</span>':'')+'</div>';
+      html+='<div class="ag-day-detail-name">'+esc(ev.cliente||'Sem título')+'</div>';
+      if(ev.endereco) html+='<div class="ag-day-detail-desc">'+esc(ev.endereco)+'</div>';
+      if(colabs) html+='<div class="ag-day-detail-meta">'+_SVG.users+' '+esc(colabs)+'</div>';
+      if(ev.obs) html+='<div class="ag-day-detail-desc">'+esc(ev.obs)+'</div>';
+      html+='</div>';
+    });
+  }
+  html+='<div class="ag-day-detail-actions"><button class="ag-day-detail-btn" onclick="agCellClick(\''+ds+'\')">Ver dia completo</button><button class="ag-day-detail-btn" onclick="agHideDayDetail()">Fechar</button></div>';
+  html+='</div>';
+  modal.innerHTML=html;
+  document.getElementById('ag-day-detail-overlay').classList.add('on');
+  modal.classList.add('on');
+}
+function agShowCollaboratorTasks(colabId){
+  var colab=db('colab').find(function(c){return c.id===colabId;})||{nome:'Colaborador'};
+  var evs=db('agenda').filter(function(e){return (e.colaboradores||[]).indexOf(colabId)>-1;});
+  var modal=document.getElementById('ag-day-detail-modal');
+  var html='<div class="ag-day-detail-hd"><div><div class="ag-day-detail-title">Tarefas de '+esc(colab.nome)+'</div><div class="ag-day-detail-sub">'+evs.length+' tarefa'+(evs.length===1?'':'s')+'</div></div><button class="ag-day-detail-close" onclick="agHideDayDetail()">'+_SVG.xmark+'</button></div>';
+  html+='<div class="ag-day-detail-body">';
+  if(!evs.length){html+='<div class="ag-day-detail-empty">Nenhuma tarefa associada a este colaborador.</div>';} else {
+    evs.sort(function(a,b){var da=a.data, db=b.data; if(da!==db) return da.localeCompare(db); return (a.horaInicio||'00:00').localeCompare(b.horaInicio||'00:00');});
+    evs.forEach(function(ev){
+      var d=new Date(ev.data+'T12:00:00');
+      var tipo=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
+      var status=ev.status==='concluido'?'Concluído':ev.status==='cancelado'?'Cancelado':'Agendado';
+      var dateLabel=_DAYS[d.getDay()]+', '+d.getDate()+' de '+_MONTHS[d.getMonth()];
+      html+='<div class="ag-day-detail-item" onclick="agEditModal(\''+ev.id+'\')">';
+      html+='<div class="ag-day-detail-meta"><span class="ag-day-detail-pill" style="background:'+tipo.color+'20;color:'+tipo.color+'">'+esc(tipo.label)+'</span><span class="ag-day-detail-pill">'+status+'</span><span>'+dateLabel+'</span>'+(ev.horaInicio?'<span>'+ev.horaInicio+(ev.horaFim?' – '+ev.horaFim:'')+'</span>':'')+'</div>';
+      html+='<div class="ag-day-detail-name">'+esc(ev.cliente||'Sem título')+'</div>';
+      if(ev.endereco) html+='<div class="ag-day-detail-desc">'+esc(ev.endereco)+'</div>';
+      if(ev.obs) html+='<div class="ag-day-detail-desc">'+esc(ev.obs)+'</div>';
+      html+='</div>';
+    });
+  }
+  html+='<div class="ag-day-detail-actions"><button class="ag-day-detail-btn" onclick="agHideDayDetail()">Fechar</button></div>';
+  html+='</div>';
+  modal.innerHTML=html;
+  document.getElementById('ag-day-detail-overlay').classList.add('on');
+  modal.classList.add('on');
+}
 function agSave(id,isEdit){
   var tipo=document.querySelector('input[name=ag-tipo-r]:checked');
   if(!tipo){toast('Selecione o tipo de serviço','err');return;}
