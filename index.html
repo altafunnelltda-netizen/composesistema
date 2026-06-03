@@ -4249,7 +4249,7 @@ function _agOsHtml(evs,params){
       body+='<div class="os-ev-cliente">'+esc(ev.cliente||'—')+'</div>';
       if(ev.endereco) body+='<div class="os-ev-row"><b>Endereço:</b> '+esc(ev.endereco)+'</div>';
       if(cn)          body+='<div class="os-ev-row"><b>Responsáveis:</b> '+esc(cn)+'</div>';
-      if(ev.obs)      body+='<div class="os-ev-row os-ev-obs"><b>Obs.:</b> '+esc(ev.obs)+'</div>';
+      if(ev.obs)      body+='<div class="os-ev-row os-ev-obs"><b>Obs.:</b> <span style="white-space:pre-line;">'+esc(ev.obs)+'</span></div>';
       body+='</div>';
     });
     body+='</div>';
