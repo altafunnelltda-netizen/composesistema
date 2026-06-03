@@ -3632,8 +3632,7 @@ function renderAgenda() {
   }
 }
 function _agRefreshContent() {
-  var ci = document.getElementById('ag-ci');
-  if (ci) ci.innerHTML = _agViewHtml(); else renderAgenda();
+  renderAgenda();
 }
 function _agViewHtml() {
   if (_agView==='mes')    return _agMesHtml();
