@@ -182,23 +182,23 @@
 .ag-overlay.on { display:block; }
 .ag-day-detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:220; }
 .ag-day-detail-overlay.on { display:block; }
-.ag-day-detail-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:221; width:min(640px,92vw); max-height:min(84vh,600px); overflow:hidden; background:var(--bg); border:1.5px solid var(--brd); border-radius:18px; box-shadow:0 24px 56px rgba(0,0,0,.24); flex-direction:column; }
+.ag-day-detail-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:221; width:min(640px,92vw); max-height:min(80vh,520px); overflow:hidden; background:var(--bg); border:1.5px solid var(--brd); border-radius:16px; box-shadow:0 24px 56px rgba(0,0,0,.24); flex-direction:column; }
 .ag-day-detail-modal.on { display:flex; }
-.ag-day-detail-hd { padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1.5px solid var(--brd); }
-.ag-day-detail-title { font-size:18px; font-weight:800; color:var(--txt); }
-.ag-day-detail-sub { font-size:13px; color:var(--txt2); }
-.ag-day-detail-close { width:36px; height:36px; border-radius:12px; border:none; background:var(--bg2); color:var(--txt2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; }
+.ag-day-detail-hd { padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1.5px solid var(--brd); }
+.ag-day-detail-title { font-size:16px; font-weight:800; color:var(--txt); }
+.ag-day-detail-sub { font-size:12px; color:var(--txt2); }
+.ag-day-detail-close { width:34px; height:34px; border-radius:12px; border:none; background:var(--bg2); color:var(--txt2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; }
 .ag-day-detail-close:hover { background:var(--bg); color:var(--txt); }
-.ag-day-detail-body { padding:16px 22px 20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px; }
-.ag-day-detail-item { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border:1px solid var(--brd); border-radius:14px; background:var(--bg2); transition:.15s; }
+.ag-day-detail-body { padding:12px 18px 16px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px; }
+.ag-day-detail-item { display:flex; flex-direction:column; gap:6px; padding:12px 14px; border:1px solid var(--brd); border-radius:12px; background:var(--bg2); transition:.15s; }
 .ag-day-detail-item:hover { border-color:var(--acc); }
-.ag-day-detail-meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:var(--txt2); font-size:12px; }
-.ag-day-detail-pill { padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.15); color:var(--txt); font-size:12px; font-weight:700; }
-.ag-day-detail-name { font-size:15px; font-weight:700; color:var(--txt); }
-.ag-day-detail-desc { font-size:13px; color:var(--txt2); line-height:1.5; }
-.ag-day-detail-empty { display:flex; align-items:center; justify-content:center; min-height:180px; color:var(--txt2); font-size:14px; }
-.ag-day-detail-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:10px; }
-.ag-day-detail-btn { padding:8px 14px; border-radius:999px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt); font-size:13px; cursor:pointer; transition:.15s; }
+.ag-day-detail-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; color:var(--txt2); font-size:11px; }
+.ag-day-detail-pill { padding:3px 8px; border-radius:999px; background:rgba(255,255,255,.15); color:var(--txt); font-size:11px; font-weight:700; }
+.ag-day-detail-name { font-size:14px; font-weight:700; color:var(--txt); }
+.ag-day-detail-desc { font-size:12px; color:var(--txt2); line-height:1.4; }
+.ag-day-detail-empty { display:flex; align-items:center; justify-content:center; min-height:140px; color:var(--txt2); font-size:13px; }
+.ag-day-detail-actions { display:flex; justify-content:flex-end; gap:8px; padding-top:8px; }
+.ag-day-detail-btn { padding:7px 12px; border-radius:999px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt); font-size:12px; cursor:pointer; transition:.15s; }
 .ag-day-detail-btn:hover { border-color:var(--acc); color:var(--txt); }
 .ag-summary { display:grid; grid-template-columns:1fr; gap:10px; padding:14px 18px; border-bottom:1.5px solid var(--brd); background:var(--bg2); border-radius:18px; margin:0 18px 10px; }
 .ag-summary-period { font-size:11px; font-weight:700; color:var(--txt2); letter-spacing:.08em; text-transform:uppercase; }
