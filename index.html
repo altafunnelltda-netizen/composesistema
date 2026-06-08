@@ -3943,7 +3943,7 @@ function agShowDayTasks(ds){
       var tipo=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
       var status=ev.status==='concluido'?'Concluído':ev.status==='cancelado'?'Cancelado':'Agendado';
       var colabs=(ev.colaboradores||[]).map(function(cid){var c=db('colab').find(function(x){return x.id===cid;});return c?esc(c.nome):'';}).filter(Boolean).join(' · ');
-      html+='<div class="ag-day-detail-item" onclick="agEditModal(\''+ev.id+'\')">';
+      html+='<div class="ag-day-detail-item" onclick="agEditModal(\''+ev.id+'\')" oncontextmenu="agDayItemCtx(event,\''+ev.id+'\')">';
       html+='<div class="ag-day-detail-meta"><span class="ag-day-detail-pill" style="background:'+tipo.color+'20;color:'+tipo.color+'">'+esc(tipo.label)+'</span><span class="ag-day-detail-pill">'+status+'</span>'+(ev.horaInicio?'<span>'+ev.horaInicio+(ev.horaFim?' – '+ev.horaFim:'')+'</span>':'')+'</div>';
       html+='<div class="ag-day-detail-name">'+esc(ev.cliente||'Sem título')+'</div>';
       if(ev.endereco) html+='<div class="ag-day-detail-desc">'+esc(ev.endereco)+'</div>';
@@ -3971,7 +3971,7 @@ function agShowCollaboratorTasks(colabId){
       var tipo=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
       var status=ev.status==='concluido'?'Concluído':ev.status==='cancelado'?'Cancelado':'Agendado';
       var dateLabel=_DAYS[d.getDay()]+', '+d.getDate()+' de '+_MONTHS[d.getMonth()];
-      html+='<div class="ag-day-detail-item" onclick="agEditModal(\''+ev.id+'\')">';
+      html+='<div class="ag-day-detail-item" onclick="agEditModal(\''+ev.id+'\')" oncontextmenu="agDayItemCtx(event,\''+ev.id+'\')">';
       html+='<div class="ag-day-detail-meta"><span class="ag-day-detail-pill" style="background:'+tipo.color+'20;color:'+tipo.color+'">'+esc(tipo.label)+'</span><span class="ag-day-detail-pill">'+status+'</span><span>'+dateLabel+'</span>'+(ev.horaInicio?'<span>'+ev.horaInicio+(ev.horaFim?' – '+ev.horaFim:'')+'</span>':'')+'</div>';
       html+='<div class="ag-day-detail-name">'+esc(ev.cliente||'Sem título')+'</div>';
       if(ev.endereco) html+='<div class="ag-day-detail-desc">'+esc(ev.endereco)+'</div>';
@@ -4008,6 +4008,19 @@ function agDelete(id){
   if(!confirm('Excluir este evento?'))return;
   dbSave('agenda',db('agenda').filter(function(e){return e.id!==id;}));
   agCloseModal(); renderAgenda(); toast('Evento excluído.','ok');
+}
+
+function agDayItemCtx(e,id){
+  e.preventDefault(); e.stopPropagation();
+  var ev = (db('agenda')||[]).find(function(x){return x.id===id;});
+  var items = [
+    {icon:'✏️', label:'Abrir', fn:function(){ agEditModal(id); }},
+    {icon:'📞', label:'Ligar', fn:function(){ if(ev&&ev.fone) window.open('tel:'+ev.fone); else toast('Telefone não disponível','err'); }},
+    'sep',
+    {icon:'✅', label:'Marcar como concluído', fn:function(){ if(!ev) return; var arr=db('agenda'); var i=arr.findIndex(function(a){return a.id===id;}); if(i>-1){ arr[i].status='concluido'; dbSave('agenda',arr); renderAgenda(); agShowDayTasks(ev.data); toast('Marcado como concluído','ok'); }}},
+    {icon:'🗑️', label:'Cancelar', danger:true, fn:function(){ if(!ev) return; var arr=db('agenda'); var i=arr.findIndex(function(a){return a.id===id;}); if(i>-1){ arr[i].status='cancelado'; dbSave('agenda',arr); renderAgenda(); agShowDayTasks(ev.data); toast('Evento cancelado','ok'); } }}
+  ];
+  ctxShow(e,items);
 }
 
 // ── DAY VIEW DRAG-TO-RESCHEDULE ──────────────────────────
