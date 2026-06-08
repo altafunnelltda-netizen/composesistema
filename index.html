@@ -200,18 +200,6 @@
 .ag-day-detail-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:10px; }
 .ag-day-detail-btn { padding:8px 14px; border-radius:999px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt); font-size:13px; cursor:pointer; transition:.15s; }
 .ag-day-detail-btn:hover { border-color:var(--acc); color:var(--txt); }
-
-/* Cobrancas modal */
-.cob-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:230; }
-.cob-overlay.on { display:block; }
-.cob-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:231; width:min(720px,94vw); max-height:min(86vh,680px); overflow:hidden; background:var(--bg); border:1.5px solid var(--brd); border-radius:14px; box-shadow:0 30px 70px rgba(0,0,0,.28); flex-direction:column; }
-.cob-modal.on { display:flex; }
-.cob-modal .cob-hd{padding:14px 18px; border-bottom:1px solid var(--brd); display:flex; justify-content:space-between; align-items:center}
-.cob-modal .cob-body{padding:12px 16px; overflow:auto; flex:1; display:flex; flex-direction:column; gap:10px}
-.cob-item{border:1px solid var(--brd); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--bg2)}
-.cob-item .cob-meta{display:flex;gap:8px;align-items:center;color:var(--txt2);font-size:12px}
-.cob-item .cob-actions{display:flex;gap:8px;justify-content:flex-end}
-.cob-badge{background:#ef4444;color:#fff;padding:4px 8px;border-radius:999px;font-weight:700}
 .ag-summary { display:grid; grid-template-columns:1fr; gap:10px; padding:14px 18px; border-bottom:1.5px solid var(--brd); background:var(--bg2); border-radius:18px; margin:0 18px 10px; }
 .ag-summary-period { font-size:11px; font-weight:700; color:var(--txt2); letter-spacing:.08em; text-transform:uppercase; }
 .ag-summary-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:12px; }
@@ -1033,10 +1021,6 @@
 <div class="ag-overlay" id="ag-overlay" onclick="if(event.target===this)agCloseModal()"></div>
 <div class="ag-modal" id="ag-modal"></div>
 
-<!-- COBRANÇAS MODAL -->
-<div class="cob-overlay" id="cob-overlay" onclick="if(event.target===this)cobCloseModal()"></div>
-<div class="cob-modal" id="cob-modal"></div>
-
 <div class="ag-day-detail-overlay" id="ag-day-detail-overlay" onclick="if(event.target===this)agHideDayDetail()"></div>
 <div class="ag-day-detail-modal" id="ag-day-detail-modal"></div>
 
@@ -1161,11 +1145,6 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) _
     if(typeof atualizarTrashBadge === 'function') atualizarTrashBadge();
     var _hid = window.location.hash.replace('#','') || 'dashboard';
     if (_hid !== 'dashboard' && document.getElementById('pg-'+_hid)) ir(_hid, null);
-    // scan for stalled orçamentos and create cobrancas if needed
-    var created = scanForStalledOrcs(7);
-    if(created && created.length) { openCobrancasModal(); }
-    // periodic background scan (every 6 hours)
-    setInterval(function(){ var c=scanForStalledOrcs(7); if(c && c.length) { /* optionally notify */ } }, 6*3600*1000);
   }).catch(function(){ _initDone = true; _flushQueue(); });
 })();
 
@@ -1548,63 +1527,6 @@ function orcMarkPerdidoById(id){
   var arr=db('orc'), idx=arr.findIndex(function(o){return o.id===id;});
   if(idx>=0) orcMarkPerdidoByIndex(arr, idx);
 }
-
-// ── COBRANÇAS / GESTÃO AUTOMÁTICA ─────────────────────────────────
-function scanForStalledOrcs(daysThreshold){
-  daysThreshold = typeof daysThreshold==='number'?daysThreshold:7;
-  var orcs = db('orc')||[]; var now=Date.now(); var created=[];
-  var cobrancas = db('cobrancas')||[];
-  orcs.forEach(function(o){
-    var st = o.status||'pendente';
-    if(['pendente','em-negociacao'].indexOf(st)===-1) return;
-    var ageDays = Math.floor((now - (o._ts||0))/(1000*60*60*24));
-    if(ageDays < daysThreshold) return;
-    // already has active cobranca?
-    var exist = cobrancas.find(function(c){return c.orcId===o.id && c.status!=='arquivado';});
-    if(!exist){
-      var c = {id:uid(), orcId:o.id, titulo:'Follow-up: Orçamento #'+(o.num||o.id.slice(0,6)), cliente:o.cliente||'', amount:o.total||0, criado:now, status:'pendente', ageDays:ageDays, motivo:'Orçamento parado '+ageDays+' dias'};
-      cobrancas.push(c); created.push(c);
-    }
-  });
-  if(created.length){ dbSave('cobrancas',cobrancas); }
-  return created;
-}
-
-function openCobrancasModal(){
-  renderCobrancasModal();
-  document.getElementById('cob-overlay').classList.add('on');
-  document.getElementById('cob-modal').classList.add('on');
-}
-function cobCloseModal(){ document.getElementById('cob-overlay').classList.remove('on'); document.getElementById('cob-modal').classList.remove('on'); }
-
-function renderCobrancasModal(){
-  var modal = document.getElementById('cob-modal'); if(!modal) return;
-  var arr = db('cobrancas')||[];
-  var html = '<div class="cob-hd"><div><strong>Cobranças / Follow-ups</strong> <span style="color:var(--txt2);margin-left:8px">('+arr.length+')</span></div><div><button class="btn btn-s" onclick="cobCloseModal()">Fechar</button></div></div>';
-  html += '<div class="cob-body">';
-  if(!arr.length) html += '<div style="color:var(--txt2)">Nenhuma cobrança pendente.</div>';
-  arr.forEach(function(c){
-    var o = (db('orc')||[]).find(function(x){return x.id===c.orcId;})||{};
-    html += '<div class="cob-item">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+esc(c.titulo)+'</strong><div style="color:var(--txt2);font-size:13px">'+esc(c.cliente||o.cliente||'')+'</div></div><div>'+(c.status==='pendente'?'<span class="cob-badge">PENDENTE</span>':'<span class="cob-badge" style="background:#10b981">OK</span>')+'</div></div>';
-    html += '<div class="cob-meta">'+(c.motivo?esc(c.motivo):'')+' · Valor sugerido: R$ '+(Number(c.amount||0).toLocaleString('pt-BR',{minimumFractionDigits:2}))+'</div>';
-    html += '<div class="cob-actions">';
-    html += '<button class="btn btn-s" onclick="(function(){cobOpenOrc(\''+c.orcId+'\');})()">Abrir Orçamento</button>';
-    html += '<button class="btn btn-p" onclick="(function(){cobMarkContacted(\''+c.id+'\');})()">Marcar contatado</button>';
-    html += '<button class="btn btn-s" onclick="(function(){cobSnooze(\''+c.id+'\',3);})()">Adiar 3d</button>';
-    html += '<button class="btn btn-d" onclick="(function(){cobArchive(\''+c.id+'\');})()">Arquivar</button>';
-    html += '</div>';
-    html += '</div>';
-  });
-  html += '</div>';
-  modal.innerHTML = html;
-}
-
-function cobOpenOrc(orcId){ var o=(db('orc')||[]).find(function(x){return x.id===orcId;}); if(o) orcRestaurar(o); cobCloseModal(); }
-function cobMarkContacted(id){ var arr=db('cobrancas')||[]; var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1){ arr[i].status='contatado'; arr[i].lastContact=Date.now(); dbSave('cobrancas',arr); renderCobrancasModal(); toast('Marcado como contatado','ok'); } }
-function cobSnooze(id,days){ var arr=db('cobrancas')||[]; var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1){ arr[i].snoozedUntil = Date.now() + (days||3)*24*3600*1000; dbSave('cobrancas',arr); renderCobrancasModal(); toast('Adiado '+(days||3)+' dias','ok'); } }
-function cobArchive(id){ var arr=db('cobrancas')||[]; var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1){ arr[i].status='arquivado'; dbSave('cobrancas',arr); renderCobrancasModal(); toast('Arquivado','ok'); } }
-
 
 function novoOrcamento(){
   orcId=null; orcN=0;
