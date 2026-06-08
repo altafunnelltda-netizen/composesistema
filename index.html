@@ -212,6 +212,14 @@
 .cob-item .cob-meta{display:flex;gap:8px;align-items:center;color:var(--txt2);font-size:12px}
 .cob-item .cob-actions{display:flex;gap:8px;justify-content:flex-end}
 .cob-badge{background:#ef4444;color:#fff;padding:4px 8px;border-radius:999px;font-weight:700}
+
+/* settings modal */
+.set-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:240}
+.set-overlay.on{display:block}
+.set-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:241;width:min(520px,92vw);background:var(--bg);border:1.5px solid var(--brd);border-radius:12px;padding:12px;box-shadow:0 24px 56px rgba(0,0,0,.24)}
+.set-modal.on{display:block}
+.set-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+#floating-settings-btn{position:fixed;right:18px;bottom:18px;width:46px;height:46px;border-radius:50%;border:none;background:var(--acc);color:#fff;font-size:18px;box-shadow:0 8px 20px rgba(0,0,0,.2);cursor:pointer;z-index:255}
 .ag-summary { display:grid; grid-template-columns:1fr; gap:10px; padding:14px 18px; border-bottom:1.5px solid var(--brd); background:var(--bg2); border-radius:18px; margin:0 18px 10px; }
 .ag-summary-period { font-size:11px; font-weight:700; color:var(--txt2); letter-spacing:.08em; text-transform:uppercase; }
 .ag-summary-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:12px; }
@@ -1047,6 +1055,13 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- SETTINGS MODAL -->
+<div class="set-overlay" id="set-overlay" onclick="if(event.target===this)settingsClose()"></div>
+<div class="set-modal" id="set-modal"></div>
+
+<!-- floating settings button -->
+<button id="floating-settings-btn" title="Configurações" onclick="settingsOpen()" style="display:none">⚙️</button>
+
 <script>
 // ── STORAGE ──────────────────────────────────────────────
 var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf' };
@@ -1551,7 +1566,9 @@ function orcMarkPerdidoById(id){
 
 // ── COBRANÇAS / GESTÃO AUTOMÁTICA ─────────────────────────────────
 function scanForStalledOrcs(daysThreshold){
-  daysThreshold = typeof daysThreshold==='number'?daysThreshold:7;
+  // read default from settings if not provided
+  var settings = getSettings();
+  daysThreshold = typeof daysThreshold==='number'?daysThreshold:(settings.diasParados||7);
   var orcs = db('orc')||[]; var now=Date.now(); var created=[];
   var cobrancas = db('cobrancas')||[];
   orcs.forEach(function(o){
@@ -1604,6 +1621,23 @@ function cobOpenOrc(orcId){ var o=(db('orc')||[]).find(function(x){return x.id==
 function cobMarkContacted(id){ var arr=db('cobrancas')||[]; var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1){ arr[i].status='contatado'; arr[i].lastContact=Date.now(); dbSave('cobrancas',arr); renderCobrancasModal(); toast('Marcado como contatado','ok'); } }
 function cobSnooze(id,days){ var arr=db('cobrancas')||[]; var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1){ arr[i].snoozedUntil = Date.now() + (days||3)*24*3600*1000; dbSave('cobrancas',arr); renderCobrancasModal(); toast('Adiado '+(days||3)+' dias','ok'); } }
 function cobArchive(id){ var arr=db('cobrancas')||[]; var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1){ arr[i].status='arquivado'; dbSave('cobrancas',arr); renderCobrancasModal(); toast('Arquivado','ok'); } }
+
+
+function getSettings(){
+  try{ return JSON.parse(localStorage.getItem('cps_settings')||'{}'); }catch(e){return{};}
+}
+function saveSettings(s){ localStorage.setItem('cps_settings', JSON.stringify(s||{})); }
+
+function settingsOpen(){
+  var modal=document.getElementById('set-modal'); if(!modal) return;
+  var s=getSettings();
+  var dias = s.diasParados||7;
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Configurações</strong><button class="btn btn-s" onclick="settingsClose()">Fechar</button></div>';
+  html += '<div class="set-row"><label style="width:220px">Dias para considerar orçamento parado</label><input id="set-diasParados" type="number" min="1" style="width:80px" value="'+dias+'"></div>';
+  html += '<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn btn-p" onclick="(function(){ var v=parseInt(document.getElementById(\'set-diasParados\').value||7); var s=getSettings(); s.diasParados=v; saveSettings(s); settingsClose(); toast(\'Salvo\','ok'); })()">Salvar</button></div>';
+  modal.innerHTML = html; document.getElementById('set-overlay').classList.add('on'); modal.classList.add('on');
+}
+function settingsClose(){ document.getElementById('set-overlay').classList.remove('on'); document.getElementById('set-modal').classList.remove('on'); }
 
 
 function novoOrcamento(){
