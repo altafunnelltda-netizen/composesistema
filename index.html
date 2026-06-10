@@ -1510,12 +1510,44 @@ function orcAddItem(){
       '<span class="item-badge">ITEM '+n+'</span>'+
       '<input type="text" placeholder="Descrição do produto..." style="flex:1;font-weight:600" id="oi'+n+'-titulo">'+
       '<input type="text" placeholder="R$ 0,00" style="width:100px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi'+n+'-preco" oninput="orcCalc()">'+
+      '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item">⧉</button>'+
       '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi'+n+'\').remove();orcCalc()">✕</button>'+
     '</div>'+
     '<div id="oi'+n+'-linhas"></div>'+
     '<button class="btn btn-s btn-xs no-print" style="margin-top:5px" onclick="orcAddLinha(\'oi'+n+'-linhas\')">+ linha</button>';
   wrap.appendChild(div);
   orcAddLinha('oi'+n+'-linhas');
+}
+
+function orcDuplicarItem(itemId){
+  var src=document.getElementById(itemId);
+  if(!src) return;
+  orcN++;
+  var n=orcN;
+  var titulo=src.querySelector('[id$="-titulo"]')?src.querySelector('[id$="-titulo"]').value:'';
+  var preco=src.querySelector('[id$="-preco"]')?src.querySelector('[id$="-preco"]').value:'';
+  var linhas=Array.from(src.querySelectorAll('.det-line input')).map(function(i){return i.value;});
+  var wrap=document.getElementById('orc-itens');
+  var div=document.createElement('div'); div.className='orc-item'; div.id='oi'+n;
+  div.innerHTML=
+    '<div class="orc-item-hd">'+
+      '<span class="item-badge">ITEM '+n+'</span>'+
+      '<input type="text" style="flex:1;font-weight:600" id="oi'+n+'-titulo" value="'+esc(titulo)+'">'+
+      '<input type="text" style="width:100px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi'+n+'-preco" oninput="orcCalc()" value="'+esc(preco)+'">'+
+      '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item">⧉</button>'+
+      '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi'+n+'\').remove();orcCalc()">✕</button>'+
+    '</div>'+
+    '<div id="oi'+n+'-linhas"></div>'+
+    '<button class="btn btn-s btn-xs no-print" style="margin-top:5px" onclick="orcAddLinha(\'oi'+n+'-linhas\')">+ linha</button>';
+  src.insertAdjacentElement('afterend', div);
+  linhas.forEach(function(linha){
+    var c=document.getElementById('oi'+n+'-linhas');
+    var d=document.createElement('div'); d.className='det-line';
+    d.innerHTML='<input type="text" value="'+esc(linha)+'"><button class="btn btn-d btn-xs no-print" onclick="this.parentElement.remove()">✕</button>';
+    c.appendChild(d);
+  });
+  if(linhas.length===0) orcAddLinha('oi'+n+'-linhas');
+  orcCalc();
 }
 
 function orcAddLinha(cid){
@@ -1644,6 +1676,7 @@ function orcRestaurar(o){
         '<span class="item-badge">ITEM '+n+'</span>'+
         '<input type="text" style="flex:1;font-weight:600" id="oi'+n+'-titulo" value="'+esc(item.titulo||'')+'">'+
         '<input type="text" style="width:100px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi'+n+'-preco" oninput="orcCalc()" value="'+esc(item.preco||'')+'">'+
+        '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item">⧉</button>'+
         '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi'+n+'\').remove();orcCalc()">✕</button>'+
       '</div>'+
       '<div id="oi'+n+'-linhas"></div>'+
