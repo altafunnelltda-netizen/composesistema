@@ -1510,7 +1510,7 @@ function orcAddItem(){
       '<span class="item-badge">ITEM '+n+'</span>'+
       '<input type="text" placeholder="Descrição do produto..." style="flex:1;font-weight:600" id="oi'+n+'-titulo">'+
       '<input type="text" placeholder="R$ 0,00" style="width:100px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi'+n+'-preco" oninput="orcCalc()">'+
-      '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item">⧉</button>'+
+      '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'+
       '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi'+n+'\').remove();orcCalc()">✕</button>'+
     '</div>'+
     '<div id="oi'+n+'-linhas"></div>'+
@@ -1534,7 +1534,7 @@ function orcDuplicarItem(itemId){
       '<span class="item-badge">ITEM '+n+'</span>'+
       '<input type="text" style="flex:1;font-weight:600" id="oi'+n+'-titulo" value="'+esc(titulo)+'">'+
       '<input type="text" style="width:100px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi'+n+'-preco" oninput="orcCalc()" value="'+esc(preco)+'">'+
-      '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item">⧉</button>'+
+      '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'+
       '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi'+n+'\').remove();orcCalc()">✕</button>'+
     '</div>'+
     '<div id="oi'+n+'-linhas"></div>'+
@@ -1676,7 +1676,7 @@ function orcRestaurar(o){
         '<span class="item-badge">ITEM '+n+'</span>'+
         '<input type="text" style="flex:1;font-weight:600" id="oi'+n+'-titulo" value="'+esc(item.titulo||'')+'">'+
         '<input type="text" style="width:100px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi'+n+'-preco" oninput="orcCalc()" value="'+esc(item.preco||'')+'">'+
-        '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item">⧉</button>'+
+        '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi'+n+'\')" title="Duplicar item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'+
         '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi'+n+'\').remove();orcCalc()">✕</button>'+
       '</div>'+
       '<div id="oi'+n+'-linhas"></div>'+
@@ -2028,6 +2028,7 @@ function histHTML(o,key){
     '</div></div>'+
     '<div class="hi-actions">'+
       '<button class="btn btn-s btn-xs" onclick="abrirDoc(\''+key+'\',\''+o.id+'\')">✏️ Abrir</button>'+
+      (key==='orc'?'<button class="btn btn-s btn-xs" onclick="duplicarOrcHist(\''+o.id+'\')" title="Duplicar orçamento"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>':'')+
       '<button class="btn btn-d btn-xs" onclick="excluirDoc(\''+key+'\',\''+o.id+'\')">🗑</button>'+
     '</div></div>';
 }
@@ -2037,6 +2038,8 @@ function histCtx(e,key,id){
     'sep'
   ];
   if(key==='orc'){
+    items.push({icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',label:'Duplicar orçamento',fn:function(){duplicarOrcHist(id);}});
+    items.push('sep');
     items.push({isLbl:true,label:'Alterar Status'});
     ['pendente','aprovado','em-negociacao','perdido'].forEach(function(s){
       items.push({label:ORC_STATUS_LABELS[s],fn:function(){
@@ -2067,6 +2070,22 @@ function excluirDoc(key,id){
   dbSave(key,db(key).filter(function(o){return o.id!==id;}));
   toast('Excluído.','ok');
   renderHistorico(); atualizarDash();
+}
+
+function duplicarOrcHist(id){
+  var arr=db('orc');
+  var orig=arr.find(function(o){return o.id===id;});
+  if(!orig){toast('Orçamento não encontrado.','err');return;}
+  var copia=JSON.parse(JSON.stringify(orig));
+  copia.id='orc_'+Date.now();
+  copia.num=(orig.num||'')+'(cópia)';
+  copia.data=new Date().toISOString().slice(0,10);
+  copia.status='pendente';
+  arr.push(copia);
+  dbSave('orc',arr);
+  renderHistorico();
+  atualizarDash();
+  toast('Orçamento duplicado!','ok');
 }
 
 // ── CALCULADORAS — FÓRMULAS COMPOSÊ ──────────────────────
@@ -2686,7 +2705,7 @@ function kbMakeCard(card){
     var otherCols=d.cols.filter(function(c){return c.id!==card.col;});
     var items=[
       {icon:'✏️',label:'Editar',fn:function(){kbOpenModal(card.id,card.col);}},
-      {icon:'⧉',label:'Duplicar',fn:function(){kbDuplicateCard(card.id);}},
+      {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',label:'Duplicar',fn:function(){kbDuplicateCard(card.id);}},
     ];
     if(otherCols.length){
       items.push('sep');
