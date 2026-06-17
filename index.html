@@ -3580,7 +3580,7 @@ AG_TIPOS[2].svg = _SVG.home;
 AG_TIPOS[3].svg = _SVG.ruler;
 AG_TIPOS[4].svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
 function agGetTipo(ev){
-  var t=agGetTipo(ev);
+  var t=AG_TIPOS.find(function(x){return x.id===ev.tipo;})||AG_TIPOS[0];
   if(ev.tipo==='outro'&&ev.tipoLabel){return {id:'outro',label:ev.tipoLabel,color:t.color,svg:t.svg};}
   return t;
 }
