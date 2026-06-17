@@ -122,7 +122,7 @@ app.get('/logo.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'logo_transp.png'));
 });
 
-app.get('/versao', auth, (req, res) => {
+app.get('/versao', (req, res) => {
   res.json({ v: VERSAO });
 });
 

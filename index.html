@@ -1133,9 +1133,12 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) _
 var _versaoAtual = 0;
 function _versaoPull() {
   fetch('/versao')
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if(r.redirected || r.url.indexOf('/login')>-1) { location.reload(); return null; }
+      return r.json();
+    })
     .then(function(d){
-      if(!d.v) return;
+      if(!d||!d.v) return;
       if(_versaoAtual === 0) { _versaoAtual = d.v; return; }
       if(d.v !== _versaoAtual) { location.reload(); }
     }).catch(function(){});
