@@ -5,6 +5,7 @@ const path    = require('path');
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
+const VERSAO = Date.now(); // timestamp de inicialização — muda a cada novo deploy
 const SENHA  = process.env.SENHA_SISTEMA || 'compose2024';
 const SECRET = process.env.SESSION_SECRET || 'cps-' + Math.random().toString(36).slice(2);
 
@@ -119,6 +120,10 @@ app.get('/style.css', auth, (req, res) => {
 
 app.get('/logo.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'logo_transp.png'));
+});
+
+app.get('/versao', auth, (req, res) => {
+  res.json({ v: VERSAO });
 });
 
 app.get('/dados', auth, async (req, res) => {

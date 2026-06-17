@@ -1129,6 +1129,20 @@ function _syncBadge() {
 setInterval(function(){ if(!document.hidden) _syncPull(); }, 12000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) _syncPull(); });
 
+// ── DETECÇÃO DE NOVO DEPLOY ───────────────────────────────
+var _versaoAtual = 0;
+function _versaoPull() {
+  fetch('/versao')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.v) return;
+      if(_versaoAtual === 0) { _versaoAtual = d.v; return; }
+      if(d.v !== _versaoAtual) { location.reload(); }
+    }).catch(function(){});
+}
+setInterval(function(){ if(!document.hidden) _versaoPull(); }, 30000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) _versaoPull(); });
+
 // ── INIT: carrega dados do servidor no localStorage ───────
 (function(){
   fetch('/dados').then(function(r){ return r.json(); }).then(function(d){
