@@ -459,6 +459,11 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Backup
     </a>
+    <button class="sb-backup-btn" onclick="importarBackup()" title="Restaurar dados a partir de um arquivo de backup" style="background:none;border:none;cursor:pointer;width:100%;text-align:left;padding:0;color:inherit;font:inherit">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Importar
+    </button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importarBackupArquivo(this)">
     Composê Home · composesantos.com.br
     <a href="/logout" class="sb-logout" onclick="return confirm('Sair do sistema?')">Sair</a>
   </div>
@@ -4776,6 +4781,34 @@ function colabDelete(id){
   colabCloseModal(); renderColab(); toast('Colaborador removido.','ok');
 }
 _SVG.clock='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+function importarBackup(){
+  var senha=prompt('Digite a senha do sistema para importar o backup:');
+  if(!senha)return;
+  var inp=document.getElementById('import-file-input');
+  inp._senha=senha;
+  inp.value='';
+  inp.click();
+}
+function importarBackupArquivo(inp){
+  var file=inp.files[0];
+  if(!file)return;
+  var senha=inp._senha||'';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dados;
+    try{dados=JSON.parse(e.target.result);}catch(_){toast('Arquivo inválido. Selecione um backup .json válido.','err');return;}
+    if(!confirm('Atenção: isso vai SUBSTITUIR todos os dados atuais pelo backup selecionado.\n\nArquivo: '+file.name+'\n\nTem certeza?'))return;
+    fetch('/importar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha:senha,dados:dados})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok){toast('Backup restaurado com sucesso! Recarregando...','ok');setTimeout(function(){location.reload();},1500);}
+        else{toast('Erro: '+(d.erro||'Falha ao importar'),'err');}
+      })
+      .catch(function(){toast('Erro de conexão ao importar.','err');});
+  };
+  reader.readAsText(file);
+}
 </script>
 </body>
 </html>

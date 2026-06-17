@@ -186,6 +186,30 @@ app.get('/backup', auth, async (req, res) => {
   }
 });
 
+app.post('/importar', auth, async (req, res) => {
+  try {
+    const { senha, dados } = req.body;
+    if (!senha || senha !== SENHA) {
+      return res.status(403).json({ ok: false, erro: 'Senha incorreta.' });
+    }
+    if (!dados || typeof dados !== 'object') {
+      return res.status(400).json({ ok: false, erro: 'Arquivo inválido.' });
+    }
+    const lm = Date.now();
+    const payload = Object.assign({}, dados, { _lastModified: lm });
+    // Backup do estado atual antes de sobrescrever
+    if (!pool) {
+      const today = new Date().toISOString().slice(0, 10);
+      const backupPath = path.join(process.env.DADOS_DIR || __dirname, `dados_backup_pre_import_${today}.json`);
+      try { const cur = await lerDados(); fs.writeFileSync(backupPath, JSON.stringify(cur, null, 2)); } catch (_) {}
+    }
+    await salvarDados(payload);
+    res.json({ ok: true, lastModified: lm });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Composê rodando em http://localhost:${PORT}`);
   console.log(`Senha de acesso: ${SENHA}`);
