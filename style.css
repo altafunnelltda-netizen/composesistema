@@ -1235,6 +1235,17 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 }
 [data-theme=dark] .pipe-col{background:var(--cream-dark)}
 [data-theme=dark] .pipe-card{background:var(--white);border-color:var(--border)}
+.pipe-card-client{cursor:pointer}
+.pipe-sub-list{margin-top:8px;border-top:1px solid var(--border);padding-top:6px;display:flex;flex-direction:column;gap:4px;}
+.pipe-sub-item{
+  display:flex;align-items:center;gap:6px;padding:4px 6px;
+  border-radius:5px;cursor:pointer;font-size:11px;
+  background:var(--bg2);transition:background .12s;
+}
+.pipe-sub-item:hover{background:rgba(201,169,97,.15);}
+.pipe-sub-num{font-weight:600;color:var(--charcoal);flex-shrink:0;}
+.pipe-sub-val{color:var(--mid);}
+.pipe-sub-date{color:var(--mid);opacity:.7;margin-left:auto;flex-shrink:0;}
 @media(max-width:640px){.pipeline{grid-template-columns:repeat(2,1fr)}}
 
 /* ── STATUS ORÇAMENTO ── */
