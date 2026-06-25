@@ -285,10 +285,10 @@ app.get('/auge/raw/:caminho(*)', auth, async (req, res) => {
 });
 
 // ── IA — GEMINI ─────────────────────────────────────────────────────────────
-const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+const CLAUDE_KEY = process.env.ANTHROPIC_API_KEY || '';
 
 app.post('/ia/gerar-orcamento', auth, async (req, res) => {
-  if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
+  if (!CLAUDE_KEY) return res.status(503).json({ erro: 'IA não configurada (ANTHROPIC_API_KEY ausente).' });
 
   const { texto, exemplos } = req.body;
   if (!texto) return res.status(400).json({ erro: 'Texto das anotações não informado.' });
@@ -316,45 +316,45 @@ Com base nas anotações acima, gere os itens do orçamento no formato JSON abai
 Responda APENAS com o JSON, sem texto adicional:
 {"itens": [...]}`;
 
-  const geminiCall = (body) => new Promise((resolve, reject) => {
-    const u = new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent');
-    const opts = { hostname: u.hostname, path: u.pathname, method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) } };
-    const req2 = https.request(opts, r => {
-      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
-    });
-    req2.on('error', reject); req2.write(body); req2.end();
-  });
-
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-
   try {
-    const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+    const body = JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }]
+    });
 
-    let result;
-    for (let tentativa = 1; tentativa <= 3; tentativa++) {
-      result = await geminiCall(body);
-      if (result.status !== 503) break;
-      console.log(`[Gemini] 503 sobrecarga, tentativa ${tentativa}/3...`);
-      await sleep(2000 * tentativa);
-    }
+    const result = await new Promise((resolve, reject) => {
+      const opts = {
+        hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_KEY,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(body)
+        }
+      };
+      const req2 = https.request(opts, r => {
+        let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
+      });
+      req2.on('error', reject); req2.write(body); req2.end();
+    });
 
     if (result.status !== 200) {
-      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
+      console.error('[Claude] status', result.status, result.body.slice(0, 500));
       let detalhe = '';
       try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
-      return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
+      return res.status(502).json({ erro: 'IA ' + result.status + (detalhe ? ': ' + detalhe : '') });
     }
 
     const parsed = JSON.parse(result.body);
-    const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = parsed?.content?.[0]?.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return res.status(502).json({ erro: 'IA não retornou JSON válido.' });
 
     const itens = JSON.parse(jsonMatch[0]);
     res.json(itens);
   } catch (e) {
-    console.error('[Gemini] erro:', e.message);
+    console.error('[Claude] erro:', e.message);
     res.status(500).json({ erro: e.message });
   }
 });
