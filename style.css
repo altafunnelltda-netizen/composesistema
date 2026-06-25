@@ -1,9 +1,9 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --gold:#c9a961;--gold-dark:#b8903a;
-  --cream:#fdfcfa;--cream-dark:#f3efe8;
-  --charcoal:#2c2c2c;--mid:#888;--border:#ddd5c8;
-  --white:#fefdf8;--sb:220px;--r:10px;
+  --cream:#ece6db;--cream-dark:#e2dbd0;
+  --charcoal:#2c2c2c;--mid:#888;--border:#d4c9b8;
+  --white:#f5f0e6;--sb:220px;--r:10px;
   --transition:.18s ease;
 }
 /* scrollbar global */
