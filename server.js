@@ -317,13 +317,13 @@ Responda APENAS com o JSON, sem texto adicional:
 {"itens": [...]}`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
 
     const result = await new Promise((resolve, reject) => {
       const u = new URL(url);
-      const opts = { hostname: u.hostname, path: u.pathname + u.search, method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } };
+      const opts = { hostname: u.hostname, path: u.pathname, method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) } };
       const req2 = https.request(opts, r => {
         let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
       });
@@ -331,8 +331,10 @@ Responda APENAS com o JSON, sem texto adicional:
     });
 
     if (result.status !== 200) {
-      console.error('[Gemini] status', result.status, result.body.slice(0, 300));
-      return res.status(502).json({ erro: 'Erro na API Gemini: ' + result.status });
+      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
+      let detalhe = '';
+      try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
+      return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
     }
 
     const parsed = JSON.parse(result.body);
