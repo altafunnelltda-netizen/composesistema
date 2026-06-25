@@ -863,6 +863,7 @@
       <div class="calc-res" id="cc-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="btn btn-p" onclick="salvarCalcCortina()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Cálculo</button>
+        <button class="btn btn-s" onclick="calcParaNotas('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Salvar nas Anotações</button>
         <button class="btn btn-s" onclick="limparCalcCortina()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
       </div>
     </div>
@@ -940,6 +941,7 @@
       <div class="calc-res" id="cp-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="btn btn-p" onclick="salvarCalcPiso()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Cálculo</button>
+        <button class="btn btn-s" onclick="calcParaNotas('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Salvar nas Anotações</button>
         <button class="btn btn-s" onclick="limparCalcPiso()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
       </div>
     </div>
@@ -5086,6 +5088,57 @@ function importarBackupArquivo(inp){
       .catch(function(){toast('Erro de conexão ao importar.','err');});
   };
   reader.readAsText(file);
+}
+
+// ── CALC → ANOTAÇÕES ──────────────────────────────────────
+function calcParaNotas(prefixo){
+  var resId = prefixo+'-res';
+  var resEl = document.getElementById(resId);
+  if(!resEl || resEl.querySelector('span[style*="--mid"]')){
+    toast('Calcule antes de enviar para as anotações.','err'); return;
+  }
+  var clientes = nbClientes();
+  if(!clientes.length){ toast('Nenhum cliente nas anotações. Crie um primeiro.','err'); return; }
+
+  // modal de seleção
+  var overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText='background:var(--white);border-radius:12px;padding:24px;width:340px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.25);';
+  box.innerHTML=
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px;">Salvar nas Anotações</div>'+
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Escolha o cliente:</div>'+
+    '<select id="calc-notas-sel" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);font-size:13px;margin-bottom:16px;">'+
+      clientes.map(function(c){ return '<option value="'+c.id+'">'+esc(c.nome)+'</option>'; }).join('')+
+    '</select>'+
+    '<div style="display:flex;gap:8px;">'+
+      '<button class="btn btn-p" style="flex:1;" id="calc-notas-ok">Salvar</button>'+
+      '<button class="btn btn-s" id="calc-notas-cancel">Cancelar</button>'+
+    '</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  document.getElementById('calc-notas-cancel').onclick = function(){ document.body.removeChild(overlay); };
+  overlay.onclick = function(e){ if(e.target===overlay) document.body.removeChild(overlay); };
+
+  document.getElementById('calc-notas-ok').onclick = function(){
+    var cliId = document.getElementById('calc-notas-sel').value;
+    var titulo = prefixo==='cc' ? 'Calculadora de Cortina' : 'Calculadora de Piso';
+    var data = new Date().toLocaleDateString('pt-BR');
+    var bloco =
+      '<p><strong>— '+titulo+' — '+data+' —</strong></p>'+
+      resEl.innerHTML+
+      '<p></p>';
+    var clientes2 = nbClientes();
+    var idx = clientes2.findIndex(function(c){ return c.id===cliId; });
+    if(idx>=0){
+      clientes2[idx].texto = (clientes2[idx].texto||'') + bloco;
+      clientes2[idx]._ts = Date.now();
+      dbSave('notas', clientes2);
+      toast('Cálculo salvo nas anotações de '+clientes2[idx].nome+'!','ok');
+    }
+    document.body.removeChild(overlay);
+  };
 }
 </script>
 </body>
