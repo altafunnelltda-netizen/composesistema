@@ -2238,7 +2238,7 @@ function augeImportar(idx){
           var motorizado = /\bMot\b/i.test(nome);
           var linha2 = motorizado ? 'MOTORIZADO' : 'MANUAL';
           return {
-            titulo: nome,
+            titulo: nome.toUpperCase(),
             preco: brl(total),
             linhas: [linha1, linha2, '3 ANOS DE GARANTIA', 'INSTALAÇÃO INCLUSA']
           };
