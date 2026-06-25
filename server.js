@@ -263,11 +263,24 @@ app.get('/auge/orcamentos', auth, async (req, res) => {
 app.get('/auge/orcamento-itens/:id', auth, async (req, res) => {
   try {
     const { status, body } = await augeRequest('dyn/fn/OrcamentoItem?idOrcamento=' + encodeURIComponent(req.params.id));
+    console.log('[Auge itens] status:', status, '| body:', body.slice(0, 500));
     if (status !== 200) return res.status(status).json({ erro: 'Auge retornou ' + status });
     const lista = xmlParseList(body, 'OrcamentoItem');
+    console.log('[Auge itens] parsed:', lista.length, 'itens');
     res.json(lista);
   } catch (e) {
     res.status(500).json({ erro: e.message });
+  }
+});
+
+// rota de debug — retorna XML bruto (remover após diagnóstico)
+app.get('/auge/raw/:caminho(*)', auth, async (req, res) => {
+  try {
+    const { status, body } = await augeRequest(req.params.caminho);
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(`STATUS: ${status}\n\n${body}`);
+  } catch (e) {
+    res.send('ERRO: ' + e.message);
   }
 });
 
