@@ -284,6 +284,70 @@ app.get('/auge/raw/:caminho(*)', auth, async (req, res) => {
   }
 });
 
+// ── IA — GEMINI ─────────────────────────────────────────────────────────────
+const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+
+app.post('/ia/gerar-orcamento', auth, async (req, res) => {
+  if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
+
+  const { texto, exemplos } = req.body;
+  if (!texto) return res.status(400).json({ erro: 'Texto das anotações não informado.' });
+
+  const exemplosTxt = (exemplos || []).slice(0, 6).map((e, i) =>
+    `EXEMPLO ${i+1}:\nAnotação: ${e.anotacao}\nOrçamento gerado:\n${e.itens.map(it =>
+      `- Título: ${it.titulo}\n  Preço: ${it.preco}\n  Detalhes: ${it.linhas.join(' | ')}`
+    ).join('\n')}`
+  ).join('\n\n');
+
+  const prompt = `Você é um assistente especializado em orçamentos para a empresa Composê Home, que vende cortinas, persianas, tapetes e tapeçaria em Santos-SP.
+
+${exemplosTxt ? `EXEMPLOS DE ORÇAMENTOS JÁ FEITOS PELA COMPOSÊ (use como referência de estilo e preços):\n${exemplosTxt}\n\n` : ''}ANOTAÇÃO DO CLIENTE:
+${texto}
+
+Com base nas anotações acima, gere os itens do orçamento no formato JSON abaixo. Cada item deve ter:
+- "titulo": nome do ambiente + tipo do produto em MAIÚSCULAS (ex: "SALA - CORTINA ROLÔ")
+- "preco": valor em reais formatado (ex: "R$ 1.200,00")
+- "linhas": array com 4 linhas de detalhes em MAIÚSCULAS:
+  - Linha 1: quantidade + tipo + cor/modelo
+  - Linha 2: MANUAL ou MOTORIZADO
+  - Linha 3: 3 ANOS DE GARANTIA
+  - Linha 4: INSTALAÇÃO INCLUSA
+
+Responda APENAS com o JSON, sem texto adicional:
+{"itens": [...]}`;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+    const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+
+    const result = await new Promise((resolve, reject) => {
+      const u = new URL(url);
+      const opts = { hostname: u.hostname, path: u.pathname + u.search, method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } };
+      const req2 = https.request(opts, r => {
+        let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
+      });
+      req2.on('error', reject); req2.write(body); req2.end();
+    });
+
+    if (result.status !== 200) {
+      console.error('[Gemini] status', result.status, result.body.slice(0, 300));
+      return res.status(502).json({ erro: 'Erro na API Gemini: ' + result.status });
+    }
+
+    const parsed = JSON.parse(result.body);
+    const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(502).json({ erro: 'IA não retornou JSON válido.' });
+
+    const itens = JSON.parse(jsonMatch[0]);
+    res.json(itens);
+  } catch (e) {
+    console.error('[Gemini] erro:', e.message);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Composê rodando em http://localhost:${PORT}`);
   console.log(`Senha de acesso: ${SENHA}`);

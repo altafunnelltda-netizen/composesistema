@@ -3432,6 +3432,11 @@ function nbOpenNotebook(cli, mainEl){
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>'+
         ' Desenhar'+
       '</button>'+
+      '<div class="nb-tool-sep"></div>'+
+      '<button class="nb-tool-btn nb-ia-btn" onclick="nbGerarOrcamentoIA()" title="Gerar orçamento com IA a partir das anotações">'+
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>'+
+        ' Gerar Orçamento IA'+
+      '</button>'+
     '</div>'+
     // barra de desenho (oculta por padrão)
     '<div class="nb-draw-bar" id="nb-draw-bar">'+
@@ -5138,6 +5143,102 @@ function calcParaNotas(prefixo){
       toast('Cálculo salvo nas anotações de '+clientes2[idx].nome+'!','ok');
     }
     document.body.removeChild(overlay);
+  };
+}
+
+// ── IA — GERAR ORÇAMENTO DAS ANOTAÇÕES ───────────────────
+function iaExemplos(){
+  try{ return JSON.parse(localStorage.getItem('cps_ia_exemplos')||'[]'); }catch(e){ return []; }
+}
+function iaSalvarExemplo(anotacao, itens){
+  var arr=iaExemplos();
+  arr.unshift({anotacao:anotacao, itens:itens, _ts:Date.now()});
+  if(arr.length>20) arr=arr.slice(0,20);
+  localStorage.setItem('cps_ia_exemplos', JSON.stringify(arr));
+}
+
+function nbGerarOrcamentoIA(){
+  if(!_nbCurrentCli){ toast('Abra um cliente antes de gerar o orçamento.','err'); return; }
+  var ed=document.getElementById('nb-editor');
+  var texto=(ed?ed.innerText:'').trim();
+  if(!texto){ toast('As anotações estão vazias.','err'); return; }
+
+  var btn=document.querySelector('.nb-ia-btn');
+  if(btn) btn.classList.add('loading');
+
+  var exemplos=iaExemplos();
+
+  fetch('/ia/gerar-orcamento',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({texto:texto, exemplos:exemplos})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(btn) btn.classList.remove('loading');
+    if(data.erro){ toast('IA: '+data.erro,'err'); return; }
+    var itens=data.itens||[];
+    if(!itens.length){ toast('A IA não encontrou itens nas anotações.','err'); return; }
+    iaShowReview(texto, itens);
+  })
+  .catch(function(e){
+    if(btn) btn.classList.remove('loading');
+    toast('Erro ao contatar IA.','err');
+  });
+}
+
+function iaShowReview(textoOriginal, itens){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:14px;padding:24px;width:520px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.35);';
+
+  var html='<div style="font-weight:700;font-size:16px;color:#1a1a1a;margin-bottom:4px;">Orçamento gerado pela IA</div>'+
+    '<div style="font-size:12px;color:#777;margin-bottom:16px;">Revise os itens e confirme para criar o orçamento.</div>';
+
+  itens.forEach(function(it, i){
+    html+='<div class="ia-preview-item">'+
+      '<div class="ia-preview-titulo">'+esc(it.titulo||'')+'</div>'+
+      '<div class="ia-preview-preco">'+esc(it.preco||'')+'</div>'+
+      '<div class="ia-preview-linha">'+(it.linhas||[]).map(function(l){return esc(l);}).join('<br>')+'</div>'+
+    '</div>';
+  });
+
+  html+='<div style="display:flex;gap:8px;margin-top:16px;">'+
+    '<button class="btn btn-p" style="flex:1;" id="ia-confirmar">Criar Orçamento</button>'+
+    '<button class="btn btn-s" id="ia-cancelar">Cancelar</button>'+
+  '</div>';
+
+  box.innerHTML=html;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  document.getElementById('ia-cancelar').onclick=function(){ document.body.removeChild(ov); };
+  ov.onclick=function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  document.getElementById('ia-confirmar').onclick=function(){
+    // busca nome do cliente atual
+    var clientes=nbClientes();
+    var cli=clientes.find(function(c){return c.id===_nbCurrentCli;});
+    var nomeCliente=cli?(cli.cliente||cli.nome||''):'';
+
+    // cria orçamento
+    var orc={
+      id:uid(), cliente:nomeCliente, status:'lead',
+      _ts:Date.now(), _cobradoEm:null,
+      itens: itens.map(function(it){
+        return { titulo:it.titulo||'', preco:it.preco||'R$ 0,00', linhas:it.linhas||[] };
+      })
+    };
+    var orcs=db('orc'); orcs.unshift(orc); dbSave('orc',orcs);
+
+    // salva como exemplo para aprendizado futuro
+    iaSalvarExemplo(textoOriginal, orc.itens);
+
+    document.body.removeChild(ov);
+    toast('Orçamento criado para '+nomeCliente+'!','ok');
+    // abre o orçamento criado
+    setTimeout(function(){ ir('quadro',document.getElementById('nav-quadro')); renderPipeline(); },300);
   };
 }
 </script>

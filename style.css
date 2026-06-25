@@ -836,6 +836,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   background:rgba(201,169,97,.15);border-color:rgba(201,169,97,.45);
   color:var(--gold-dark);font-weight:700;
 }
+.nb-ia-btn{background:rgba(201,169,97,.12);border-color:rgba(201,169,97,.4);color:var(--gold-dark);font-weight:600;}
+.nb-ia-btn:hover{background:rgba(201,169,97,.22);border-color:var(--gold);}
+.nb-ia-btn.loading{opacity:.6;pointer-events:none;}
+.ia-preview-item{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:var(--white);}
+.ia-preview-titulo{font-weight:700;font-size:13px;margin-bottom:4px;color:var(--charcoal);}
+.ia-preview-preco{color:var(--gold-dark);font-weight:700;font-size:13px;margin-bottom:6px;}
+.ia-preview-linha{font-size:11px;color:var(--mid);line-height:1.6;}
 .nb-tool-sep{width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0}
 
 /* ── Barra de desenho ── */
