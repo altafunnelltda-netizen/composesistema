@@ -2229,19 +2229,34 @@ function augeImportar(idx){
         itens: itens.map(function(it){
           var total = parseFloat(it.vlTotalItem)||0;
           var qtd   = parseFloat(it.qtPecas)||1;
+          var larg  = parseFloat(it.Largura)||0;
+          var alt   = parseFloat(it.Altura)||0;
           var nome  = it.dsItem||it.dsItemAbreviado||'';
           var partes = nome.split(' . ');
-          var produto = partes[0].trim();
-          var cor     = partes[1] ? partes[1].trim() : '';
-          var ambiente = it.dsAmbiente ? ' ('+it.dsAmbiente+')' : '';
-          var linha1 = (qtd+'x '+produto+(cor?' - '+cor:'')+ambiente).toUpperCase();
+          var cor   = partes[1] ? partes[1].trim().toUpperCase() : '';
           var motorizado = /\bMot\b/i.test(nome);
-          var linha2 = motorizado ? 'MOTORIZADO' : 'MANUAL';
-          return {
-            titulo: nome.toUpperCase(),
-            preco: brl(total),
-            linhas: [linha1, linha2, '3 ANOS DE GARANTIA', 'INSTALAÇÃO INCLUSA']
-          };
+          // tipo legível
+          var tipo = (function(){
+            if(/^Cortina\s+ROL/i.test(nome))  return 'Cortina Rolô';
+            if(/^Cortina\s+ROM/i.test(nome))  return 'Cortina Romana';
+            if(/^Cortina\s+VEV/i.test(nome))  return 'Cortina Vertical';
+            if(/^Cortina\s+CEL/i.test(nome))  return 'Cortina Célula';
+            if(/^Persiana\s+Hor\s+MAD/i.test(nome)) return 'Persiana Horizontal Madeira';
+            if(/^Persiana\s+Hor/i.test(nome)) return 'Persiana Horizontal';
+            if(/^Tol\b/i.test(nome))          return 'Toldo';
+            if(/^Trilho/i.test(nome))         return 'Trilho';
+            if(/^Motorizacao/i.test(nome))    return 'Motorização';
+            if(/^Componente/i.test(nome))     return 'Componente';
+            return partes[0].trim();
+          })();
+          var titulo = (it.dsAmbiente ? it.dsAmbiente.trim().toUpperCase()+' - ' : '')+tipo.toUpperCase();
+          var linhas = [];
+          if(larg && alt) linhas.push(qtd+'x  '+larg.toFixed(2).replace('.',',')+'m (L) × '+alt.toFixed(2).replace('.',',')+'m (A)');
+          if(cor) linhas.push(cor);
+          linhas.push(motorizado ? 'MOTORIZADO' : 'MANUAL');
+          linhas.push('3 ANOS DE GARANTIA');
+          linhas.push('INSTALAÇÃO INCLUSA');
+          return { titulo: titulo, preco: brl(total), linhas: linhas };
         })
       };
       arr.push(novoOrc);
