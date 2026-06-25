@@ -2250,12 +2250,13 @@ function augeImportar(idx){
             return partes[0].trim();
           })();
           var titulo = (it.dsAmbiente ? it.dsAmbiente.trim().toUpperCase()+' - ' : '')+tipo.toUpperCase();
-          var linhas = [];
-          if(larg && alt) linhas.push(qtd+'x  '+larg.toFixed(2).replace('.',',')+'m (L) × '+alt.toFixed(2).replace('.',',')+'m (A)');
-          if(cor) linhas.push(cor);
-          linhas.push(motorizado ? 'MOTORIZADO' : 'MANUAL');
-          linhas.push('3 ANOS DE GARANTIA');
-          linhas.push('INSTALAÇÃO INCLUSA');
+          var linha1 = qtd+' unid '+tipo+(cor?' - '+cor:'');
+          var linhas = [
+            linha1.toUpperCase(),
+            motorizado ? 'MOTORIZADO' : 'MANUAL',
+            '3 ANOS DE GARANTIA',
+            'INSTALAÇÃO INCLUSA'
+          ];
           return { titulo: titulo, preco: brl(total), linhas: linhas };
         })
       };
