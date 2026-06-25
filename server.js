@@ -317,7 +317,7 @@ Responda APENAS com o JSON, sem texto adicional:
 {"itens": [...]}`;
 
   try {
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
     const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
 
     const result = await new Promise((resolve, reject) => {
