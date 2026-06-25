@@ -436,6 +436,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         Conferência
       </div>
+      <div class="sb-item" id="nav-auge" onclick="ir('auge',this);renderAuge()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar Auge
+      </div>
       <div class="sb-lbl">Ferramentas</div>
       <div class="sb-item" id="nav-calculadoras" onclick="ir('calculadoras',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
@@ -966,6 +970,21 @@
     <div id="hpn-orc" class="tab-pn on"></div>
     <div id="hpn-cor" class="tab-pn"></div>
     <div id="hpn-tap" class="tab-pn"></div>
+  </div>
+
+  <!-- IMPORTAR AUGE -->
+  <div id="pg-auge" class="pg">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+        Orçamentos do Auge (últimos 30 dias)
+        <button class="btn btn-s" style="margin-left:auto;" onclick="renderAuge()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg>
+          Atualizar
+        </button>
+      </div>
+      <div id="auge-status" style="font-size:12px;color:var(--text-muted);margin-bottom:10px;"></div>
+      <div id="auge-lista"></div>
+    </div>
   </div>
 
   <!-- QUADRO KANBAN -->
@@ -2137,6 +2156,98 @@ function tapRestaurar(o){
   sv('tap-obs',o.obs);
   document.getElementById('tap-ph-doc').textContent='OS — '+(o.tipo||'TAPEÇARIA').toUpperCase();
   ir('os-tapecaria',document.getElementById('nav-os-tapecaria'));
+}
+
+// ── IMPORTAR AUGE ─────────────────────────────────────────
+var _augeCache = null;
+
+function renderAuge(){
+  var lista = document.getElementById('auge-lista');
+  var status = document.getElementById('auge-status');
+  if(!lista) return;
+  lista.innerHTML = '<div class="empty">Carregando...</div>';
+  if(status) status.textContent = '';
+  fetch('/auge/orcamentos')
+    .then(function(r){ return r.json(); })
+    .then(function(dados){
+      if(dados.erro){ lista.innerHTML='<div class="empty" style="color:#ef4444;">Erro: '+esc(dados.erro)+'</div>'; return; }
+      _augeCache = dados;
+      if(status) status.textContent = dados.length + ' orçamento(s) encontrado(s) no Auge.';
+      if(!dados.length){ lista.innerHTML='<div class="empty">Nenhum orçamento nos últimos 30 dias.</div>'; return; }
+      var orcsLocais = db('orc');
+      lista.innerHTML = '<table class="auge-table"><thead><tr>'+
+        '<th>Nº</th><th>Cliente</th><th>Situação</th><th>Data</th><th>Total</th><th></th>'+
+        '</tr></thead><tbody>'+
+        dados.map(function(o, i){
+          var jaImportado = orcsLocais.some(function(loc){ return loc._augeId === o.idOrcamento; });
+          return '<tr>'+
+            '<td>'+esc(o.idOrcamento||'—')+'</td>'+
+            '<td>'+esc(o.nrRefOrcamentoClienteFinal||o.cdCliente||'—')+'</td>'+
+            '<td>'+esc(o.dsSituacao||'—')+'</td>'+
+            '<td>'+(o.dtOrcamento?o.dtOrcamento.slice(0,10).split('-').reverse().join('/'):'—')+'</td>'+
+            '<td>'+(o.vlTotal?'R$ '+parseFloat(o.vlTotal).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—')+'</td>'+
+            '<td>'+
+              (jaImportado
+                ? '<span style="font-size:11px;color:var(--text-muted);">Já importado</span>'
+                : '<button class="btn btn-s" style="font-size:11px;padding:4px 10px;" onclick="augeImportar('+i+')">Importar</button>'
+              )+
+            '</td>'+
+          '</tr>';
+        }).join('')+
+        '</tbody></table>';
+    })
+    .catch(function(e){ lista.innerHTML='<div class="empty" style="color:#ef4444;">Falha na conexão com o Auge.</div>'; });
+}
+
+function augeImportar(idx){
+  var o = _augeCache && _augeCache[idx];
+  if(!o) return;
+  var btn = document.querySelectorAll('.auge-table tbody tr')[idx].querySelector('button');
+  if(btn){ btn.disabled=true; btn.textContent='Carregando...'; }
+  fetch('/auge/orcamento-itens/'+encodeURIComponent(o.idOrcamento))
+    .then(function(r){ return r.json(); })
+    .then(function(itens){
+      if(itens.erro){ toast('Erro ao buscar itens: '+itens.erro,'err'); if(btn){btn.disabled=false;btn.textContent='Importar';} return; }
+      var arr = db('orc');
+      var dataStr = o.dtOrcamento ? o.dtOrcamento.slice(0,10) : new Date().toISOString().slice(0,10);
+      var novoOrc = {
+        id: 'orc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        num: o.idOrcamento,
+        _augeId: o.idOrcamento,
+        cliente: o.nrRefOrcamentoClienteFinal||o.cdCliente||'',
+        fone: '',
+        end: '',
+        intro: '',
+        prazo: '',
+        pagamento: '',
+        validade: '',
+        obs: o.dsObservacao||'',
+        status: 'lead',
+        data: dataStr,
+        _ts: Date.now(),
+        total: o.vlTotal ? parseFloat(o.vlTotal) : 0,
+        itens: itens.map(function(it){
+          return {
+            desc: it.dsItem||it.dsItemAbreviado||'',
+            qtd: parseFloat(it.qtPecas)||1,
+            larg: parseFloat(it.Largura)||0,
+            alt: parseFloat(it.Altura)||0,
+            m2: parseFloat(it.qtMetroQuadrado)||0,
+            vlUnit: parseFloat(it.vlPrecoUnitario)||0,
+            desconto: parseFloat(it.prDesconto)||0,
+            total: parseFloat(it.vlTotalItem)||0,
+            modelo: it.nmModelo||'',
+            obs: it.dsObservacaoItem||''
+          };
+        })
+      };
+      arr.push(novoOrc);
+      dbSave('orc', arr);
+      toast('Orçamento #'+o.idOrcamento+' importado!','ok');
+      renderAuge();
+      atualizarDash();
+    })
+    .catch(function(){ toast('Falha ao importar itens.','err'); if(btn){btn.disabled=false;btn.textContent='Importar';} });
 }
 
 // ── HISTÓRICO ─────────────────────────────────────────────

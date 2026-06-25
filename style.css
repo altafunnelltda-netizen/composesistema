@@ -1248,6 +1248,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .pipe-sub-date{color:var(--mid);opacity:.7;margin-left:auto;flex-shrink:0;}
 @media(max-width:640px){.pipeline{grid-template-columns:repeat(2,1fr)}}
 
+/* ── AUGE IMPORT ── */
+.auge-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.auge-table th{text-align:left;padding:7px 10px;border-bottom:2px solid var(--border);color:var(--text-muted);font-weight:600;white-space:nowrap;}
+.auge-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.auge-table tbody tr:hover{background:var(--bg2);}
+.auge-table td:last-child{text-align:right;}
+
 /* ── STATUS ORÇAMENTO ── */
 .orc-status-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .orc-status-btn{

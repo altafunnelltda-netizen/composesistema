@@ -1,7 +1,8 @@
-const express = require('express');
-const session = require('express-session');
-const fs      = require('fs');
-const path    = require('path');
+const express  = require('express');
+const session  = require('express-session');
+const fs       = require('fs');
+const path     = require('path');
+const https    = require('https');
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
@@ -212,6 +213,61 @@ app.post('/importar', auth, async (req, res) => {
     res.json({ ok: true, lastModified: lm });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
+// ── PROXY AUGE API ───────────────────────────────────────────────────────────
+const AUGE_BASE = process.env.AUGE_BASE || 'https://api-kazza.auge.app/portal/';
+const AUGE_USER = process.env.AUGE_USER || '60010394000190';
+const AUGE_PASS = process.env.AUGE_PASS || '12345678';
+
+function augeRequest(caminho) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(caminho, AUGE_BASE);
+    const auth = Buffer.from(`${AUGE_USER}:${AUGE_PASS}`).toString('base64');
+    https.get(url.toString(), { headers: { Authorization: `Basic ${auth}` } }, (res) => {
+      let raw = '';
+      res.on('data', d => raw += d);
+      res.on('end', () => resolve({ status: res.statusCode, body: raw }));
+    }).on('error', reject);
+  });
+}
+
+function xmlParseList(xml, tag) {
+  const items = [];
+  const re = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'g');
+  let m;
+  while ((m = re.exec(xml)) !== null) {
+    const block = m[1];
+    const obj = {};
+    const fieldRe = /<(\w+)>([\s\S]*?)<\/\1>/g;
+    let f;
+    while ((f = fieldRe.exec(block)) !== null) obj[f[1]] = f[2].trim();
+    items.push(obj);
+  }
+  return items;
+}
+
+app.get('/auge/orcamentos', auth, async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const { status, body } = await augeRequest('dyn/fn/Orcamento' + (qs ? '?' + qs : ''));
+    if (status !== 200) return res.status(status).json({ erro: 'Auge retornou ' + status });
+    const lista = xmlParseList(body, 'Orcamento');
+    res.json(lista);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.get('/auge/orcamento-itens/:id', auth, async (req, res) => {
+  try {
+    const { status, body } = await augeRequest('dyn/fn/OrcamentoItem?idOrcamento=' + encodeURIComponent(req.params.id));
+    if (status !== 200) return res.status(status).json({ erro: 'Auge retornou ' + status });
+    const lista = xmlParseList(body, 'OrcamentoItem');
+    res.json(lista);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
   }
 });
 
