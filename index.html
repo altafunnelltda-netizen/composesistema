@@ -2234,9 +2234,9 @@ function augeImportar(idx){
           var produto = partes[0].trim();
           var cor     = partes[1] ? partes[1].trim() : '';
           var ambiente = it.dsAmbiente ? ' ('+it.dsAmbiente+')' : '';
-          var linha1 = qtd+'x '+produto+(cor?' - '+cor:'')+ambiente;
+          var linha1 = (qtd+'x '+produto+(cor?' - '+cor:'')+ambiente).toUpperCase();
           var motorizado = /\bMot\b/i.test(nome);
-          var linha2 = motorizado ? 'Motorizado' : 'Manual';
+          var linha2 = motorizado ? 'MOTORIZADO' : 'MANUAL';
           return {
             titulo: nome,
             preco: brl(total),
