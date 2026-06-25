@@ -2227,21 +2227,20 @@ function augeImportar(idx){
         _ts: Date.now(),
         total: o.vlTotal ? parseFloat(o.vlTotal) : 0,
         itens: itens.map(function(it){
-          var larg = parseFloat(it.Largura)||0;
-          var alt  = parseFloat(it.Altura)||0;
-          var qtd  = parseFloat(it.qtPecas)||1;
-          var desc = parseFloat(it.prDesconto)||0;
           var total = parseFloat(it.vlTotalItem)||0;
-          var linhas = [];
-          if(larg && alt) linhas.push(qtd+'x  '+larg.toFixed(2)+'m (L) × '+alt.toFixed(2)+'m (A)');
-          if(desc) linhas.push('Desconto: '+desc.toFixed(1)+'%');
-          if(it.nmModelo) linhas.push('Modelo: '+it.nmModelo);
-          if(it.dsAmbiente) linhas.push('Ambiente: '+it.dsAmbiente);
-          if(it.dsObservacaoItem) linhas.push(it.dsObservacaoItem);
+          var qtd   = parseFloat(it.qtPecas)||1;
+          var nome  = it.dsItem||it.dsItemAbreviado||'';
+          var partes = nome.split(' . ');
+          var produto = partes[0].trim();
+          var cor     = partes[1] ? partes[1].trim() : '';
+          var ambiente = it.dsAmbiente ? ' ('+it.dsAmbiente+')' : '';
+          var linha1 = qtd+'x '+produto+(cor?' - '+cor:'')+ambiente;
+          var motorizado = /\bMot\b/i.test(nome);
+          var linha2 = motorizado ? 'Motorizado' : 'Manual';
           return {
-            titulo: it.dsItem||it.dsItemAbreviado||'',
+            titulo: nome,
             preco: brl(total),
-            linhas: linhas.filter(Boolean)
+            linhas: [linha1, linha2, '3 ANOS DE GARANTIA', 'INSTALAÇÃO INCLUSA']
           };
         })
       };
