@@ -2182,7 +2182,7 @@ function renderAuge(){
           var jaImportado = orcsLocais.some(function(loc){ return loc._augeId === o.idOrcamento; });
           return '<tr>'+
             '<td>'+esc(o.idOrcamento||'—')+'</td>'+
-            '<td>'+esc(o.nrRefOrcamentoClienteFinal||o.cdCliente||'—')+'</td>'+
+            '<td>'+esc(o.nrRefOrcamento||o.nrRefOrcamentoClienteFinal||o.cdCliente||'—')+'</td>'+
             '<td>'+esc(o.dsSituacao||'—')+'</td>'+
             '<td>'+(o.dtOrcamento?o.dtOrcamento.slice(0,10).split('-').reverse().join('/'):'—')+'</td>'+
             '<td>'+(o.vlTotal?'R$ '+parseFloat(o.vlTotal).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—')+'</td>'+
@@ -2214,7 +2214,7 @@ function augeImportar(idx){
         id: 'orc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
         num: o.idOrcamento,
         _augeId: o.idOrcamento,
-        cliente: o.nrRefOrcamentoClienteFinal||o.cdCliente||'',
+        cliente: o.nrRefOrcamento||o.nrRefOrcamentoClienteFinal||o.cdCliente||'',
         fone: '',
         end: '',
         intro: '',
