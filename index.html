@@ -5103,12 +5103,17 @@ function calcParaNotas(prefixo){
   // modal de seleção
   var overlay = document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  var isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  var bgBox  = isDark ? '#23272e' : '#ffffff';
+  var bgSel  = isDark ? '#1a1d22' : '#f5f3ee';
+  var clrTxt = isDark ? '#e6e6e6' : '#2c2c2c';
+  var bdSel  = isDark ? '#3a3f4a' : '#ddd5c8';
   var box = document.createElement('div');
-  box.style.cssText='background:var(--white);border-radius:12px;padding:24px;width:340px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.25);';
+  box.style.cssText='background:'+bgBox+';border-radius:12px;padding:24px;width:340px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);';
   box.innerHTML=
-    '<div style="font-weight:700;font-size:15px;margin-bottom:14px;">Salvar nas Anotações</div>'+
-    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Escolha o cliente:</div>'+
-    '<select id="calc-notas-sel" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);font-size:13px;margin-bottom:16px;">'+
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px;color:'+clrTxt+'">Salvar nas Anotações</div>'+
+    '<div style="font-size:12px;color:'+clrTxt+';opacity:.65;margin-bottom:8px;">Escolha o cliente:</div>'+
+    '<select id="calc-notas-sel" style="width:100%;padding:8px 10px;border:1px solid '+bdSel+';border-radius:7px;background:'+bgSel+';color:'+clrTxt+';font-size:13px;margin-bottom:16px;">'+
       clientes.map(function(c){ return '<option value="'+c.id+'">'+esc(c.nome)+'</option>'; }).join('')+
     '</select>'+
     '<div style="display:flex;gap:8px;">'+
