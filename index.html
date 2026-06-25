@@ -5114,7 +5114,7 @@ function calcParaNotas(prefixo){
     '<div style="font-weight:700;font-size:15px;margin-bottom:14px;color:'+clrTxt+'">Salvar nas Anotações</div>'+
     '<div style="font-size:12px;color:'+clrTxt+';opacity:.65;margin-bottom:8px;">Escolha o cliente:</div>'+
     '<select id="calc-notas-sel" style="width:100%;padding:8px 10px;border:1px solid '+bdSel+';border-radius:7px;background:'+bgSel+';color:'+clrTxt+';font-size:13px;margin-bottom:16px;">'+
-      clientes.map(function(c){ return '<option value="'+c.id+'">'+esc(c.nome)+'</option>'; }).join('')+
+      clientes.map(function(c){ return '<option value="'+c.id+'" style="background:'+bgSel+';color:'+clrTxt+'">'+esc(c.nome)+'</option>'; }).join('')+
     '</select>'+
     '<div style="display:flex;gap:8px;">'+
       '<button class="btn btn-p" style="flex:1;" id="calc-notas-ok">Salvar</button>'+
