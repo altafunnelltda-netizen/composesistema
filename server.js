@@ -316,19 +316,28 @@ Com base nas anotações acima, gere os itens do orçamento no formato JSON abai
 Responda APENAS com o JSON, sem texto adicional:
 {"itens": [...]}`;
 
+  const geminiCall = (body) => new Promise((resolve, reject) => {
+    const u = new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent');
+    const opts = { hostname: u.hostname, path: u.pathname, method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) } };
+    const req2 = https.request(opts, r => {
+      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
+    });
+    req2.on('error', reject); req2.write(body); req2.end();
+  });
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
   try {
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
     const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
 
-    const result = await new Promise((resolve, reject) => {
-      const u = new URL(url);
-      const opts = { hostname: u.hostname, path: u.pathname, method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) } };
-      const req2 = https.request(opts, r => {
-        let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
-      });
-      req2.on('error', reject); req2.write(body); req2.end();
-    });
+    let result;
+    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+      result = await geminiCall(body);
+      if (result.status !== 503) break;
+      console.log(`[Gemini] 503 sobrecarga, tentativa ${tentativa}/3...`);
+      await sleep(2000 * tentativa);
+    }
 
     if (result.status !== 200) {
       console.error('[Gemini] status', result.status, result.body.slice(0, 500));
