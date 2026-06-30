@@ -832,7 +832,8 @@
     <div class="calc-card">
       <div class="calc-title">🪟 Calculadora de Cortina</div>
       <div class="row">
-        <div class="f fw"><label>Cliente (para salvar no histórico)</label><input type="text" id="cc-cliente" placeholder="Nome do cliente"></div>
+        <div class="f f2"><label>Cliente</label><input type="text" id="cc-cliente" placeholder="Nome do cliente" oninput="ccVerificarCliente()"></div>
+        <div class="f f2"><label>Ambiente</label><input type="text" id="cc-ambiente" placeholder="Ex: Sala, Quarto 1..."></div>
       </div>
       <div class="row">
         <div class="f f2"><label>Largura do Ambiente (m)</label><input type="number" id="cc-larg" step="0.01" placeholder="Ex: 3.07" oninput="calcCortina()"></div>
@@ -866,9 +867,21 @@
       </div>
       <div class="calc-res" id="cc-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-p" onclick="salvarCalcCortina()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Cálculo</button>
-        <button class="btn btn-s" onclick="calcParaNotas('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Salvar nas Anotações</button>
-        <button class="btn btn-s" onclick="limparCalcCortina()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
+        <button class="btn btn-p" onclick="ccAdicionarAmbiente()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ambiente</button>
+        <button class="btn btn-s" onclick="calcParaNotas('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Anotações</button>
+        <button class="btn btn-s" onclick="limparCalcCortinaFields()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
+      </div>
+      <!-- Painel de sessão (ambientes adicionados) -->
+      <div id="cc-sessao-panel" style="display:none;margin-top:14px;border:2px solid var(--acc,#c9a84c);border-radius:12px;overflow:hidden">
+        <div style="background:var(--acc,#c9a84c);color:#fff;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="cc-sessao-titulo" style="font-size:14px">Cliente: —</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="salvarSessaoCortina()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">💾 Salvar Tudo</button>
+            <button onclick="exportarSessaoPDF('cc')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">📄 Exportar PDF</button>
+            <button onclick="descartarSessao('cc')" style="background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;font-family:inherit" title="Descartar sessão">✕</button>
+          </div>
+        </div>
+        <div id="cc-sessao-lista" style="padding:10px 14px"></div>
       </div>
     </div>
 
@@ -888,7 +901,8 @@
 
       <!-- Cliente -->
       <div class="row">
-        <div class="f fw"><label>Cliente (para salvar no histórico)</label><input type="text" id="cp-cliente" placeholder="Nome do cliente"></div>
+        <div class="f f2"><label>Cliente</label><input type="text" id="cp-cliente" placeholder="Nome do cliente" oninput="cpVerificarCliente()"></div>
+        <div class="f f2"><label>Ambiente</label><input type="text" id="cp-ambiente" placeholder="Ex: Sala, Quarto 1..."></div>
       </div>
 
       <!-- Piso -->
@@ -944,9 +958,21 @@
 
       <div class="calc-res" id="cp-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-p" onclick="salvarCalcPiso()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Cálculo</button>
-        <button class="btn btn-s" onclick="calcParaNotas('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Salvar nas Anotações</button>
-        <button class="btn btn-s" onclick="limparCalcPiso()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
+        <button class="btn btn-p" onclick="cpAdicionarAmbiente()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ambiente</button>
+        <button class="btn btn-s" onclick="calcParaNotas('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Anotações</button>
+        <button class="btn btn-s" onclick="limparCalcPisoFields()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
+      </div>
+      <!-- Painel de sessão -->
+      <div id="cp-sessao-panel" style="display:none;margin-top:14px;border:2px solid var(--acc,#c9a84c);border-radius:12px;overflow:hidden">
+        <div style="background:var(--acc,#c9a84c);color:#fff;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="cp-sessao-titulo" style="font-size:14px">Cliente: —</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="salvarSessaoPiso()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">💾 Salvar Tudo</button>
+            <button onclick="exportarSessaoPDF('cp')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">📄 Exportar PDF</button>
+            <button onclick="descartarSessao('cp')" style="background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;font-family:inherit" title="Descartar sessão">✕</button>
+          </div>
+        </div>
+        <div id="cp-sessao-lista" style="padding:10px 14px"></div>
       </div>
     </div>
 
@@ -2476,30 +2502,84 @@ function calcCortina(){
 }
 
 
-// ── CALCULADORA DE CORTINA — HISTÓRICO ───────────────────
-function salvarCalcCortina(){
-  var cliente=document.getElementById('cc-cliente').value.trim();
-  if(!cliente){alert('Informe o nome do cliente antes de salvar.');return;}
-  var resEl=document.getElementById('cc-res');
-  if(resEl.querySelector('span[style*="--mid"]')){alert('Calcule antes de salvar.');return;}
-  var campos={
-    larg: document.getElementById('cc-larg').value,
-    alt: document.getElementById('cc-alt').value,
-    valor: document.getElementById('cc-valor').value,
-    prega: document.getElementById('cc-prega').value,
-    forro: document.getElementById('cc-forro').checked,
-    faixa: document.getElementById('cc-faixa').checked,
-    largTec: document.getElementById('cc-larg-tec').value,
-    barra: document.getElementById('cc-barra').value
-  };
-  var reg={id:uid(),cliente:cliente,data:new Date().toLocaleDateString('pt-BR'),campos:campos,resHtml:resEl.innerHTML};
-  var arr=db('cort');arr.unshift(reg);
-  dbSave('cort',arr);
-  toast('Cálculo salvo para '+cliente+'!','ok');
-  renderHistCalcCortina();
+// ── CALCULADORA DE CORTINA — SESSÃO E HISTÓRICO ──────────
+var _ccSessao = [];
+var _ccSessaoCliente = '';
+
+function ccVerificarCliente(){
+  var v = (document.getElementById('cc-cliente')||{}).value||'';
+  if(_ccSessao.length && _ccSessaoCliente && v.trim() && v.trim() !== _ccSessaoCliente){
+    document.getElementById('cc-sessao-titulo').textContent = 'Cliente: '+_ccSessaoCliente+' (sessão em aberto)';
+  }
 }
-function limparCalcCortina(){
-  ['cc-cliente','cc-larg','cc-alt','cc-valor','cc-larg-tec','cc-barra'].forEach(function(id){
+
+function ccAdicionarAmbiente(){
+  var cliente = (document.getElementById('cc-cliente').value||'').trim();
+  var ambiente = (document.getElementById('cc-ambiente').value||'').trim() || ('Ambiente '+ (_ccSessao.length+1));
+  var resEl = document.getElementById('cc-res');
+  if(!cliente){toast('Informe o nome do cliente.','err');return;}
+  if(resEl.querySelector('span[style*="--mid"]')){toast('Calcule antes de adicionar.','err');return;}
+  if(_ccSessao.length && _ccSessaoCliente && cliente !== _ccSessaoCliente){
+    if(!confirm('O cliente mudou de "'+_ccSessaoCliente+'" para "'+cliente+'". Descartar ambientes anteriores e iniciar nova sessão?'))return;
+    _ccSessao=[];
+  }
+  _ccSessaoCliente = cliente;
+  var campos={
+    larg:document.getElementById('cc-larg').value, alt:document.getElementById('cc-alt').value,
+    valor:document.getElementById('cc-valor').value, prega:document.getElementById('cc-prega').value,
+    forro:document.getElementById('cc-forro').checked, faixa:document.getElementById('cc-faixa').checked,
+    largTec:document.getElementById('cc-larg-tec').value, barra:document.getElementById('cc-barra').value
+  };
+  _ccSessao.push({id:uid(), ambiente:ambiente, campos:campos, resHtml:resEl.innerHTML});
+  renderSessaoCortina();
+  document.getElementById('cc-ambiente').value='';
+  limparCalcCortinaFields();
+  toast('Ambiente "'+ambiente+'" adicionado!','ok');
+}
+
+function renderSessaoCortina(){
+  var panel = document.getElementById('cc-sessao-panel');
+  var lista = document.getElementById('cc-sessao-lista');
+  var titulo = document.getElementById('cc-sessao-titulo');
+  if(!_ccSessao.length){panel.style.display='none';return;}
+  panel.style.display='';
+  titulo.textContent = 'Cliente: '+_ccSessaoCliente+' — '+_ccSessao.length+' ambiente'+ (_ccSessao.length>1?'s':'');
+  lista.innerHTML = _ccSessao.map(function(amb,i){
+    return '<div style="border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--bg2,#fafaf8)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+        '<strong style="font-size:13px">'+esc(amb.ambiente)+'</strong>'+
+        '<button onclick="ccRemoverAmbiente('+i+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px;line-height:1;padding:0 4px" title="Remover">×</button>'+
+      '</div>'+
+      '<div style="font-size:12px;color:var(--mid)">'+amb.resHtml+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function ccRemoverAmbiente(i){
+  _ccSessao.splice(i,1);
+  if(!_ccSessao.length) _ccSessaoCliente='';
+  renderSessaoCortina();
+}
+
+function salvarSessaoCortina(){
+  if(!_ccSessao.length){toast('Nenhum ambiente adicionado.','err');return;}
+  var reg={id:uid(),cliente:_ccSessaoCliente,data:new Date().toLocaleDateString('pt-BR'),ambientes:_ccSessao.slice()};
+  var arr=db('cort'); arr.unshift(reg);
+  dbSave('cort',arr);
+  _ccSessao=[]; _ccSessaoCliente='';
+  renderSessaoCortina();
+  renderHistCalcCortina();
+  toast('Sessão salva para '+reg.cliente+'!','ok');
+}
+
+function descartarSessao(prefixo){
+  if(!confirm('Descartar todos os ambientes da sessão atual?'))return;
+  if(prefixo==='cc'){_ccSessao=[];_ccSessaoCliente='';renderSessaoCortina();}
+  else{_cpSessao=[];_cpSessaoCliente='';renderSessaoPiso();}
+}
+
+function limparCalcCortinaFields(){
+  ['cc-larg','cc-alt','cc-valor','cc-larg-tec','cc-barra'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('cc-forro').checked=false;
@@ -2508,46 +2588,59 @@ function limparCalcCortina(){
   document.getElementById('cc-prega').value='wave';
   document.getElementById('cc-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
 }
+function limparCalcCortina(){
+  document.getElementById('cc-cliente').value='';
+  document.getElementById('cc-ambiente').value='';
+  limparCalcCortinaFields();
+}
+
 function toggleHistCalcCortina(){
   var card=document.getElementById('cc-hist-card');
   var btn=document.getElementById('cc-hist-btn');
   if(card.style.display==='none'){card.style.display='';btn.style.display='none';renderHistCalcCortina();}
   else{card.style.display='none';btn.style.display='';}
 }
+
 function renderHistCalcCortina(){
   var arr=db('cort');
   var el=document.getElementById('cc-hist-lista');
   if(!arr.length){el.innerHTML='<p style="color:var(--mid);padding:12px">Nenhum cálculo salvo ainda.</p>';return;}
   el.innerHTML=arr.map(function(r){
-    return '<div style="border:1px solid var(--gold);border-radius:8px;padding:12px;margin-bottom:8px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
-      '<strong>'+r.cliente+'</strong><span style="color:var(--mid);font-size:12px">'+r.data+'</span></div>'+
-      '<div style="display:flex;gap:6px">'+
-      '<button class="btn btn-p" style="font-size:11px;padding:4px 10px" onclick="verCalcCortina(\''+r.id+'\')">Carregar</button>'+
-      '<button class="btn" style="font-size:11px;padding:4px 10px;background:#c0392b;color:#fff" onclick="excluirCalcCortina(\''+r.id+'\')">Excluir</button>'+
-      '</div></div>';
+    // suporte ao formato antigo (sem ambientes)
+    var ambientes = r.ambientes || [{id:r.id, ambiente:'Ambiente 1', campos:r.campos, resHtml:r.resHtml}];
+    var nAmb = ambientes.length;
+    return '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">'+
+      '<div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2,#fafaf8);flex-wrap:wrap;gap:6px">'+
+        '<div>'+
+          '<strong style="font-size:14px">'+esc(r.cliente)+'</strong>'+
+          '<span style="color:var(--mid);font-size:11px;margin-left:8px">'+r.data+'</span>'+
+          '<span style="background:#eee;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:8px;color:var(--mid)">'+nAmb+' ambiente'+(nAmb>1?'s':'')+'</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cc\',\''+r.id+'\')">📄 PDF</button>'+
+          '<button class="btn btn-p" style="font-size:11px;padding:3px 10px" onclick="toggleHistCortItem(\''+r.id+'\')">Ver</button>'+
+          '<button class="btn" style="font-size:11px;padding:3px 8px;background:#c0392b;color:#fff" onclick="excluirCalcCortina(\''+r.id+'\')">✕</button>'+
+        '</div>'+
+      '</div>'+
+      '<div id="hi-cc-'+r.id+'" style="display:none;padding:12px 14px">'+
+        ambientes.map(function(amb){
+          return '<div style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:8px">'+
+            '<div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--acc)">'+esc(amb.ambiente||'Ambiente')+'</div>'+
+            '<div style="font-size:12px">'+amb.resHtml+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>'+
+    '</div>';
   }).join('');
 }
-function verCalcCortina(id){
-  var reg=db('cort').find(function(r){return r.id===id;});
-  if(!reg)return;
-  var c=reg.campos;
-  document.getElementById('cc-cliente').value=reg.cliente;
-  document.getElementById('cc-larg').value=c.larg||'';
-  document.getElementById('cc-alt').value=c.alt||'';
-  document.getElementById('cc-valor').value=c.valor||'';
-  document.getElementById('cc-prega').value=c.prega||'wave';
-  document.getElementById('cc-forro').checked=!!c.forro;
-  document.getElementById('cc-faixa').checked=!!c.faixa;
-  document.getElementById('cc-larg-tec').value=c.largTec||'';
-  document.getElementById('cc-barra').value=c.barra||'';
-  document.getElementById('cc-faixa-fields').style.display=c.faixa?'':'none';
-  document.getElementById('cc-res').innerHTML=reg.resHtml;
-  toggleHistCalcCortina();
-  toast('Cálculo de '+reg.cliente+' carregado.','ok');
+
+function toggleHistCortItem(id){
+  var el=document.getElementById('hi-cc-'+id);
+  if(el) el.style.display = el.style.display==='none'?'':'none';
 }
+
 function excluirCalcCortina(id){
-  if(!confirm('Excluir este cálculo?'))return;
+  if(!confirm('Excluir este registro?'))return;
   dbSave('cort',db('cort').filter(function(r){return r.id!==id;}));
   toast('Excluído.','ok');
   renderHistCalcCortina();
@@ -2667,12 +2760,19 @@ function calcPiso(){
   res.innerHTML=h;
 }
 
-function salvarCalcPiso(){
-  var cliente=document.getElementById('cp-cliente').value.trim()||'Sem nome';
-  var res=document.getElementById('cp-res');
-  if(res.querySelector('span[style*="--mid"]')){toast('Calcule antes de salvar.','err');return;}
-  var reg={
-    id:uid(), _ts:Date.now(), cliente:cliente, data:hojeFormatado(),
+// ── CALCULADORA DE PISO — SESSÃO E HISTÓRICO ─────────────
+var _cpSessao = [];
+var _cpSessaoCliente = '';
+
+function cpVerificarCliente(){
+  var v = (document.getElementById('cp-cliente')||{}).value||'';
+  if(_cpSessao.length && _cpSessaoCliente && v.trim() && v.trim() !== _cpSessaoCliente){
+    document.getElementById('cp-sessao-titulo').textContent = 'Cliente: '+_cpSessaoCliente+' (sessão em aberto)';
+  }
+}
+
+function _capturarCamposPiso(){
+  return {
     custoM2:parseFloat(document.getElementById('cp-custo-m2').value)||0,
     mkPiso:parseFloat(document.getElementById('cp-markup').value)||0,
     m2:parseFloat(document.getElementById('cp-m2').value)||0,
@@ -2694,24 +2794,77 @@ function salvarCalcPiso(){
     prime:document.getElementById('cp-prime-chk').checked,
     primeCusto:parseFloat(document.getElementById('cp-prime-custo').value)||0,
     laminado:document.getElementById('cp-laminado-chk').checked,
-    mantaVal:parseFloat(document.getElementById('cp-manta-val').value)||0,
-    resumoHtml:res.innerHTML
+    mantaVal:parseFloat(document.getElementById('cp-manta-val').value)||0
   };
-  var arr=db('piso'); arr.push(reg);
-  dbSave('piso',arr);
-  toast('Cálculo salvo para '+cliente+'!','ok');
-  renderHistCalcPiso();
 }
 
-function limparCalcPiso(){
-  ['cp-cliente','cp-custo-m2','cp-markup','cp-m2','cp-rend-cx','cp-rod-custo','cp-rod-markup','cp-rod-ml','cp-rod-barra',
+function cpAdicionarAmbiente(){
+  var cliente=(document.getElementById('cp-cliente').value||'').trim();
+  var ambiente=(document.getElementById('cp-ambiente').value||'').trim()||('Ambiente '+(_cpSessao.length+1));
+  var res=document.getElementById('cp-res');
+  if(!cliente){toast('Informe o nome do cliente.','err');return;}
+  if(res.querySelector('span[style*="--mid"]')){toast('Calcule antes de adicionar.','err');return;}
+  if(_cpSessao.length && _cpSessaoCliente && cliente !== _cpSessaoCliente){
+    if(!confirm('O cliente mudou de "'+_cpSessaoCliente+'" para "'+cliente+'". Descartar ambientes anteriores e iniciar nova sessão?'))return;
+    _cpSessao=[];
+  }
+  _cpSessaoCliente = cliente;
+  _cpSessao.push({id:uid(), ambiente:ambiente, campos:_capturarCamposPiso(), resHtml:res.innerHTML});
+  renderSessaoPiso();
+  document.getElementById('cp-ambiente').value='';
+  limparCalcPisoFields();
+  toast('Ambiente "'+ambiente+'" adicionado!','ok');
+}
+
+function renderSessaoPiso(){
+  var panel=document.getElementById('cp-sessao-panel');
+  var lista=document.getElementById('cp-sessao-lista');
+  var titulo=document.getElementById('cp-sessao-titulo');
+  if(!_cpSessao.length){panel.style.display='none';return;}
+  panel.style.display='';
+  titulo.textContent='Cliente: '+_cpSessaoCliente+' — '+_cpSessao.length+' ambiente'+(_cpSessao.length>1?'s':'');
+  lista.innerHTML=_cpSessao.map(function(amb,i){
+    return '<div style="border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--bg2,#fafaf8)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+        '<strong style="font-size:13px">'+esc(amb.ambiente)+'</strong>'+
+        '<button onclick="cpRemoverAmbiente('+i+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px;line-height:1;padding:0 4px" title="Remover">×</button>'+
+      '</div>'+
+      '<div style="font-size:12px;color:var(--mid)">'+amb.resHtml+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function cpRemoverAmbiente(i){
+  _cpSessao.splice(i,1);
+  if(!_cpSessao.length) _cpSessaoCliente='';
+  renderSessaoPiso();
+}
+
+function salvarSessaoPiso(){
+  if(!_cpSessao.length){toast('Nenhum ambiente adicionado.','err');return;}
+  var reg={id:uid(),cliente:_cpSessaoCliente,data:hojeFormatado(),ambientes:_cpSessao.slice()};
+  var arr=db('piso'); arr.unshift(reg);
+  dbSave('piso',arr);
+  _cpSessao=[]; _cpSessaoCliente='';
+  renderSessaoPiso();
+  renderHistCalcPiso();
+  toast('Sessão salva para '+reg.cliente+'!','ok');
+}
+
+function limparCalcPisoFields(){
+  ['cp-custo-m2','cp-markup','cp-m2','cp-rend-cx','cp-rod-custo','cp-rod-markup','cp-rod-ml','cp-rod-barra',
    'cp-perfil-qtd','cp-porta-qtd','cp-porta-val','cp-cola-val','cp-nivel-custo','cp-prime-custo','cp-manta-val'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value='';
+    var el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('cp-perfil-val').value='200';
   ['cp-laminado-chk','cp-perfil-chk','cp-porta-chk','cp-cola-chk','cp-nivel-chk','cp-prime-chk'].forEach(function(id){document.getElementById(id).checked=false;});
   ['cp-laminado-row','cp-perfil-row','cp-porta-row','cp-cola-row','cp-nivel-row','cp-prime-row'].forEach(function(id){document.getElementById(id).style.display='none';});
   document.getElementById('cp-res').innerHTML='<span style="color:var(--mid)">Preencha os campos para calcular.</span>';
+}
+function limparCalcPiso(){
+  document.getElementById('cp-cliente').value='';
+  document.getElementById('cp-ambiente').value='';
+  limparCalcPisoFields();
 }
 
 function toggleHistCalcPiso(){
@@ -2725,66 +2878,119 @@ function toggleHistCalcPiso(){
 }
 
 function renderHistCalcPiso(){
-  var arr=db('piso').slice().reverse();
+  var arr=db('piso').slice();
   var el=document.getElementById('cp-hist-lista');
   if(!arr.length){el.innerHTML='<div style="color:var(--mid);padding:12px 0;text-align:center">Nenhum cálculo salvo ainda.</div>';return;}
   el.innerHTML=arr.map(function(r){
-    var m2c=(r.m2||0)*1.10;
-    var vendaM2=(r.custoM2||0)*(1+(r.mkPiso||0)/100);
-    var vendaPiso=vendaM2*m2c;
-    var mlc=(r.rodML||0)*1.10;
-    var vendaRod=(r.custoRodML||0)*(1+(r.mkRod||0)/100)*mlc;
-    var extras=(r.perfil?r.perfilQtd*r.perfilVal:0)+(r.porta?r.portaQtd*r.portaVal:0)+(r.cola?r.colaVal:0);
-    var venda=vendaPiso+vendaRod+extras;
-    return '<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
-      '<div><strong>'+esc(r.cliente)+'</strong> <span style="color:var(--mid);font-size:11px">'+r.data+'</span></div>'+
-      '<div style="display:flex;gap:6px">'+
-      '<button class="btn btn-s" style="font-size:11px;padding:3px 8px" onclick="verCalcPiso(\''+r.id+'\')">Ver</button>'+
-      '<button class="btn" style="font-size:11px;padding:3px 8px;background:#b00;color:#fff" onclick="excluirCalcPiso(\''+r.id+'\')">✕</button>'+
-      '</div></div>'+
-      '<div style="font-size:12px;color:var(--mid)">Venda total: <strong style="color:var(--charcoal)">'+brl(venda)+'</strong></div>'+
-      '</div>';
+    var ambientes = r.ambientes || [{id:r.id, ambiente:'Ambiente 1', campos:r, resHtml:r.resumoHtml||''}];
+    var nAmb=ambientes.length;
+    return '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">'+
+      '<div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2,#fafaf8);flex-wrap:wrap;gap:6px">'+
+        '<div>'+
+          '<strong style="font-size:14px">'+esc(r.cliente)+'</strong>'+
+          '<span style="color:var(--mid);font-size:11px;margin-left:8px">'+r.data+'</span>'+
+          '<span style="background:#eee;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:8px;color:var(--mid)">'+nAmb+' ambiente'+(nAmb>1?'s':'')+'</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cp\',\''+r.id+'\')">📄 PDF</button>'+
+          '<button class="btn btn-p" style="font-size:11px;padding:3px 10px" onclick="toggleHistPisoItem(\''+r.id+'\')">Ver</button>'+
+          '<button class="btn" style="font-size:11px;padding:3px 8px;background:#b00;color:#fff" onclick="excluirCalcPiso(\''+r.id+'\')">✕</button>'+
+        '</div>'+
+      '</div>'+
+      '<div id="hi-cp-'+r.id+'" style="display:none;padding:12px 14px">'+
+        ambientes.map(function(amb){
+          return '<div style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:8px">'+
+            '<div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--acc)">'+esc(amb.ambiente||'Ambiente')+'</div>'+
+            '<div style="font-size:12px">'+amb.resHtml+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
-function verCalcPiso(id){
-  var r=db('piso').find(function(o){return o.id===id;});
-  if(!r)return;
-  document.getElementById('cp-cliente').value=r.cliente||'';
-  document.getElementById('cp-custo-m2').value=r.custoM2||'';
-  document.getElementById('cp-markup').value=r.mkPiso||'';
-  document.getElementById('cp-m2').value=r.m2||'';
-  document.getElementById('cp-rend-cx').value=r.rendCx||'';
-  document.getElementById('cp-rod-custo').value=r.custoRodML||'';
-  document.getElementById('cp-rod-markup').value=r.mkRod||'';
-  document.getElementById('cp-rod-ml').value=r.rodML||'';
-  document.getElementById('cp-rod-barra').value=r.rodBarra||'';
-  document.getElementById('cp-perfil-chk').checked=!!r.perfil;
-  document.getElementById('cp-perfil-qtd').value=r.perfilQtd||'';
-  document.getElementById('cp-perfil-val').value=r.perfilVal||200;
-  document.getElementById('cp-porta-chk').checked=!!r.porta;
-  document.getElementById('cp-porta-qtd').value=r.portaQtd||'';
-  document.getElementById('cp-porta-val').value=r.portaVal||'';
-  document.getElementById('cp-cola-chk').checked=!!r.cola;
-  document.getElementById('cp-cola-val').value=r.colaVal||'';
-  document.getElementById('cp-nivel-chk').checked=!!r.nivel;
-  document.getElementById('cp-nivel-custo').value=r.nivelCusto||'';
-  document.getElementById('cp-prime-chk').checked=!!r.prime;
-  document.getElementById('cp-prime-custo').value=r.primeCusto||'';
-  document.getElementById('cp-laminado-chk').checked=!!r.laminado;
-  document.getElementById('cp-manta-val').value=r.mantaVal||'';
-  calcPiso();
-  ir('calculadoras',document.getElementById('nav-calculadoras'));
-  window.scrollTo(0,0);
+function toggleHistPisoItem(id){
+  var el=document.getElementById('hi-cp-'+id);
+  if(el) el.style.display=el.style.display==='none'?'':'none';
 }
 
 function excluirCalcPiso(id){
-  if(!confirm('Excluir este cálculo?'))return;
+  if(!confirm('Excluir este registro?'))return;
   dbSave('piso',db('piso').filter(function(o){return o.id!==id;}));
   toast('Excluído.','ok');
   renderHistCalcPiso();
 }
+
+// ── EXPORTAR PDF ──────────────────────────────────────────
+function exportarSessaoPDF(prefixo){
+  var sessao = prefixo==='cc' ? _ccSessao : _cpSessao;
+  var cliente = prefixo==='cc' ? _ccSessaoCliente : _cpSessaoCliente;
+  if(!sessao.length){toast('Nenhum ambiente na sessão para exportar.','err');return;}
+  var tipo = prefixo==='cc' ? 'Cortina' : 'Piso';
+  _abrirPDF(cliente, new Date().toLocaleDateString('pt-BR'), tipo, sessao);
+}
+
+function exportarHistPDF(prefixo, id){
+  var arr = db(prefixo==='cc'?'cort':'piso');
+  var r = arr.find(function(x){return x.id===id;});
+  if(!r)return;
+  var ambientes = r.ambientes || [{id:r.id,ambiente:'Ambiente 1',campos:r,resHtml:r.resumoHtml||r.resHtml||''}];
+  var tipo = prefixo==='cc'?'Cortina':'Piso';
+  _abrirPDF(r.cliente, r.data, tipo, ambientes);
+}
+
+function _abrirPDF(cliente, data, tipo, ambientes){
+  var corLinha = '#c9a84c';
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">'+
+    '<title>Cálculo '+tipo+' — '+cliente+'</title>'+
+    '<style>'+
+      '*{box-sizing:border-box;margin:0;padding:0}'+
+      'body{font-family:Arial,sans-serif;color:#222;padding:32px;font-size:13px;line-height:1.5}'+
+      '.hd{border-bottom:3px solid '+corLinha+';padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}'+
+      '.hd-empresa{font-size:20px;font-weight:700;color:'+corLinha+';letter-spacing:.5px}'+
+      '.hd-sub{font-size:12px;color:#666;margin-top:2px}'+
+      '.hd-info{text-align:right;font-size:12px;color:#555}'+
+      '.cliente-box{background:#f8f6f0;border-left:4px solid '+corLinha+';padding:12px 16px;margin-bottom:20px;border-radius:0 8px 8px 0}'+
+      '.cliente-box h2{font-size:15px;font-weight:700;margin-bottom:2px}'+
+      '.amb-bloco{border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:16px;break-inside:avoid}'+
+      '.amb-titulo{background:'+corLinha+';color:#fff;padding:8px 14px;font-weight:700;font-size:13px}'+
+      '.amb-body{padding:12px 14px}'+
+      '.res-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid #f0f0f0}'+
+      '.res-row:last-child{border-bottom:none}'+
+      '.res-label{color:#555;font-size:12px}'+
+      '.res-val{font-size:12px;font-weight:600}'+
+      '.res-total-val{font-size:14px;font-weight:700;color:'+corLinha+'}'+
+      '.calc-section-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#888;margin:10px 0 4px;padding-bottom:2px;border-bottom:1px solid #e8e8e8}'+
+      '.ft{margin-top:24px;border-top:1px solid #e0e0e0;padding-top:12px;font-size:11px;color:#999;text-align:center}'+
+      '@media print{body{padding:16px}@page{margin:1cm}}'+
+    '</style></head><body>'+
+    '<div class="hd">'+
+      '<div><div class="hd-empresa">Composê Sistema</div><div class="hd-sub">Calculadora de '+tipo+'</div></div>'+
+      '<div class="hd-info">Data: '+data+'<br>Gerado em: '+new Date().toLocaleString('pt-BR')+'</div>'+
+    '</div>'+
+    '<div class="cliente-box">'+
+      '<h2>Cliente: '+_esc(cliente)+'</h2>'+
+      '<div style="font-size:12px;color:#666">'+ambientes.length+' ambiente'+(ambientes.length>1?'s':'')+'</div>'+
+    '</div>';
+
+  ambientes.forEach(function(amb){
+    html += '<div class="amb-bloco">'+
+      '<div class="amb-titulo">'+_esc(amb.ambiente||'Ambiente')+'</div>'+
+      '<div class="amb-body">'+amb.resHtml+'</div>'+
+    '</div>';
+  });
+
+  html += '<div class="ft">Composê Sistema — '+new Date().toLocaleDateString('pt-BR')+'</div></body></html>';
+
+  var win = window.open('','_blank');
+  if(win){
+    win.document.write(html);
+    win.document.close();
+    win.onload = function(){ setTimeout(function(){ win.print(); },300); };
+  }
+}
+
+function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── TABELAS DE PREÇO ──────────────────────────────────────
 var TAB_TIPOS = {
