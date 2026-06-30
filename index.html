@@ -2993,18 +2993,10 @@ function kbMakeCard(card){
     var items=[
       {icon:'✏️',label:'Editar',fn:function(){kbOpenModal(card.id,card.col);}},
       {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',label:'Duplicar',fn:function(){kbDuplicateCard(card.id);}},
+      card.status==='ok'
+        ? {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Reabrir',fn:function(){var d2=dbKb();var idx=d2.cards.findIndex(function(c){return c.id===card.id;});if(idx>=0){d2.cards[idx].status='';dbKbSave(d2);renderQuadro();toast('Card reaberto.','ok');}}}
+        : {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',label:'Concluir',fn:function(){var d2=dbKb();var idx=d2.cards.findIndex(function(c){return c.id===card.id;});if(idx>=0){d2.cards[idx].status='ok';dbKbSave(d2);renderQuadro();toast('Card concluído!','ok');}}},
     ];
-    if(otherCols.length){
-      items.push('sep');
-      items.push({isLbl:true,label:'Mover para'});
-      otherCols.forEach(function(c){
-        items.push({icon:'→',label:c.nome||c.label||c.id,fn:(function(cid){return function(){
-          var d2=dbKb();
-          var idx=d2.cards.findIndex(function(ca){return ca.id===card.id;});
-          if(idx>=0){d2.cards[idx].col=cid;dbKbSave(d2);renderQuadro();toast('Card movido.','ok');}
-        };})(c.id)});
-      });
-    }
     items.push('sep');
     items.push({icon:'🗑️',label:'Excluir',danger:true,fn:function(){
       if(!confirm('Excluir este cartão? Esta ação não pode ser desfeita.'))return;
