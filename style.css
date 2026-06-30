@@ -1385,3 +1385,122 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   .wrap{padding:12px}
   #pg-quadro{margin:-12px -12px 0;padding:12px 12px 0}
 }
+
+/* ══════════════════════════════════════════
+   TABELAS DE PREÇO
+══════════════════════════════════════════ */
+#pg-tabelas.on{
+  margin:-20px -22px;padding:0;
+  background:var(--cream-dark,#f5f4f0);
+  min-height:calc(100vh - 48px);
+}
+.tab-toolbar{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  padding:14px 18px;
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:52px;z-index:10;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+#tab-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+  padding:20px 18px;
+}
+.tab-secao-lbl{
+  grid-column:1/-1;
+  font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--mid,#8b95a1);
+  padding:4px 0 2px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:2px;
+}
+.tab-card{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  transition:.18s;
+  display:flex;flex-direction:column;
+  position:relative;
+  cursor:default;
+}
+.tab-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.09);}
+.tab-card-top{height:5px;flex-shrink:0;}
+.tab-card-body{padding:14px 16px 10px;flex:1;}
+.tab-card-nome{font-size:15px;font-weight:700;color:var(--txt);margin:0 0 2px;}
+.tab-card-marca{font-size:12px;color:var(--mid);margin:0 0 6px;}
+.tab-card-tipo{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;
+  margin-bottom:8px;
+}
+.tab-tipo-cortina{background:#dbeafe;color:#1d4ed8;}
+.tab-tipo-tapecaria{background:#ede9fe;color:#6d28d9;}
+.tab-tipo-papel-de-parede{background:#fce7f3;color:#9d174d;}
+.tab-card-date{font-size:11px;color:var(--mid);display:flex;align-items:center;gap:4px;}
+.tab-card-date svg{width:11px;height:11px;opacity:.6;}
+.tab-card-vencida .tab-card-top{background:#f59e0b!important;}
+.tab-card-vencida{border-color:#f59e0b;}
+.tab-venc-badge{
+  font-size:10px;font-weight:700;color:#92400e;background:#fef3c7;
+  border-radius:20px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px;margin-top:4px;
+}
+.tab-card-ft{
+  padding:8px 16px 12px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.tab-card-btn{
+  background:none;border:1px solid var(--border);color:var(--txt2);
+  font-size:12px;font-weight:600;border-radius:7px;padding:4px 10px;
+  cursor:pointer;transition:.15s;font-family:inherit;display:flex;align-items:center;gap:4px;
+}
+.tab-card-btn:hover{background:var(--acc);color:#fff;border-color:var(--acc);}
+.tab-card-btn.danger:hover{background:#ef4444;border-color:#ef4444;color:#fff;}
+/* Modal */
+.tab-modal{
+  background:var(--white);
+  border-radius:16px;
+  padding:0;
+  width:100%;max-width:500px;
+  box-shadow:0 20px 60px rgba(0,0,0,.18);
+  position:relative;
+  max-height:90vh;overflow-y:auto;
+}
+.tab-modal-hd{
+  padding:20px 24px 14px;
+  border-bottom:1px solid var(--border);
+  font-size:16px;font-weight:700;color:var(--txt);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.tab-modal-body{padding:20px 24px;}
+.tab-modal-ft{
+  padding:14px 24px 20px;
+  border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.tab-field{margin-bottom:14px;}
+.tab-field label{display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.tab-tipo-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.tab-tipo-opt{
+  border:2px solid var(--border);background:none;border-radius:8px;
+  padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;color:var(--txt2);transition:.15s;
+}
+.tab-tipo-opt.on{border-color:var(--acc);background:var(--acc);color:#fff;}
+/* Alerta vencimento */
+#tab-alert-vencidas{
+  margin:14px 18px 0;
+  padding:10px 16px;
+  background:#fef3c7;
+  border:1.5px solid #f59e0b;
+  border-radius:10px;
+  font-size:13px;color:#92400e;
+  display:flex;align-items:center;gap:8px;
+}
+@media(max-width:640px){
+  #pg-tabelas{margin:-12px -12px 0;padding:12px 12px 0;}
+  #tab-grid{grid-template-columns:1fr;padding:12px;}
+}

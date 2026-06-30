@@ -440,6 +440,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Importar Auge
       </div>
+      <div class="sb-item" id="nav-tabelas" onclick="ir('tabelas',this);renderTabelas()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        Tabelas de Preço
+      </div>
       <div class="sb-lbl">Ferramentas</div>
       <div class="sb-item" id="nav-calculadoras" onclick="ir('calculadoras',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
@@ -989,6 +993,34 @@
     </div>
   </div>
 
+  <!-- TABELAS DE PREÇO -->
+  <div id="pg-tabelas" class="pg">
+    <div class="tab-toolbar">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:0">
+        <div class="kb-search-wrap" style="max-width:280px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="tab-search" placeholder="Buscar marca ou tabela..." oninput="renderTabelas()">
+        </div>
+        <select id="tab-filter-tipo" onchange="renderTabelas()" style="min-width:160px">
+          <option value="">Todos os tipos</option>
+          <option value="cortina">Cortina</option>
+          <option value="tapecaria">Tapeçaria</option>
+          <option value="papel-de-parede">Papel de Parede</option>
+        </select>
+        <select id="tab-filter-marca" onchange="renderTabelas()" style="min-width:160px">
+          <option value="">Todas as marcas</option>
+        </select>
+      </div>
+      <button class="btn btn-s btn-xs" onclick="tabNovaTabela()" style="flex-shrink:0;white-space:nowrap">＋ Nova Tabela</button>
+    </div>
+    <div id="tab-alert-vencidas" style="display:none;margin:0 0 14px;padding:10px 16px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span id="tab-alert-txt"></span>
+    </div>
+    <div id="tab-grid"></div>
+    <div id="tab-overlay" class="kb-overlay" style="display:none" onclick="if(event.target===this)tabCloseModal()"></div>
+  </div>
+
   <!-- QUADRO KANBAN -->
   <div id="pg-quadro" class="pg">
     <div class="kb-toolbar">
@@ -1071,7 +1103,7 @@
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas' };
 var _initDone = false;
 var _saveQueue = [];
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
@@ -1083,7 +1115,7 @@ function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   var changedKey = K[key];
   var doSave = function() {
-    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), _changed: changedKey };
+    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), cps_tabelas: dbTabelas(), _changed: changedKey };
     payload[changedKey] = arr;
     fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
       .then(function(r){ return r.json(); })
@@ -1097,7 +1129,7 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
 
 // ── SYNC AUTOMÁTICO ──────────────────────────────────────
 var _syncLM = 0;
-var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf'];
+var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_tabelas'];
 
 function _syncAplicar(d) {
   var changed = false;
@@ -1205,7 +1237,7 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) _
 })();
 
 // ── NAV ───────────────────────────────────────────────────
-var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', conferencia:'Conferência de Material' };
+var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', conferencia:'Conferência de Material', tabelas:'Tabelas de Preço' };
 function ir(id,el) {
   var pg = document.getElementById('pg-'+id);
   if (!pg) return;
@@ -1221,7 +1253,7 @@ function ir(id,el) {
   var pageTitle = TITLES[id]||id;
   document.getElementById('topbar-title').textContent = pageTitle;
   document.title = pageTitle + ' — Composê';
-  document.querySelector('.wrap').classList.toggle('wrap-wide', id==='quadro'||id==='notas'||id==='agenda');
+  document.querySelector('.wrap').classList.toggle('wrap-wide', id==='quadro'||id==='notas'||id==='agenda'||id==='tabelas');
   document.querySelector('.wrap').classList.toggle('wrap-nopad', id==='agenda');
   window.scrollTo({top:0,behavior:'smooth'});
   if (window.location.hash !== '#'+id) window.location.hash = id;
@@ -1232,6 +1264,7 @@ function ir(id,el) {
   if(id==='agenda') renderAgenda();
   if(id==='colaboradores') renderColab();
   if(id==='conferencia') renderConf();
+  if(id==='tabelas') renderTabelas();
 }
 
 // Roteamento por hash — back/forward e URL direta (ex: /#historico)
@@ -2751,6 +2784,246 @@ function excluirCalcPiso(id){
   dbSave('piso',db('piso').filter(function(o){return o.id!==id;}));
   toast('Excluído.','ok');
   renderHistCalcPiso();
+}
+
+// ── TABELAS DE PREÇO ──────────────────────────────────────
+var TAB_TIPOS = {
+  cortina:       {label:'Cortina',       color:'#1d4ed8', bg:'#dbeafe'},
+  tapecaria:     {label:'Tapeçaria',     color:'#6d28d9', bg:'#ede9fe'},
+  'papel-de-parede':{label:'Papel de Parede',color:'#9d174d',bg:'#fce7f3'},
+};
+var TAB_TIPO_COLORS = {
+  cortina:'#2563eb', tapecaria:'#7c3aed', 'papel-de-parede':'#db2777'
+};
+
+function dbTabelas(){
+  try{ var r=JSON.parse(localStorage.getItem('cps_tabelas')||'[]'); return Array.isArray(r)?r:[]; }catch(e){return[];}
+}
+function dbTabelasSave(arr){
+  localStorage.setItem('cps_tabelas', JSON.stringify(arr));
+  if(typeof dbSave==='function') dbSave('tabelas', arr);
+}
+
+function renderTabelas(){
+  var busca = (document.getElementById('tab-search')||{}).value||'';
+  busca = busca.toLowerCase().trim();
+  var filtroTipo  = (document.getElementById('tab-filter-tipo')||{}).value||'';
+  var filtroMarca = (document.getElementById('tab-filter-marca')||{}).value||'';
+  var arr = dbTabelas();
+
+  // popular filtro marcas
+  var marcasSet = {};
+  arr.forEach(function(t){ if(t.marca) marcasSet[t.marca]=true; });
+  var marcasSel = document.getElementById('tab-filter-marca');
+  if(marcasSel){
+    var curVal = marcasSel.value;
+    marcasSel.innerHTML = '<option value="">Todas as marcas</option>';
+    Object.keys(marcasSet).sort().forEach(function(m){
+      var o=document.createElement('option');
+      o.value=m; o.textContent=m;
+      if(m===curVal) o.selected=true;
+      marcasSel.appendChild(o);
+    });
+  }
+
+  // alerta vencidas
+  var hoje = Date.now();
+  var MES = 30*24*60*60*1000;
+  var vencidas = arr.filter(function(t){ return t.dataUpload && (hoje - new Date(t.dataUpload).getTime()) > MES; });
+  var alertEl = document.getElementById('tab-alert-vencidas');
+  var alertTxt = document.getElementById('tab-alert-txt');
+  if(alertEl){
+    if(vencidas.length){
+      alertEl.style.display='flex';
+      alertTxt.textContent = vencidas.length + ' tabela'+(vencidas.length>1?'s':'')+' com mais de 30 dias — verifique se precisam ser atualizadas.';
+    } else {
+      alertEl.style.display='none';
+    }
+  }
+
+  // filtrar
+  var lista = arr.filter(function(t){
+    if(filtroTipo  && t.tipo!==filtroTipo) return false;
+    if(filtroMarca && t.marca!==filtroMarca) return false;
+    if(busca && !(
+      (t.nome||'').toLowerCase().includes(busca)||
+      (t.marca||'').toLowerCase().includes(busca)||
+      (t.obs||'').toLowerCase().includes(busca)
+    )) return false;
+    return true;
+  });
+
+  var grid = document.getElementById('tab-grid');
+  if(!grid) return;
+
+  if(!lista.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--mid);font-size:14px">'+(arr.length?'Nenhuma tabela encontrada.':'Nenhuma tabela cadastrada ainda. Clique em <b>＋ Nova Tabela</b> para começar.')+'</div>';
+    return;
+  }
+
+  // agrupar por tipo
+  var grupos = {};
+  lista.forEach(function(t){
+    var k = t.tipo||'cortina';
+    if(!grupos[k]) grupos[k]=[];
+    grupos[k].push(t);
+  });
+  var ordemTipos = ['cortina','tapecaria','papel-de-parede'];
+
+  var html = '';
+  ordemTipos.forEach(function(tipo){
+    if(!grupos[tipo]||!grupos[tipo].length) return;
+    var tipoInfo = TAB_TIPOS[tipo]||{label:tipo};
+    html += '<div class="tab-secao-lbl">'+tipoInfo.label+'</div>';
+    grupos[tipo].forEach(function(t){
+      var cor = TAB_TIPO_COLORS[t.tipo||'cortina']||'#94a3b8';
+      var isVencida = t.dataUpload && (hoje - new Date(t.dataUpload).getTime()) > MES;
+      var dataFmt = t.dataUpload ? new Date(t.dataUpload).toLocaleDateString('pt-BR') : '—';
+      var tipoInfo2 = TAB_TIPOS[t.tipo]||{label:t.tipo};
+      html += '<div class="tab-card'+(isVencida?' tab-card-vencida':'')+'">'+
+        '<div class="tab-card-top" style="background:'+cor+'"></div>'+
+        '<div class="tab-card-body">'+
+          '<div class="tab-card-nome">'+esc(t.nome||'Sem nome')+'</div>'+
+          '<div class="tab-card-marca">'+esc(t.marca||'—')+'</div>'+
+          '<span class="tab-card-tipo tab-tipo-'+(t.tipo||'cortina')+'">'+tipoInfo2.label+'</span>'+
+          '<div class="tab-card-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Upload: '+dataFmt+'</div>'+
+          (isVencida?'<div class="tab-venc-badge">⚠ Atualização necessária</div>':'')+
+          (t.obs?'<div style="font-size:12px;color:var(--mid);margin-top:6px">'+esc(t.obs)+'</div>':'')+
+        '</div>'+
+        '<div class="tab-card-ft">'+
+          (t.arquivo?'<button class="tab-card-btn" onclick="tabVerArquivo(\''+esc(t.id)+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Ver</button>':'<span style="font-size:12px;color:var(--mid)">Sem arquivo</span>')+
+          '<button class="tab-card-btn" onclick="tabEditar(\''+t.id+'\')">✏️ Editar</button>'+
+          '<button class="tab-card-btn danger" onclick="tabExcluir(\''+t.id+'\')">🗑️</button>'+
+        '</div>'+
+      '</div>';
+    });
+  });
+  grid.innerHTML = html;
+}
+
+var _tabEditId = null;
+function tabNovaTabela(){ tabAbrirModal(null); }
+function tabEditar(id){ tabAbrirModal(id); }
+
+function tabAbrirModal(id){
+  _tabEditId = id;
+  var arr = dbTabelas();
+  var t = id ? arr.find(function(x){return x.id===id;})||null : null;
+  var isNew = !t;
+  if(isNew) t = {id:'',nome:'',marca:'',tipo:'cortina',obs:'',dataUpload:new Date().toISOString().slice(0,10),arquivo:''};
+
+  var tipoOpts = Object.keys(TAB_TIPOS).map(function(k){
+    return '<button type="button" class="tab-tipo-opt'+(t.tipo===k?' on':'')+'" data-tipo="'+k+'" onclick="tabSetTipo(this)">'+TAB_TIPOS[k].label+'</button>';
+  }).join('');
+
+  var html = '<div class="tab-modal">'+
+    '<div class="tab-modal-hd">'+
+      '<span>'+(isNew?'Nova Tabela':'Editar Tabela')+'</span>'+
+      '<button onclick="tabCloseModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mid);line-height:1">×</button>'+
+    '</div>'+
+    '<div class="tab-modal-body">'+
+      '<div class="tab-field"><label>Nome da Tabela</label><input id="tabm-nome" type="text" value="'+esc(t.nome)+'" placeholder="Ex: Tabela Hunter Douglas 2024"></div>'+
+      '<div class="tab-field"><label>Marca / Fornecedor</label><input id="tabm-marca" type="text" value="'+esc(t.marca)+'" placeholder="Ex: Hunter Douglas, Karsten..."></div>'+
+      '<div class="tab-field"><label>Tipo</label><div class="tab-tipo-grid" id="tabm-tipo-grid">'+tipoOpts+'</div><input type="hidden" id="tabm-tipo" value="'+esc(t.tipo)+'"></div>'+
+      '<div class="tab-field"><label>Data do Upload</label><input id="tabm-data" type="date" value="'+esc(t.dataUpload||new Date().toISOString().slice(0,10))+'"></div>'+
+      '<div class="tab-field"><label>Arquivo (PDF / Imagem)</label>'+
+        (t.arquivo?'<div style="font-size:12px;color:var(--acc);margin-bottom:6px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Arquivo carregado</div>':'')+
+        '<input id="tabm-arquivo" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" style="font-size:13px">'+
+        (t.arquivo?'<label style="display:flex;align-items:center;gap:5px;margin-top:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="tabm-rm-arquivo"> Remover arquivo atual</label>':'')+
+      '</div>'+
+      '<div class="tab-field"><label>Observação</label><textarea id="tabm-obs" rows="2" placeholder="Informações adicionais...">'+esc(t.obs)+'</textarea></div>'+
+    '</div>'+
+    '<div class="tab-modal-ft">'+
+      '<div>'+(!isNew?'<button class="btn btn-d btn-xs" onclick="tabExcluir(\''+id+'\',true)">Excluir</button>':'')+'</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-xs" onclick="tabCloseModal()">Cancelar</button>'+
+        '<button class="btn btn-s btn-xs" onclick="tabSalvar()">Salvar</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  var ov = document.getElementById('tab-overlay');
+  ov.innerHTML = html;
+  ov.style.display = 'flex';
+  ov.style.alignItems = 'center';
+  ov.style.justifyContent = 'center';
+  ov.style.padding = '20px';
+  setTimeout(function(){ var el=document.getElementById('tabm-nome'); if(el) el.focus(); },50);
+}
+
+function tabSetTipo(btn){
+  document.querySelectorAll('#tabm-tipo-grid .tab-tipo-opt').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  document.getElementById('tabm-tipo').value = btn.dataset.tipo;
+}
+
+function tabSalvar(){
+  var nome  = (document.getElementById('tabm-nome')||{}).value||'';
+  var marca = (document.getElementById('tabm-marca')||{}).value||'';
+  var tipo  = (document.getElementById('tabm-tipo')||{}).value||'cortina';
+  var data  = (document.getElementById('tabm-data')||{}).value||new Date().toISOString().slice(0,10);
+  var obs   = (document.getElementById('tabm-obs')||{}).value||'';
+  if(!nome.trim()){ toast('Informe o nome da tabela.','err'); return; }
+
+  var arr = dbTabelas();
+  var isNew = !_tabEditId;
+  var fileInput = document.getElementById('tabm-arquivo');
+  var rmCheck = document.getElementById('tabm-rm-arquivo');
+
+  function _salvarComArquivo(arquivoB64){
+    var obj;
+    if(isNew){
+      obj = {id:uid(), nome:nome, marca:marca, tipo:tipo, dataUpload:data, obs:obs, arquivo:arquivoB64||''};
+      arr.push(obj);
+    } else {
+      var idx = arr.findIndex(function(x){return x.id===_tabEditId;});
+      if(idx<0) return;
+      var rm = rmCheck && rmCheck.checked;
+      arr[idx] = Object.assign({}, arr[idx], {nome:nome,marca:marca,tipo:tipo,dataUpload:data,obs:obs,
+        arquivo: rm ? '' : (arquivoB64||arr[idx].arquivo||'')
+      });
+    }
+    dbTabelasSave(arr);
+    tabCloseModal();
+    renderTabelas();
+    toast(isNew?'Tabela cadastrada!':'Tabela atualizada!','ok');
+  }
+
+  if(fileInput && fileInput.files && fileInput.files[0]){
+    var reader = new FileReader();
+    reader.onload = function(ev){ _salvarComArquivo(ev.target.result); };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    _salvarComArquivo(null);
+  }
+}
+
+function tabCloseModal(){
+  var ov = document.getElementById('tab-overlay');
+  if(ov){ ov.style.display='none'; ov.innerHTML=''; }
+  _tabEditId = null;
+}
+
+function tabExcluir(id, fromModal){
+  if(!confirm('Excluir esta tabela? Esta ação não pode ser desfeita.')) return;
+  var arr = dbTabelas().filter(function(t){return t.id!==id;});
+  dbTabelasSave(arr);
+  if(fromModal) tabCloseModal();
+  renderTabelas();
+  toast('Tabela excluída.','ok');
+}
+
+function tabVerArquivo(id){
+  var t = dbTabelas().find(function(x){return x.id===id;});
+  if(!t||!t.arquivo){ toast('Nenhum arquivo disponível.','err'); return; }
+  var win = window.open();
+  if(win){
+    if(t.arquivo.startsWith('data:application/pdf')){
+      win.document.write('<iframe src="'+t.arquivo+'" style="width:100%;height:100vh;border:none"></iframe>');
+    } else {
+      win.document.write('<img src="'+t.arquivo+'" style="max-width:100%;display:block;margin:auto">');
+    }
+  }
 }
 
 // ── QUADRO KANBAN ─────────────────────────────────────────
