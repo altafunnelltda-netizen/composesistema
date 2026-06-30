@@ -1218,7 +1218,9 @@ function ir(id,el) {
     var navEl = document.getElementById('nav-'+id);
     if (navEl) navEl.classList.add('on');
   }
-  document.getElementById('topbar-title').textContent = TITLES[id]||'';
+  var pageTitle = TITLES[id]||id;
+  document.getElementById('topbar-title').textContent = pageTitle;
+  document.title = pageTitle + ' — Composê';
   document.querySelector('.wrap').classList.toggle('wrap-wide', id==='quadro'||id==='notas'||id==='agenda');
   document.querySelector('.wrap').classList.toggle('wrap-nopad', id==='agenda');
   window.scrollTo({top:0,behavior:'smooth'});
