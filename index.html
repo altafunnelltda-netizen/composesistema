@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Composê — Sistema</title>
 <link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -828,7 +831,7 @@
 
     <!-- Calculadora de Cortina - fórmulas Composê -->
     <div class="calc-card">
-      <div class="calc-title">🪟 Calculadora de Cortina</div>
+      <div class="calc-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="8" x2="21" y2="8"/></svg> Calculadora de Cortina</div>
       <div class="row">
         <div class="f f2"><label>Cliente</label><input type="text" id="cc-cliente" placeholder="Nome do cliente" oninput="ccVerificarCliente()"></div>
         <div class="f f2"><label>Ambiente</label><input type="text" id="cc-ambiente" placeholder="Ex: Sala, Quarto 1..."></div>
@@ -836,7 +839,7 @@
       <div class="row">
         <div class="f f2"><label>Largura do Ambiente (m)</label><input type="number" id="cc-larg" step="0.01" placeholder="Ex: 3.07" oninput="calcCortina()"></div>
         <div class="f f2"><label>Altura (m)</label><input type="number" id="cc-alt" step="0.01" placeholder="Ex: 2.76" oninput="calcCortina()"></div>
-        <div class="f f2"><label>Valor do Tecido (R$/m)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="cc-valor" step="0.01" placeholder="Ex: 85.00" oninput="calcCortina()" style="flex:1"><button class="tab-pick-btn" onclick="tabAbrirPicker(function(v){document.getElementById('cc-valor').value=v;calcCortina();},'Valor do Tecido')">📋 Tabela</button></div></div>
+        <div class="f f2"><label>Valor do Tecido (R$/m)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="cc-valor" step="0.01" placeholder="Ex: 85.00" oninput="calcCortina()" style="flex:1"><button class="tab-pick-btn" onclick="tabAbrirPicker(function(v){document.getElementById('cc-valor').value=v;calcCortina();},'Valor do Tecido')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Tabela</button></div></div>
       </div>
       <div class="row">
         <div class="f f2">
@@ -864,18 +867,24 @@
         </div>
       </div>
       <div class="calc-res" id="cc-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
-      <div style="display:flex;gap:8px;margin-top:10px">
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="btn btn-p" onclick="ccAdicionarAmbiente()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ambiente</button>
         <button class="btn btn-s" onclick="calcParaNotas('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Anotações</button>
         <button class="btn btn-s" onclick="limparCalcCortinaFields()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="calcEnviarOrcamento('cc')" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Enviar para Orçamento</button>
+        <button class="btn btn-s" onclick="calcEnviarIA('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Gerar com IA</button>
       </div>
       <!-- Painel de sessão (ambientes adicionados) -->
       <div id="cc-sessao-panel" style="display:none;margin-top:14px;border:2px solid var(--acc,#c9a84c);border-radius:12px;overflow:hidden">
         <div style="background:var(--acc,#c9a84c);color:#fff;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <span id="cc-sessao-titulo" style="font-size:14px">Cliente: —</span>
           <div style="display:flex;gap:6px">
-            <button onclick="salvarSessaoCortina()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">💾 Salvar Tudo</button>
-            <button onclick="exportarSessaoPDF('cc')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">📄 Exportar PDF</button>
+            <button onclick="salvarSessaoCortina()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Salvar</button>
+            <button onclick="exportarSessaoPDF('cc')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>
+            <button onclick="calcSessaoEnviarOrcamento('cc')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Orçamento</button>
+            <button onclick="calcSessaoEnviarIA('cc')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> IA</button>
             <button onclick="descartarSessao('cc')" style="background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;font-family:inherit" title="Descartar sessão">✕</button>
           </div>
         </div>
@@ -906,7 +915,7 @@
       <!-- Piso -->
       <div class="calc-section-title">Piso</div>
       <div class="row">
-        <div class="f f2"><label>Custo por m² (R$)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="cp-custo-m2" step="0.01" placeholder="Ex: 82.00" oninput="calcPiso()" style="flex:1"><button class="tab-pick-btn" onclick="tabAbrirPicker(function(v){document.getElementById('cp-custo-m2').value=v;calcPiso();},'Custo por m²')">📋 Tabela</button></div></div>
+        <div class="f f2"><label>Custo por m² (R$)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="cp-custo-m2" step="0.01" placeholder="Ex: 82.00" oninput="calcPiso()" style="flex:1"><button class="tab-pick-btn" onclick="tabAbrirPicker(function(v){document.getElementById('cp-custo-m2').value=v;calcPiso();},'Custo por m²')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Tabela</button></div></div>
         <div class="f f2"><label>Markup (%)</label><input type="number" id="cp-markup" step="1" placeholder="Ex: 40" oninput="calcPiso()"></div>
         <div class="f f2"><label>Metragem sem perda (m²)</label><input type="number" id="cp-m2" step="0.01" placeholder="Ex: 22.00" oninput="calcPiso()"></div>
         <div class="f f2"><label>Rendimento da caixa (m²)</label><input type="number" id="cp-rend-cx" step="0.01" placeholder="Ex: 2.40" oninput="calcPiso()"></div>
@@ -955,18 +964,24 @@
       </div>
 
       <div class="calc-res" id="cp-res"><span style="color:var(--mid)">Preencha os campos para calcular.</span></div>
-      <div style="display:flex;gap:8px;margin-top:10px">
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="btn btn-p" onclick="cpAdicionarAmbiente()" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Adicionar Ambiente</button>
         <button class="btn btn-s" onclick="calcParaNotas('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Anotações</button>
         <button class="btn btn-s" onclick="limparCalcPisoFields()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.28"/></svg> Limpar</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="calcEnviarOrcamento('cp')" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Enviar para Orçamento</button>
+        <button class="btn btn-s" onclick="calcEnviarIA('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Gerar com IA</button>
       </div>
       <!-- Painel de sessão -->
       <div id="cp-sessao-panel" style="display:none;margin-top:14px;border:2px solid var(--acc,#c9a84c);border-radius:12px;overflow:hidden">
         <div style="background:var(--acc,#c9a84c);color:#fff;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <span id="cp-sessao-titulo" style="font-size:14px">Cliente: —</span>
           <div style="display:flex;gap:6px">
-            <button onclick="salvarSessaoPiso()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">💾 Salvar Tudo</button>
-            <button onclick="exportarSessaoPDF('cp')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">📄 Exportar PDF</button>
+            <button onclick="salvarSessaoPiso()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Salvar</button>
+            <button onclick="exportarSessaoPDF('cp')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>
+            <button onclick="calcSessaoEnviarOrcamento('cp')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Orçamento</button>
+            <button onclick="calcSessaoEnviarIA('cp')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> IA</button>
             <button onclick="descartarSessao('cp')" style="background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;font-family:inherit" title="Descartar sessão">✕</button>
           </div>
         </div>
@@ -1454,7 +1469,7 @@ function renderLixeira(){
         '<div class="lx-age">'+ageStr+'</div>'+
       '</div>'+
       '<div class="lx-btns">'+
-        '<button class="btn btn-sm lx-restore-btn" title="Restaurar">↩ Restaurar</button>'+
+        '<button class="btn btn-sm lx-restore-btn" title="Restaurar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg> Restaurar</button>'+
         '<button class="btn btn-d btn-sm lx-del-btn" title="Excluir permanentemente">✕</button>'+
       '</div>';
     el.querySelector('.lx-restore-btn').onclick=(function(id){return function(){trashRestore(id);};})(item.id);
@@ -1769,7 +1784,7 @@ function fmtTs(ts){
 
 function dashCtx(e,key,id){
   ctxShow(e,[
-    {icon:'✏️',label:'Abrir',fn:function(){abrirDoc(key,id);}},
+    {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',label:'Abrir',fn:function(){abrirDoc(key,id);}},
     'sep',
     {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
       var obj=db(key).find(function(o){return o.id===id;});
@@ -2491,14 +2506,14 @@ function histHTML(o,key){
       '<div class="hi-meta">'+esc(o.consultor||'')+(sub?' · '+esc(sub):'')+
     '</div></div>'+
     '<div class="hi-actions">'+
-      '<button class="btn btn-s btn-xs" onclick="abrirDoc(\''+key+'\',\''+o.id+'\')">✏️ Abrir</button>'+
+      '<button class="btn btn-s btn-xs" onclick="abrirDoc(\''+key+'\',\''+o.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Abrir</button>'+
       (key==='orc'?'<button class="btn btn-s btn-xs" onclick="duplicarOrcHist(\''+o.id+'\')" title="Duplicar orçamento"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>':'')+
       '<button class="btn btn-d btn-xs" onclick="excluirDoc(\''+key+'\',\''+o.id+'\')">🗑</button>'+
     '</div></div>';
 }
 function histCtx(e,key,id){
   var items=[
-    {icon:'✏️',label:'Abrir / Carregar',fn:function(){abrirDoc(key,id);}},
+    {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',label:'Abrir / Carregar',fn:function(){abrirDoc(key,id);}},
     'sep'
   ];
   if(key==='orc'){
@@ -2666,7 +2681,10 @@ function renderSessaoCortina(){
     return '<div style="border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--bg2,#fafaf8)">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
         '<strong style="font-size:13px">'+esc(amb.ambiente)+'</strong>'+
+        '<div style="display:flex;gap:4px">'+
+        '<button onclick="ccDuplicarAmbiente('+i+')" style="background:none;border:1px solid rgba(0,0,0,.15);border-radius:5px;color:#555;cursor:pointer;font-size:11px;padding:2px 7px;font-weight:600;font-family:inherit" title="Duplicar"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'+
         '<button onclick="ccRemoverAmbiente('+i+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px;line-height:1;padding:0 4px" title="Remover">×</button>'+
+        '</div>'+
       '</div>'+
       '<div style="font-size:12px;color:var(--mid)">'+amb.resHtml+'</div>'+
     '</div>';
@@ -2735,7 +2753,7 @@ function renderHistCalcCortina(){
           '<span style="background:#eee;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:8px;color:var(--mid)">'+nAmb+' ambiente'+(nAmb>1?'s':'')+'</span>'+
         '</div>'+
         '<div style="display:flex;gap:6px">'+
-          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cc\',\''+r.id+'\')">📄 PDF</button>'+
+          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cc\',\''+r.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>'+
           '<button class="btn btn-p" style="font-size:11px;padding:3px 10px" onclick="toggleHistCortItem(\''+r.id+'\')">Ver</button>'+
           '<button class="btn" style="font-size:11px;padding:3px 8px;background:#c0392b;color:#fff" onclick="excluirCalcCortina(\''+r.id+'\')">✕</button>'+
         '</div>'+
@@ -2945,7 +2963,10 @@ function renderSessaoPiso(){
     return '<div style="border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--bg2,#fafaf8)">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
         '<strong style="font-size:13px">'+esc(amb.ambiente)+'</strong>'+
+        '<div style="display:flex;gap:4px">'+
+        '<button onclick="cpDuplicarAmbiente('+i+')" style="background:none;border:1px solid rgba(0,0,0,.15);border-radius:5px;color:#555;cursor:pointer;font-size:11px;padding:2px 7px;font-weight:600;font-family:inherit" title="Duplicar"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'+
         '<button onclick="cpRemoverAmbiente('+i+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px;line-height:1;padding:0 4px" title="Remover">×</button>'+
+        '</div>'+
       '</div>'+
       '<div style="font-size:12px;color:var(--mid)">'+amb.resHtml+'</div>'+
     '</div>';
@@ -3010,7 +3031,7 @@ function renderHistCalcPiso(){
           '<span style="background:#eee;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:8px;color:var(--mid)">'+nAmb+' ambiente'+(nAmb>1?'s':'')+'</span>'+
         '</div>'+
         '<div style="display:flex;gap:6px">'+
-          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cp\',\''+r.id+'\')">📄 PDF</button>'+
+          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cp\',\''+r.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>'+
           '<button class="btn btn-p" style="font-size:11px;padding:3px 10px" onclick="toggleHistPisoItem(\''+r.id+'\')">Ver</button>'+
           '<button class="btn" style="font-size:11px;padding:3px 8px;background:#b00;color:#fff" onclick="excluirCalcPiso(\''+r.id+'\')">✕</button>'+
         '</div>'+
@@ -3276,14 +3297,14 @@ function renderTabelas(){
         (fornNome?'<div class="tab-card-marca">'+esc(fornNome)+'</div>':'')+
         '<span class="tab-card-tipo tab-tipo-'+(tiposArr[0]||'cortina')+'">'+tipoInfo.label+'</span>'+
         '<div class="tab-card-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> '+dataFmt+'</div>'+
-        (isVenc?'<div class="tab-venc-badge">⚠ Atualização necessária</div>':'')+
+        (isVenc?'<div class="tab-venc-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Atualização necessária</div>':'')+
         (t.obs?'<div style="font-size:11px;color:var(--mid);margin-top:5px">'+esc(t.obs)+'</div>':'')+
       '</div>'+
       '<div class="tab-card-ft">'+
         (t.arquivo?'<button class="tab-card-btn" onclick="tabVerArquivo(\''+t.id+'\')">'+
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Abrir</button>':
           '<span style="font-size:12px;color:var(--mid)">Sem arquivo</span>')+
-        '<button class="tab-card-btn" onclick="tabEditar(\''+t.id+'\')">✏️ Editar</button>'+
+        '<button class="tab-card-btn" onclick="tabEditar(\''+t.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Editar</button>'+
         '<button class="tab-card-btn danger" onclick="tabExcluir(\''+t.id+'\')">🗑️</button>'+
       '</div>'+
     '</div>';
@@ -3631,7 +3652,7 @@ function renderFornecedores(){
       '</div>'+
       '<div class="forn-card-ft">'+
         '<span style="font-size:12px;color:var(--mid);flex:1">'+qtd+' tabela'+(qtd!==1?'s':'')+'</span>'+
-        '<button class="tab-card-btn" onclick="fornEditar(\''+f.id+'\')">✏️ Editar</button>'+
+        '<button class="tab-card-btn" onclick="fornEditar(\''+f.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Editar</button>'+
         '<button class="tab-card-btn danger" onclick="fornExcluir(\''+f.id+'\')">🗑️</button>'+
       '</div>'+
     '</div>';
@@ -3901,7 +3922,7 @@ function renderQuadro(){
       var n=dbKb().cards.filter(function(c){return c.col===col.id;}).length;
       var pinned=!!(dbKb().cols.find(function(c){return c.id===col.id;})||{}).pinned;
       ctxShow(e,[
-        {icon:'✏️',label:'Renomear / Editar',fn:function(){kbEditCol(col.id,{stopPropagation:function(){}});}},
+        {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',label:'Renomear / Editar',fn:function(){kbEditCol(col.id,{stopPropagation:function(){}});}},
         {icon:'📌',label:pinned?'Desafixar coluna':'Fixar coluna na tela',fn:function(){kbTogglePin(col.id,{stopPropagation:function(){}});}},
         'sep',
         {icon:'🗑️',label:'Excluir coluna'+(n?' ('+n+' card'+(n>1?'s':'')+')':''),danger:true,fn:function(){
@@ -3968,7 +3989,7 @@ function kbMakeCard(card){
     var d=dbKb();
     var otherCols=d.cols.filter(function(c){return c.id!==card.col;});
     var items=[
-      {icon:'✏️',label:'Editar',fn:function(){kbOpenModal(card.id,card.col);}},
+      {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',label:'Editar',fn:function(){kbOpenModal(card.id,card.col);}},
       {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',label:'Duplicar',fn:function(){kbDuplicateCard(card.id);}},
       card.status==='ok'
         ? {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Reabrir',fn:function(){var d2=dbKb();var idx=d2.cards.findIndex(function(c){return c.id===card.id;});if(idx>=0){d2.cards[idx].status='';dbKbSave(d2);renderQuadro();toast('Card reaberto.','ok');}}}
@@ -4325,7 +4346,7 @@ function renderNotas(){
     btn.addEventListener('contextmenu',function(e){
       ctxShow(e,[
         {icon:'📖',label:'Abrir',fn:function(){_nbClienteId=c.id;nbOpenNotebook(c,main);renderNotas();}},
-        {icon:'✏️',label:'Editar',fn:function(){nbEditCliente(c.id);}},
+        {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',label:'Editar',fn:function(){nbEditCliente(c.id);}},
         'sep',
         {icon:'🗑️',label:'Mover para lixeira',danger:true,fn:function(){
           var obj=nbClientes().find(function(cl){return cl.id===c.id;});
@@ -4411,7 +4432,7 @@ function nbOpenNotebook(cli, mainEl){
     '</div>'+
     // barra de desenho (oculta por padrão)
     '<div class="nb-draw-bar" id="nb-draw-bar">'+
-      '<button class="nb-dtool on" id="dbt-pen" onclick="nbSetDrawTool(\'pen\')">✏ Caneta</button>'+
+      '<button class="nb-dtool on" id="dbt-pen" onclick="nbSetDrawTool(\'pen\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Caneta</button>'+
       '<button class="nb-dtool" id="dbt-line" onclick="nbSetDrawTool(\'line\')">╱ Linha</button>'+
       '<button class="nb-dtool" id="dbt-rect" onclick="nbSetDrawTool(\'rect\')">▭ Retângulo</button>'+
       '<button class="nb-dtool" id="dbt-circle" onclick="nbSetDrawTool(\'circle\')">○ Círculo</button>'+
@@ -4451,7 +4472,7 @@ function nbOpenNotebook(cli, mainEl){
         '</div>'+
       '</div>'+
       '<div class="nb-page-actions">'+
-        '<button class="btn btn-s btn-xs" onclick="nbEditCliente(\''+cli.id+'\')">✏️ Editar</button>'+
+        '<button class="btn btn-s btn-xs" onclick="nbEditCliente(\''+cli.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Editar</button>'+
         '<button class="btn btn-d btn-xs" onclick="nbDelCliente(\''+cli.id+'\')">🗑</button>'+
       '</div>'+
     '</div>'+
@@ -5345,10 +5366,10 @@ function agDayItemCtx(e,id){
   e.preventDefault(); e.stopPropagation();
   var ev = (db('agenda')||[]).find(function(x){return x.id===id;});
   var items = [
-    {icon:'✏️', label:'Abrir', fn:function(){ agEditModal(id); }},
+    {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>', label:'Abrir', fn:function(){ agEditModal(id); }},
     {icon:'📞', label:'Ligar', fn:function(){ if(ev&&ev.fone) window.open('tel:'+ev.fone); else toast('Telefone não disponível','err'); }},
     'sep',
-    {icon:'✅', label:'Marcar como concluído', fn:function(){ if(!ev) return; var arr=db('agenda'); var i=arr.findIndex(function(a){return a.id===id;}); if(i>-1){ arr[i].status='concluido'; dbSave('agenda',arr); renderAgenda(); agShowDayTasks(ev.data); toast('Marcado como concluído','ok'); }}},
+    {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>', label:'Marcar como concluído', fn:function(){ if(!ev) return; var arr=db('agenda'); var i=arr.findIndex(function(a){return a.id===id;}); if(i>-1){ arr[i].status='concluido'; dbSave('agenda',arr); renderAgenda(); agShowDayTasks(ev.data); toast('Marcado como concluído','ok'); }}},
     {icon:'🗑️', label:'Cancelar', danger:true, fn:function(){ if(!ev) return; var arr=db('agenda'); var i=arr.findIndex(function(a){return a.id===id;}); if(i>-1){ arr[i].status='cancelado'; dbSave('agenda',arr); renderAgenda(); agShowDayTasks(ev.data); toast('Evento cancelado','ok'); } }}
   ];
   ctxShow(e,items);
@@ -5912,6 +5933,227 @@ function importarBackupArquivo(inp){
       .catch(function(){toast('Erro de conexão ao importar.','err');});
   };
   reader.readAsText(file);
+}
+
+// ── CALCULADORAS → ORÇAMENTO / IA ────────────────────────
+
+function _calcExtrairTextoIA(prefixo) {
+  var sessao = prefixo === 'cc' ? _ccSessao : _cpSessao;
+  var cliente = prefixo === 'cc' ? _ccSessaoCliente : _cpSessaoCliente;
+  var resEl = document.getElementById(prefixo + '-res');
+
+  if (sessao && sessao.length) {
+    var tipo = prefixo === 'cc' ? 'CORTINA' : 'PISO';
+    var linhas = ['Cliente: ' + (cliente || 'sem nome'), 'Tipo de cálculo: ' + tipo, ''];
+    sessao.forEach(function(amb) {
+      linhas.push('AMBIENTE: ' + (amb.ambiente || 'sem nome'));
+      var tmp = document.createElement('div');
+      tmp.innerHTML = amb.resHtml;
+      tmp.querySelectorAll('.res-row').forEach(function(row) {
+        var lbl = row.querySelector('.res-label');
+        var val = row.querySelector('.res-val, .res-total-val');
+        if (lbl && val) linhas.push('  ' + lbl.textContent.trim() + ': ' + val.textContent.trim());
+      });
+      linhas.push('');
+    });
+    return linhas.join('\n');
+  }
+
+  if (resEl && !resEl.querySelector('span[style*="--mid"]')) {
+    var tipo2 = prefixo === 'cc' ? 'CORTINA' : 'PISO';
+    var linhas2 = ['Tipo de cálculo: ' + tipo2, ''];
+    resEl.querySelectorAll('.res-row').forEach(function(row) {
+      var lbl = row.querySelector('.res-label');
+      var val = row.querySelector('.res-val, .res-total-val');
+      if (lbl && val) linhas2.push(lbl.textContent.trim() + ': ' + val.textContent.trim());
+    });
+    return linhas2.join('\n');
+  }
+
+  return null;
+}
+
+function _calcExtrairItensOrcamento(prefixo) {
+  var sessao = prefixo === 'cc' ? _ccSessao : _cpSessao;
+  var resEl = document.getElementById(prefixo + '-res');
+  var fonte = [];
+
+  if (sessao && sessao.length) {
+    sessao.forEach(function(amb) {
+      var tmp = document.createElement('div');
+      tmp.innerHTML = amb.resHtml;
+      var rows = tmp.querySelectorAll('.res-row');
+      var totalEl = tmp.querySelector('.res-total-val');
+      var totalTxt = totalEl ? totalEl.textContent.trim() : '';
+      var linhas = [];
+      rows.forEach(function(row) {
+        var lbl = row.querySelector('.res-label');
+        var val = row.querySelector('.res-val');
+        if (lbl && val && !row.querySelector('.res-total-val')) {
+          linhas.push(val.textContent.trim());
+        }
+      });
+      fonte.push({ ambiente: amb.ambiente || 'Ambiente', total: totalTxt, linhas: linhas });
+    });
+  } else if (resEl && !resEl.querySelector('span[style*="--mid"]')) {
+    var rows2 = resEl.querySelectorAll('.res-row');
+    var totalEl2 = resEl.querySelector('.res-total-val');
+    var totalTxt2 = totalEl2 ? totalEl2.textContent.trim() : '';
+    var linhas2 = [];
+    rows2.forEach(function(row) {
+      var lbl = row.querySelector('.res-label');
+      var val = row.querySelector('.res-val');
+      if (lbl && val && !row.querySelector('.res-total-val')) {
+        linhas2.push(val.textContent.trim());
+      }
+    });
+    fonte.push({ ambiente: 'Cálculo', total: totalTxt2, linhas: linhas2 });
+  }
+
+  return fonte;
+}
+
+function calcEnviarOrcamento(prefixo) {
+  var itens = _calcExtrairItensOrcamento(prefixo);
+  if (!itens.length) { toast('Calcule antes de enviar para o orçamento.', 'err'); return; }
+
+  var clienteDefault = prefixo === 'cc' ? _ccSessaoCliente : _cpSessaoCliente;
+  var clienteEl = document.getElementById(prefixo + '-cliente');
+  if (!clienteDefault && clienteEl) clienteDefault = clienteEl.value || '';
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--white,#faf8f4);border-radius:14px;padding:24px;width:380px;max-width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35);border:1px solid var(--border,#ddd8ce)';
+
+  var preview = itens.map(function(it, i) {
+    return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:12px">' +
+      '<span style="color:#555;flex:1">' + (itens.length > 1 ? (it.ambiente || 'Item ' + (i + 1)) : 'Item ' + (i + 1)) + '</span>' +
+      '<span style="font-weight:700;color:var(--gold-dark,#b8903a)">' + (it.total || '—') + '</span>' +
+      '</div>';
+  }).join('');
+
+  box.innerHTML =
+    '<div style="font-weight:700;font-size:15px;color:var(--charcoal,#1a1a1a);margin-bottom:4px">Enviar para Orçamento</div>' +
+    '<div style="font-size:12px;color:#777;margin-bottom:16px">Os itens serão criados sem descrição — você preenche no orçamento.</div>' +
+    '<div style="margin-bottom:14px">' + preview + '</div>' +
+    '<div style="margin-bottom:16px">' +
+      '<label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:6px">Cliente</label>' +
+      '<input id="calc-orc-cli" type="text" value="' + (clienteDefault || '').replace(/"/g, '&quot;') + '" placeholder="Nome do cliente..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border,#ddd8ce);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:var(--white,#faf8f4);color:var(--charcoal,#1a1a1a)">' +
+    '</div>' +
+    '<div style="display:flex;gap:8px">' +
+      '<button class="btn btn-p" style="flex:1" id="calc-orc-ok">Criar Orçamento</button>' +
+      '<button class="btn btn-s" id="calc-orc-cancel">Cancelar</button>' +
+    '</div>';
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  var input = document.getElementById('calc-orc-cli');
+  if (input) setTimeout(function() { input.focus(); }, 50);
+
+  document.getElementById('calc-orc-cancel').onclick = function() { document.body.removeChild(ov); };
+  ov.onclick = function(e) { if (e.target === ov) document.body.removeChild(ov); };
+
+  document.getElementById('calc-orc-ok').onclick = function() {
+    var nomeCliente = document.getElementById('calc-orc-cli').value.trim();
+
+    novoOrcamento();
+    ir('orcamento', document.getElementById('nav-orcamento'));
+    if (nomeCliente) sv('orc-cliente', nomeCliente);
+
+    var orcItens = document.getElementById('orc-itens');
+    if (orcItens) orcItens.innerHTML = '';
+    orcN = 0;
+
+    itens.forEach(function(it) {
+      orcN++;
+      var n = orcN;
+      var wrap = document.getElementById('orc-itens');
+      var div = document.createElement('div');
+      div.className = 'orc-item'; div.id = 'oi' + n;
+      div.innerHTML =
+        '<div class="orc-item-hd">' +
+          '<span class="item-badge">ITEM ' + n + '</span>' +
+          '<input type="text" placeholder="Descrição do produto..." style="flex:1;font-weight:600" id="oi' + n + '-titulo">' +
+          '<input type="text" value="' + (it.total || '') + '" style="width:110px;text-align:right;font-weight:700;color:var(--gold-dark)" id="oi' + n + '-preco" oninput="orcCalc()">' +
+          '<button class="btn btn-s btn-xs no-print" onclick="orcDuplicarItem(\'oi' + n + '\')" title="Duplicar item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+          '<button class="btn btn-d btn-xs no-print" onclick="document.getElementById(\'oi' + n + '\').remove();orcCalc()">✕</button>' +
+        '</div>' +
+        '<div id="oi' + n + '-linhas"></div>' +
+        '<button class="btn btn-s btn-xs no-print" style="margin-top:5px" onclick="orcAddLinha(\'oi' + n + '-linhas\')">+ linha</button>';
+      wrap.appendChild(div);
+      var c = document.getElementById('oi' + n + '-linhas');
+      var d = document.createElement('div'); d.className = 'det-line';
+      d.innerHTML = '<input type="text" placeholder="Detalhe..."><button class="btn btn-d btn-xs no-print" onclick="this.parentElement.remove()">✕</button>';
+      c.appendChild(d);
+    });
+
+    orcCalc();
+    document.body.removeChild(ov);
+    toast('Orçamento criado' + (nomeCliente ? ' para ' + nomeCliente : '') + '!', 'ok');
+    sincronizarPrintOrc();
+  };
+}
+
+function calcEnviarIA(prefixo) {
+  var texto = _calcExtrairTextoIA(prefixo);
+  if (!texto) { toast('Calcule antes de gerar com IA.', 'err'); return; }
+
+  var clienteDefault = prefixo === 'cc' ? _ccSessaoCliente : _cpSessaoCliente;
+  var clienteEl = document.getElementById(prefixo + '-cliente');
+  if (!clienteDefault && clienteEl) clienteDefault = clienteEl.value || '';
+  if (clienteDefault) texto = 'Cliente: ' + clienteDefault + '\n' + texto;
+
+  var btn = document.querySelector('[onclick="calcEnviarIA(\'' + prefixo + '\')"]');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
+
+  fetch('/ia/gerar-orcamento', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ texto: texto, exemplos: iaExemplos() })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    if (data.erro) { toast('IA: ' + data.erro, 'err'); return; }
+    var itens = data.itens || [];
+    if (!itens.length) { toast('A IA não encontrou itens no cálculo.', 'err'); return; }
+    iaShowReview(texto, itens);
+  })
+  .catch(function() {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    toast('Erro ao contatar IA.', 'err');
+  });
+}
+
+function calcSessaoEnviarOrcamento(prefixo) {
+  calcEnviarOrcamento(prefixo);
+}
+
+function calcSessaoEnviarIA(prefixo) {
+  calcEnviarIA(prefixo);
+}
+
+function ccDuplicarAmbiente(i) {
+  var amb = _ccSessao[i];
+  if (!amb) return;
+  var copia = JSON.parse(JSON.stringify(amb));
+  copia.id = (typeof uid === 'function' ? uid() : Date.now() + Math.random());
+  copia.ambiente = copia.ambiente + ' (cópia)';
+  _ccSessao.splice(i + 1, 0, copia);
+  renderSessaoCortina();
+  toast('Ambiente duplicado!', 'ok');
+}
+
+function cpDuplicarAmbiente(i) {
+  var amb = _cpSessao[i];
+  if (!amb) return;
+  var copia = JSON.parse(JSON.stringify(amb));
+  copia.id = (typeof uid === 'function' ? uid() : Date.now() + Math.random());
+  copia.ambiente = copia.ambiente + ' (cópia)';
+  _cpSessao.splice(i + 1, 0, copia);
+  renderSessaoPiso();
+  toast('Ambiente duplicado!', 'ok');
 }
 
 // ── CALC → ANOTAÇÕES ──────────────────────────────────────
