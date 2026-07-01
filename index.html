@@ -433,10 +433,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Colaboradores
       </a>
-      <a class="sb-item" id="nav-conferencia" href="#conferencia" onclick="ir('conferencia',this);renderConf();return false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Conferência
-      </a>
       <a class="sb-item" id="nav-auge" href="#auge" onclick="ir('auge',this);renderAuge();return false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Importar Auge
@@ -1138,10 +1134,6 @@
     <div id="colab-wrap"></div>
   </div>
 
-  <div id="pg-conferencia" class="pg">
-    <div id="conf-wrap"></div>
-  </div>
-
   </div><!-- /wrap -->
 
 <!-- CONFERÊNCIA MODAL -->
@@ -1217,7 +1209,6 @@ function _syncRefresh() {
   else if(id==='quadro') { if(typeof renderQuadro==='function') renderQuadro(); }
   else if(id==='notas') { if(typeof renderNotas==='function') renderNotas(); }
   else if(id==='colaboradores') { if(typeof renderColab==='function') renderColab(); }
-  else if(id==='conferencia') { if(typeof renderConf==='function') renderConf(); }
   else if(id==='historico') { if(typeof renderHistorico==='function') renderHistorico(); }
   if(typeof atualizarTrashBadge==='function') atualizarTrashBadge();
 }
@@ -1304,7 +1295,7 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) _
 })();
 
 // ── NAV ───────────────────────────────────────────────────
-var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', conferencia:'Conferência de Material', tabelas:'Tabelas de Preço', auge:'Importar Auge' };
+var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', tabelas:'Tabelas de Preço', auge:'Importar Auge' };
 // Inicialização imediata da guia antes do fetch
 (function(){
   var paginaInicial = (window.location.hash.replace('#','')||'dashboard');
@@ -1448,7 +1439,6 @@ function ir(id,el) {
   if(id==='historico' && typeof renderHistorico==='function') renderHistorico();
   if(id==='agenda') renderAgenda();
   if(id==='colaboradores') renderColab();
-  if(id==='conferencia') renderConf();
   if(id==='tabelas') renderTabelas();
   // atualizar guia ativa
   if(_guiaAtiva && _guias.length){
@@ -5790,159 +5780,7 @@ function _hexRgba(hex,a){
 }
 
 // ── CONFERÊNCIA DE MATERIAL ───────────────────────────────
-var _SVG_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-var _SVG_CLIPBOARD='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
-var _SVG_TRASH_SM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
-var _SVG_PLUS_SM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-
-function renderConf() {
-  var wrap=document.getElementById('conf-wrap');
-  if(!wrap) return;
-  var pedidos=db('conf');
-  var html='<div class="conf-pg">';
-  html+='<div class="conf-topbar"><div><div class="conf-title">Conferência de Material</div><div class="conf-sub">'+pedidos.length+' pedido'+(pedidos.length!==1?'s':'')+'</div></div>';
-  html+='<button class="btn btn-p" style="display:flex;align-items:center;gap:6px" onclick="confOpenModal(null)">'+_SVG_PLUS_SM+' Novo Pedido</button></div>';
-  if(!pedidos.length){
-    html+='<div class="conf-empty">'+_SVG_CLIPBOARD.replace('viewBox','width="52" height="52" viewBox')+'<div class="conf-empty-ttl">Nenhum pedido ainda</div><div class="conf-empty-sub">Clique em "+ Novo Pedido" para começar</div></div>';
-  } else {
-    html+='<div class="conf-grid">';
-    pedidos.forEach(function(p){
-      var total=p.itens.length, done=p.itens.filter(function(i){return i.ok;}).length;
-      var st=total===0?'vazio':done===total?'completo':'parcial';
-      if(total===0) st='vazio';
-      var progClass='conf-prog-'+st;
-      var progTxt=total===0?'Sem itens':(done+'/'+total+' chegou'+(done===1?'':'ram'));
-      var dateStr=p.criadoEm?new Date(p.criadoEm).toLocaleDateString('pt-BR'):'';
-      html+='<div class="conf-card" id="conf-card-'+p.id+'" data-st="'+st+'" oncontextmenu="confCtx(event,\''+p.id+'\')">';
-      html+='<div class="conf-card-hd"><span class="conf-card-nome">'+esc(p.cliente)+'</span>';
-      html+='<span class="conf-prog '+progClass+'" id="conf-prog-'+p.id+'">'+progTxt+'</span></div>';
-      html+='<div class="conf-items">';
-      if(!p.itens.length){
-        html+='<div style="font-size:12px;color:var(--txt2);padding:6px 0;opacity:.6">Nenhum item adicionado</div>';
-      } else {
-        p.itens.forEach(function(item){
-          html+='<div class="conf-item'+(item.ok?' conf-item-ok':'')+'" id="conf-item-'+item.id+'" onclick="confToggle(\''+p.id+'\',\''+item.id+'\')">';
-          html+='<div class="conf-cb'+(item.ok?' on':'')+'">'+_SVG_CHECK+'</div>';
-          html+='<div class="conf-item-desc">'+esc(item.desc)+'</div>';
-          html+='</div>';
-        });
-      }
-      html+='</div>';
-      html+='<div class="conf-card-ft"><span class="conf-card-date">'+dateStr+'</span>';
-      html+='<div class="conf-card-btns">';
-      html+='<button class="conf-btn conf-btn-edit" onclick="confOpenModal(\''+p.id+'\')">Editar</button>';
-      html+='</div></div>';
-      html+='</div>';
-    });
-    html+='</div>';
-  }
-  html+='</div>';
-  wrap.innerHTML=html;
-}
-
-function confToggle(pedidoId, itemId) {
-  var arr=db('conf'), p=arr.find(function(x){return x.id===pedidoId;});
-  if(!p) return;
-  var item=p.itens.find(function(i){return i.id===itemId;});
-  if(!item) return;
-  item.ok=!item.ok;
-  dbSave('conf',arr);
-  // Atualiza UI sem re-renderizar tudo
-  var el=document.getElementById('conf-item-'+itemId);
-  if(el){ el.classList.toggle('conf-item-ok',item.ok); var cb=el.querySelector('.conf-cb'); if(cb)cb.classList.toggle('on',item.ok); }
-  var done=p.itens.filter(function(i){return i.ok;}).length, total=p.itens.length;
-  var st=done===total&&total>0?'completo':done>0?'parcial':'vazio';
-  var progTxt=total===0?'Sem itens':(done+'/'+total+' chegou'+(done===1?'':'ram'));
-  var badge=document.getElementById('conf-prog-'+pedidoId);
-  if(badge){ badge.textContent=progTxt; badge.className='conf-prog conf-prog-'+st; }
-  var card=document.getElementById('conf-card-'+pedidoId);
-  if(card) card.dataset.st=st;
-}
-
-function confCtx(e, id) {
-  e.preventDefault(); e.stopPropagation();
-  ctxShow(e,[
-    {icon:_SVG_PLUS_SM,label:'Editar pedido',fn:function(){confOpenModal(id);}},
-    'sep',
-    {icon:_SVG_TRASH_SM,label:'Excluir pedido',danger:true,fn:function(){confDelete(id);}}
-  ]);
-}
-
-function confOpenModal(id) {
-  var isEdit=!!id, arr=db('conf');
-  var p=isEdit?arr.find(function(x){return x.id===id;}):null;
-  p=p||{id:uid(),cliente:'',itens:[],criadoEm:Date.now()};
-  var modal=document.getElementById('conf-modal');
-  var itensHtml=p.itens.map(function(item,idx){
-    return '<div class="conf-item-row" id="conf-ir-'+item.id+'">'+
-      '<input type="text" placeholder="Ex: Piso 60x60 — 10 caixas" value="'+esc(item.desc)+'" oninput="confItemChange(\''+item.id+'\',this.value)" onkeydown="confItemKey(event,\''+item.id+'\')">'+
-      '<button class="conf-item-del" onclick="confItemDel(\''+item.id+'\')" title="Remover">'+_SVG_TRASH_SM+'</button>'+
-    '</div>';
-  }).join('');
-  modal.innerHTML=
-    '<div class="conf-modal-hd">'+_SVG_CLIPBOARD+'<span class="conf-modal-hd-ttl">'+(isEdit?'Editar Pedido':'Novo Pedido')+'</span>'+
-    '<button class="conf-modal-close" onclick="confCloseModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'+
-    '<div class="conf-modal-body">'+
-      '<div class="ag-form-row"><label>Cliente / Pedido</label><input id="conf-f-cliente" type="text" placeholder="Ex: Juliana, Obra Santos..." value="'+esc(p.cliente)+'"></div>'+
-      '<div class="ag-form-row"><label>Itens do pedido</label>'+
-        '<div class="conf-item-lista" id="conf-item-lista">'+itensHtml+'</div>'+
-        '<button class="conf-add-item-btn" onclick="confItemAdd()">'+_SVG_PLUS_SM+' Adicionar item</button>'+
-      '</div>'+
-    '</div>'+
-    '<div class="conf-modal-ft">'+
-      (isEdit?'<button class="btn btn-d" style="display:flex;align-items:center;gap:6px" onclick="confDelete(\''+p.id+'\')">'+_SVG_TRASH_SM+' Excluir</button>':'<span></span>')+
-      '<div style="display:flex;gap:8px">'+
-        '<button class="btn btn-s" onclick="confCloseModal()">Cancelar</button>'+
-        '<button class="btn btn-p" onclick="confSave(\''+p.id+'\','+isEdit+')">'+(isEdit?'Salvar':'Criar Pedido')+'</button>'+
-      '</div></div>';
-  // Guarda estado temporário dos itens no modal
-  window._confModalItens = p.itens.map(function(i){return{id:i.id,desc:i.desc,ok:i.ok||false};});
-  document.getElementById('conf-overlay').classList.add('on');
-  modal.classList.add('on');
-  setTimeout(function(){ var el=document.getElementById('conf-f-cliente'); if(el)el.focus(); },50);
-}
-
-function confItemChange(itemId,val){ var item=window._confModalItens.find(function(i){return i.id===itemId;}); if(item)item.desc=val; }
-function confItemKey(e,itemId){ if(e.key==='Enter'){e.preventDefault();confItemAdd();} }
-function confItemAdd(){
-  var newId=uid();
-  window._confModalItens.push({id:newId,desc:'',ok:false});
-  var lista=document.getElementById('conf-item-lista');
-  if(!lista) return;
-  var row=document.createElement('div');
-  row.className='conf-item-row'; row.id='conf-ir-'+newId;
-  row.innerHTML='<input type="text" placeholder="Ex: Papel de parede — 2 rolos" oninput="confItemChange(\''+newId+'\',this.value)" onkeydown="confItemKey(event,\''+newId+'\')">'+
-    '<button class="conf-item-del" onclick="confItemDel(\''+newId+'\')" title="Remover">'+_SVG_TRASH_SM+'</button>';
-  lista.appendChild(row);
-  setTimeout(function(){ row.querySelector('input').focus(); },30);
-}
-function confItemDel(itemId){
-  window._confModalItens=window._confModalItens.filter(function(i){return i.id!==itemId;});
-  var row=document.getElementById('conf-ir-'+itemId); if(row)row.remove();
-}
-
-function confSave(id, isEdit){
-  var cliente=document.getElementById('conf-f-cliente').value.trim();
-  if(!cliente){toast('Informe o nome do pedido','err');return;}
-  var itens=(window._confModalItens||[]).filter(function(i){return i.desc.trim();}).map(function(i){return{id:i.id,desc:i.desc.trim(),ok:i.ok||false};});
-  var arr=db('conf');
-  var p={id:id,cliente:cliente,itens:itens,criadoEm:isEdit?(arr.find(function(x){return x.id===id;})||{}).criadoEm||Date.now():Date.now()};
-  dbSave('conf',isEdit?arr.map(function(x){return x.id===id?p:x;}):[p].concat(arr));
-  confCloseModal(); renderConf(); toast(isEdit?'Pedido atualizado!':'Pedido criado!','ok');
-}
-
-function confDelete(id){
-  if(!confirm('Excluir este pedido?')) return;
-  dbSave('conf',db('conf').filter(function(x){return x.id!==id;}));
-  confCloseModal(); renderConf(); toast('Pedido excluído.','ok');
-}
-
-function confCloseModal(){
-  document.getElementById('conf-overlay').classList.remove('on');
-  document.getElementById('conf-modal').classList.remove('on');
-  window._confModalItens=[];
-}
-
+function renderConf() { /* removido */ }
 // ── COLABORADORES ─────────────────────────────────────────
 var COLAB_FUNCOES = ['Instalador','Medidor','Técnico','Costureira','Vendedor','Gerente','Outro'];
 var COLAB_CORES   = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
