@@ -55,19 +55,19 @@
 /* Month view */
 .ag-month { display:flex; flex-direction:column; }
 .ag-m-dows { display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1.5px solid var(--brd); }
-.ag-m-dow { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--txt2); text-align:center; padding:8px 0; }
+.ag-m-dow { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--txt); text-align:center; padding:8px 0; opacity:.7; }
 .ag-m-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-.ag-m-cell { border:1px solid rgba(148,163,184,.16); padding:8px 8px 6px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; gap:6px; transition:.15s; min-height:118px; background:rgba(255,255,255,.03); border-radius:14px; }
-.ag-m-cell:nth-child(7n) { border-right:none; }
-.ag-m-cell:hover { background:rgba(255,255,255,.08); }
-.ag-m-cell.ag-m-other { opacity:.4; }
-.ag-m-cell-num { font-size:12px; font-weight:600; color:var(--txt2); width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; flex-shrink:0; }
+.ag-m-cell { border:1.5px solid var(--brd); padding:8px 8px 6px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; gap:6px; transition:.15s; min-height:118px; background:var(--bg2); border-radius:14px; }
+.ag-m-cell:nth-child(7n) { border-right:1.5px solid var(--brd); }
+.ag-m-cell:hover { background:var(--bg); border-color:var(--acc); }
+.ag-m-cell.ag-m-other { opacity:.35; }
+.ag-m-cell-num { font-size:12px; font-weight:700; color:var(--txt); width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; flex-shrink:0; }
 .ag-m-num-hoje { background:var(--acc); color:#fff; }
-.ag-m-ev { font-size:11px; font-weight:700; color:#fff; padding:5px 8px; border-radius:12px; cursor:grab; line-height:1.3; display:flex; align-items:center; gap:6px; min-height:24px; user-select:none; box-shadow:0 4px 12px rgba(0,0,0,.08); }
+.ag-m-ev { font-size:11px; font-weight:700; color:#fff; padding:5px 8px; border-radius:12px; cursor:grab; line-height:1.3; display:flex; align-items:center; gap:6px; min-height:24px; user-select:none; box-shadow:0 2px 8px rgba(0,0,0,.18); text-shadow:0 1px 2px rgba(0,0,0,.25); }
 .ag-m-ev:hover { filter:brightness(.92); }
 .ag-m-ev:active { cursor:grabbing; }
-.ag-m-ev.ag-m-ev-done { opacity:.65; text-decoration:line-through; }
-.ag-m-ev.ag-m-ev-cxl { opacity:.45; text-decoration:line-through; }
+.ag-m-ev.ag-m-ev-done { opacity:.6; text-decoration:line-through; }
+.ag-m-ev.ag-m-ev-cxl { opacity:.4; text-decoration:line-through; }
 .ag-m-cell.ag-drag-over { background:rgba(248,209,129,.12) !important; outline:2px dashed rgba(245,158,11,.8); outline-offset:-2px; }
 .ag-m-ev-label { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ag-m-ev-avs { display:flex; gap:-2px; flex-shrink:0; }
@@ -81,8 +81,8 @@
 .ag-wk-hd-day { flex:1; text-align:center; padding:10px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:3px; border-right:1px solid var(--brd); cursor:pointer; transition:.12s; }
 .ag-wk-hd-day:last-child { border-right:none; }
 .ag-wk-hd-day:hover { background:var(--bg2); }
-.ag-wk-dow { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--txt2); }
-.ag-wk-hd-hoje .ag-wk-dow { color:var(--acc); }
+.ag-wk-dow { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--txt); opacity:.65; }
+.ag-wk-hd-hoje .ag-wk-dow { color:var(--acc); opacity:1; }
 .ag-wk-num { font-size:20px; font-weight:800; color:var(--txt); width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:.15s; }
 .ag-wk-num-hoje { background:var(--acc); color:#fff; box-shadow:0 2px 8px rgba(201,169,97,.4); }
 .ag-wk-body { display:flex; flex-direction:column; max-height:calc(100vh - 260px); overflow-y:auto; }
@@ -163,11 +163,12 @@
 .ag-pend-av { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; }
 .ag-pend-colab-name { font-size:13px; font-weight:600; color:var(--txt); }
 .ag-pend-colab-fn { font-size:11px; color:var(--txt2); }
-.ag-pend-ev { display:flex; align-items:flex-start; gap:6px; padding:5px 0; border-bottom:1px solid var(--brd); font-size:12px; cursor:pointer; }
+.ag-pend-ev { display:flex; align-items:flex-start; gap:6px; padding:6px 0; border-bottom:1px solid var(--brd); font-size:12px; cursor:pointer; }
 .ag-pend-ev:last-child { border-bottom:none; }
-.ag-pend-ev-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:3px; }
+.ag-pend-ev:hover { opacity:.8; }
+.ag-pend-ev-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:3px; }
 .ag-pend-ev-info { flex:1; min-width:0; }
-.ag-pend-ev-name { font-weight:600; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ag-pend-ev-name { font-weight:700; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ag-pend-ev-date { font-size:11px; color:var(--txt2); }
 .ag-pend-empty { font-size:12px; color:var(--txt2); opacity:.6; }
 .ag-yr-month { background:var(--bg2); border:1.5px solid var(--brd); border-radius:10px; padding:12px; cursor:pointer; transition:.15s; }
@@ -5838,12 +5839,13 @@ function renderColab(){
           var isH=d.toDateString()===hoje.toDateString();
           var isPast=d<hoje&&!isH;
           var dateStr=isH?'Hoje':DS[d.getDay()]+' '+d.getDate()+' '+MS[d.getMonth()];
-          html+='<div class="colab-ev-row" onclick="agCellClick(\''+ev.data+'\')">';
+          html+='<div class="colab-ev-row" style="cursor:default">';
           html+='<div class="colab-ev-dot" style="background:'+t.color+'"></div>';
-          html+='<span class="colab-ev-date'+(isPast?' vencido':'')+'">'+dateStr+'</span>';
+          html+='<span class="colab-ev-date'+(isPast?' vencido':'')+'" style="cursor:pointer" onclick="agCellClick(\''+ev.data+'\')">'+dateStr+'</span>';
           html+='<span class="colab-ev-hora">'+(ev.horaInicio||'—')+'</span>';
           html+='<span class="colab-ev-tipo" style="background:'+_hexRgba(t.color,.12)+';color:'+t.color+'">'+t.label+'</span>';
-          html+='<span class="colab-ev-cliente">'+esc(ev.cliente||'—')+'</span>';
+          html+='<span class="colab-ev-cliente" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(ev.cliente||'—')+'</span>';
+          html+='<button onclick="colabConcluirEv(\''+ev.id+'\')" title="Concluir tarefa" style="flex-shrink:0;background:none;border:1px solid rgba(80,180,80,.35);border-radius:5px;color:#5aab5a;cursor:pointer;padding:2px 7px;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;transition:.15s" onmouseover="this.style.background=\'rgba(80,180,80,.12)\'" onmouseout="this.style.background=\'none\'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>Concluir</button>';
           html+='</div>';
         });
         if(pendentes.length>6){
@@ -5864,6 +5866,16 @@ function renderColab(){
   }
   html+='</div>';
   wrap.innerHTML=html;
+}
+
+function colabConcluirEv(evId){
+  var arr=db('agenda');
+  var i=arr.findIndex(function(a){return a.id===evId;});
+  if(i<0){toast('Evento não encontrado.','err');return;}
+  arr[i].status='concluido';
+  dbSave('agenda',arr);
+  renderColab();
+  toast('Tarefa concluída!','ok');
 }
 
 function colabOpenModal(c){
