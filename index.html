@@ -2705,7 +2705,7 @@ function salvarSessaoCortina(){
   _ccSessao=[]; _ccSessaoCliente='';
   renderSessaoCortina();
   renderHistCalcCortina();
-  toast('Sessão salva para '+reg.cliente+'!','ok');
+  _calcMostrarAcaoPosSalvar('cc', reg.id, reg.cliente);
 }
 
 function descartarSessao(prefixo){
@@ -2987,7 +2987,7 @@ function salvarSessaoPiso(){
   _cpSessao=[]; _cpSessaoCliente='';
   renderSessaoPiso();
   renderHistCalcPiso();
-  toast('Sessão salva para '+reg.cliente+'!','ok');
+  _calcMostrarAcaoPosSalvar('cp', reg.id, reg.cliente);
 }
 
 function limparCalcPisoFields(){
@@ -5933,6 +5933,68 @@ function importarBackupArquivo(inp){
       .catch(function(){toast('Erro de conexão ao importar.','err');});
   };
   reader.readAsText(file);
+}
+
+// ── PÓS-SALVAR SESSÃO ──────────────────────────────────────
+function _calcMostrarAcaoPosSalvar(prefixo, id, cliente) {
+  // Remove banner anterior se existir
+  var antigo = document.getElementById('calc-pos-salvar-banner');
+  if (antigo) antigo.parentNode.removeChild(antigo);
+
+  var cardId = prefixo === 'cc' ? 'cc-hist-card' : 'cp-hist-card';
+  var btnId  = prefixo === 'cc' ? 'cc-hist-btn'  : 'cp-hist-btn';
+  var histItemId = 'hi-' + prefixo + '-' + id;
+
+  // Referência: coloca o banner antes do botão "Ver Histórico"
+  var btnRef = document.getElementById(btnId);
+  if (!btnRef) { toast('Sessão salva para ' + cliente + '!', 'ok'); return; }
+
+  var banner = document.createElement('div');
+  banner.id = 'calc-pos-salvar-banner';
+  banner.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;' +
+    'background:linear-gradient(135deg,#1a3d1a,#1e4a1e);border:1px solid rgba(80,200,80,.25);' +
+    'border-radius:10px;padding:11px 14px;margin-bottom:10px;animation:fadeIn .25s ease';
+
+  banner.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6bcb6b" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '<span style="color:#b6edba;font-size:13px;font-weight:600">Sessão de <em style="font-style:normal;color:#d4f5d4">' + esc(cliente || 'sem nome') + '</em> salva!</span>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;flex-shrink:0">' +
+      '<button id="calc-pos-salvar-abrir" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#d4f5d4;font-size:11px;font-weight:700;padding:5px 13px;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Abrir' +
+      '</button>' +
+      '<button id="calc-pos-salvar-fechar" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:0 4px;line-height:1" title="Fechar">✕</button>' +
+    '</div>';
+
+  btnRef.parentNode.insertBefore(banner, btnRef);
+
+  // Auto-remove após 8 s
+  var autoRemove = setTimeout(function() {
+    if (banner.parentNode) banner.parentNode.removeChild(banner);
+  }, 8000);
+
+  document.getElementById('calc-pos-salvar-fechar').onclick = function() {
+    clearTimeout(autoRemove);
+    if (banner.parentNode) banner.parentNode.removeChild(banner);
+  };
+
+  document.getElementById('calc-pos-salvar-abrir').onclick = function() {
+    clearTimeout(autoRemove);
+    if (banner.parentNode) banner.parentNode.removeChild(banner);
+    // Mostra o card de histórico
+    var card = document.getElementById(cardId);
+    var btn2 = document.getElementById(btnId);
+    if (card) { card.style.display = ''; if (btn2) btn2.style.display = 'none'; }
+    // Expande o registro específico
+    setTimeout(function() {
+      var item = document.getElementById(histItemId);
+      if (item) {
+        item.style.display = '';
+        item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+  };
 }
 
 // ── CALCULADORAS → ORÇAMENTO / IA ────────────────────────
