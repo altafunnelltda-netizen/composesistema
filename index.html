@@ -1154,7 +1154,7 @@
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas', fornecedores:'cps_fornecedores' };
 var _initDone = false;
 var _saveQueue = [];
 function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
@@ -1166,7 +1166,7 @@ function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   var changedKey = K[key];
   var doSave = function() {
-    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), cps_tabelas: dbTabelas(), _changed: changedKey };
+    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), cps_tabelas: dbTabelas(), cps_fornecedores: dbFornecedores(), _changed: changedKey };
     payload[changedKey] = arr;
     fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
       .then(function(r){ return r.json(); })
@@ -1180,7 +1180,7 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
 
 // ── SYNC AUTOMÁTICO ──────────────────────────────────────
 var _syncLM = 0;
-var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_tabelas'];
+var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_tabelas','cps_fornecedores'];
 
 function _syncAplicar(d) {
   var changed = false;
@@ -1277,6 +1277,7 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) _
     if(d.cps_agenda && d.cps_agenda.length) localStorage.setItem('cps_agenda', JSON.stringify(d.cps_agenda));
     if(d.cps_colab && d.cps_colab.length) localStorage.setItem('cps_colab', JSON.stringify(d.cps_colab));
     if(d.cps_conf && d.cps_conf.length) localStorage.setItem('cps_conf', JSON.stringify(d.cps_conf));
+    if(d.cps_fornecedores && d.cps_fornecedores.length) localStorage.setItem('cps_fornecedores', JSON.stringify(d.cps_fornecedores));
     _initDone = true;
     _flushQueue();
     if(typeof atualizarDash === 'function') atualizarDash();
