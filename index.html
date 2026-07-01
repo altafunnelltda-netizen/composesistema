@@ -510,7 +510,7 @@
   <div id="pg-dashboard" class="pg on">
     <div class="stats">
       <div class="stat"><div class="stat-v" id="d-n-orc">0</div><div class="stat-l">Orçamentos</div></div>
-      <div class="stat"><div class="stat-v" id="d-v-orc">R$ 0</div><div class="stat-l">Valor Total</div><select id="d-periodo" class="dash-periodo" onchange="atualizarDash()"><option value="tudo">Todo período</option><option value="mes">Este mês</option><option value="semana">Esta semana</option><option value="hoje">Hoje</option></select></div>
+      <div class="stat"><div class="stat-v" id="d-v-orc">R$ 0</div><div class="stat-l">Valor Total</div><select id="d-periodo" class="dash-periodo" onchange="atualizarDash()"><option value="mes" selected>Este mês</option><option value="mes-passado">Mês passado</option><option value="semana">Esta semana</option><option value="hoje">Hoje</option><option value="tudo">Todo período</option></select></div>
       <div class="stat"><div class="stat-v" id="d-n-cor">0</div><div class="stat-l">OS Cortinas</div></div>
       <div class="stat"><div class="stat-v" id="d-n-tap">0</div><div class="stat-l">OS Tapeçaria</div></div>
     </div>
@@ -1492,17 +1492,27 @@ function _pipeNormStatus(s){
 function renderPipeline(){
   var el=document.getElementById('dash-pipeline'); if(!el)return;
   var orcs=db('orc');
+  var periodo=(document.getElementById('d-periodo')||{value:'mes'}).value||'mes';
+  var range=_dashPeriodoRange(periodo);
+  var isMesAtual=periodo==='mes';
+  var isMesPassado=periodo==='mes-passado';
+  var _agora=Date.now();
+  var _3dias=3*24*60*60*1000;
+  var _inicioMes=new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime();
   el.innerHTML=PIPE_COLS.map(function(col){
-    var _agora=Date.now();
-    var _3dias=3*24*60*60*1000;
-    var _inicioMes=new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime();
     var items=orcs.filter(function(o){
       var s=_pipeNormStatus(o.status||'lead');
       if(s!==col.s) return false;
       var ts=o._ts||0;
       if(!ts&&o.data){var p=o.data.split('-');if(p.length===3)ts=new Date(p[0],p[1]-1,p[2]).getTime();}
-      if(s==='perdido') return ts&&(_agora-ts)<=_3dias;
-      if(s==='fechamento') return !ts||ts>=_inicioMes;
+      // filtro de período: aplica a todos exceto "tudo"
+      if(range.ini && ts<range.ini) return false;
+      if(isMesPassado && ts>=range.fim) return false;
+      // filtros temporais: só no mês atual e em "tudo" (não no mês passado — exibe histórico completo)
+      if(!isMesPassado){
+        if(s==='perdido') return ts&&(_agora-ts)<=_3dias;
+        if(s==='fechamento') return !ts||ts>=_inicioMes;
+      }
       return true;
     });
     // agrupar por cliente
@@ -1515,11 +1525,12 @@ function renderPipeline(){
     });
     var soma=items.reduce(function(s,o){return s+(o.total||0);},0);
     var somaStr=soma?'<span class="pipe-soma">'+brl(soma)+'</span>':'';
+    var emptyMsg = isMesPassado ? 'Nenhum registro' : 'Arraste aqui';
     var cards=ordem.length
       ? ordem.map(function(k){return pipeGroupCardHTML(grupos[k],col);}).join('')
-      : '<div class="pipe-empty">Arraste aqui</div>';
-    return '<div class="pipe-col" data-status="'+col.s+'" '+
-      'ondragover="pipeDragOver(event)" ondrop="pipeDrop(event,\''+col.s+'\')" ondragleave="pipeDragLeave(event)">'+
+      : '<div class="pipe-empty">'+emptyMsg+'</div>';
+    var dragAttrs=isMesPassado?'':('ondragover="pipeDragOver(event)" ondrop="pipeDrop(event,\''+col.s+'\')" ondragleave="pipeDragLeave(event)"');
+    return '<div class="pipe-col" data-status="'+col.s+'" '+dragAttrs+'>'+
       '<div class="pipe-col-hd" style="border-bottom-color:'+col.border+'">'+
         '<span style="color:'+col.color+'">'+col.label+'</span>'+
         '<span class="pipe-badge" style="background:'+col.border+';color:'+col.color+'">'+ordem.length+'</span>'+
@@ -1621,21 +1632,36 @@ function pipeGrupoCtx(e,cliente,colStatus){
   ctxShow(e,items);
 }
 
-function atualizarDash(){
-  var orcs=db('orc'),cors=db('cor'),taps=db('tap');
-  document.getElementById('d-n-orc').textContent=orcs.length;
-  var periodo=(document.getElementById('d-periodo')||{value:'tudo'}).value||'tudo';
-  var agora=Date.now(), orcsF=orcs;
+function _dashPeriodoRange(periodo){
+  var agora=Date.now();
+  var now=new Date();
   if(periodo==='hoje'){
     var ini=new Date(); ini.setHours(0,0,0,0);
-    orcsF=orcs.filter(function(o){return(o._ts||0)>=ini.getTime();});
+    return {ini:ini.getTime(),fim:agora};
   } else if(periodo==='semana'){
     var ini=new Date(); ini.setHours(0,0,0,0); ini.setDate(ini.getDate()-((ini.getDay()+6)%7));
-    orcsF=orcs.filter(function(o){return(o._ts||0)>=ini.getTime();});
+    return {ini:ini.getTime(),fim:agora};
   } else if(periodo==='mes'){
-    var ini=new Date(); ini.setDate(1); ini.setHours(0,0,0,0);
-    orcsF=orcs.filter(function(o){return(o._ts||0)>=ini.getTime();});
+    var ini=new Date(now.getFullYear(),now.getMonth(),1);
+    return {ini:ini.getTime(),fim:agora};
+  } else if(periodo==='mes-passado'){
+    var ini=new Date(now.getFullYear(),now.getMonth()-1,1);
+    var fim=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+    return {ini:ini.getTime(),fim:fim};
   }
+  return {ini:0,fim:agora}; // tudo
+}
+
+function atualizarDash(){
+  var orcs=db('orc'),cors=db('cor'),taps=db('tap');
+  var periodo=(document.getElementById('d-periodo')||{value:'mes'}).value||'mes';
+  var range=_dashPeriodoRange(periodo);
+  var orcsF=orcs.filter(function(o){
+    var ts=o._ts||0;
+    if(!ts&&o.data){var p=o.data.split('-');if(p.length===3)ts=new Date(p[0],p[1]-1,p[2]).getTime();}
+    return ts>=range.ini && ts<=range.fim;
+  });
+  document.getElementById('d-n-orc').textContent=orcsF.length;
   var soma=orcsF.reduce(function(s,o){return s+(o.total||0);},0);
   document.getElementById('d-v-orc').textContent='R$ '+soma.toLocaleString('pt-BR',{minimumFractionDigits:2});
   document.getElementById('d-n-cor').textContent=cors.length;
