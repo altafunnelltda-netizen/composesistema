@@ -196,8 +196,8 @@ body{
 [data-theme=dark] .theme-toggle:hover{background:var(--cream-dark);color:var(--gold);transform:rotate(12deg)}
 .wrap{padding:22px 24px;max-width:920px}
 .wrap-wide{max-width:none}
-/* ── Barra de guias ── */
-.tab-bar{
+/* ── (guias removidas) ── */
+.tab-bar-removed{
   position:sticky;top:90px;z-index:49;
   background:var(--bg2,#f1f5f9);
   border-bottom:1px solid var(--border);
