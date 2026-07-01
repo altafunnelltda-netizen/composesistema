@@ -195,6 +195,82 @@ body{
 [data-theme=dark] .theme-toggle:hover{background:var(--cream-dark);color:var(--gold);transform:rotate(12deg)}
 .wrap{padding:22px 24px;max-width:920px}
 .wrap-wide{max-width:none}
+/* ── Barra de guias ── */
+.tab-bar{
+  position:sticky;top:90px;z-index:49;
+  background:var(--bg2,#f1f5f9);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-end;
+  overflow-x:auto;overflow-y:hidden;
+  height:38px;padding:0 8px;gap:2px;
+  scrollbar-width:none;
+}
+.tab-bar::-webkit-scrollbar{display:none}
+[data-theme=dark] .tab-bar{background:#161b22}
+.tab-item{
+  display:flex;align-items:center;gap:5px;
+  padding:0 10px 0 12px;height:30px;
+  border-radius:7px 7px 0 0;
+  cursor:pointer;font-size:12px;font-weight:600;
+  color:var(--mid);background:transparent;
+  border:1px solid transparent;border-bottom:none;
+  white-space:nowrap;max-width:180px;
+  transition:.12s;flex-shrink:0;user-select:none;
+}
+.tab-item:hover{background:rgba(255,255,255,.7);color:var(--txt);}
+.tab-item.on{
+  background:var(--white);color:var(--txt);
+  border-color:var(--border);border-bottom-color:var(--white);
+  box-shadow:0 -1px 4px rgba(0,0,0,.06);
+}
+[data-theme=dark] .tab-item.on{background:var(--white);border-bottom-color:var(--white);}
+.tab-item-label{overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+.tab-item-close{
+  background:none;border:none;cursor:pointer;
+  color:var(--mid);font-size:14px;line-height:1;
+  padding:0 2px;border-radius:4px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  width:16px;height:16px;transition:.12s;
+}
+.tab-item-close:hover{background:rgba(0,0,0,.1);color:var(--txt);}
+.tab-bar-add{
+  background:none;border:none;cursor:pointer;
+  font-size:18px;color:var(--mid);
+  width:28px;height:28px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-bottom:1px;transition:.12s;font-family:inherit;
+}
+.tab-bar-add:hover{background:rgba(0,0,0,.08);color:var(--txt);}
+/* Picker de nova guia */
+.guia-picker-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.guia-picker-box{
+  background:var(--white);border-radius:16px;
+  width:100%;max-width:560px;overflow:hidden;
+  box-shadow:0 24px 64px rgba(0,0,0,.2);
+}
+.guia-picker-hd{
+  padding:18px 20px 14px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:15px;font-weight:700;
+}
+.guia-picker-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  padding:16px;
+}
+.guia-picker-tile{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:16px 10px;border-radius:10px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--white);
+  font-size:12px;font-weight:600;color:var(--txt2);text-align:center;
+  transition:.15s;font-family:inherit;
+}
+.guia-picker-tile:hover{border-color:var(--acc);background:var(--acc)0d;color:var(--acc);}
+.guia-picker-tile svg{width:22px;height:22px;opacity:.7;}
+.guia-picker-tile:hover svg{opacity:1;}
+@media(max-width:480px){.guia-picker-grid{grid-template-columns:repeat(2,1fr);}}
 
 /* ── PAGES ── */
 .pg{display:none}.pg.on{display:block}
@@ -311,7 +387,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   padding:14px 18px;
   background:var(--white);
   border-bottom:1px solid var(--border);
-  position:sticky;top:52px;z-index:10;
+  position:sticky;top:90px;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 .kb-search-wrap{position:relative;flex:1;min-width:180px}
@@ -1399,7 +1475,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   padding:14px 18px;
   background:var(--white);
   border-bottom:1px solid var(--border);
-  position:sticky;top:52px;z-index:10;
+  position:sticky;top:90px;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 #tab-grid{
@@ -1509,7 +1585,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   display:flex;gap:4px;padding:10px 18px 0;
   border-bottom:1px solid var(--border);
   background:var(--white);
-  position:sticky;top:52px;z-index:11;
+  position:sticky;top:90px;z-index:11;
 }
 .tab-sub-btn{
   background:none;border:none;border-bottom:2.5px solid transparent;
@@ -1520,7 +1596,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .tab-sub-btn:hover{color:var(--txt);}
 .tab-sub-btn.on{color:var(--acc);border-bottom-color:var(--acc);}
 .tab-toolbar{
-  top:calc(52px + 43px)!important;
+  top:calc(90px + 43px)!important;
 }
 /* Pasta de fornecedor */
 .tab-pasta{
