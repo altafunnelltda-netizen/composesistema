@@ -839,7 +839,7 @@
       <div class="row">
         <div class="f f2"><label>Largura do Ambiente (m)</label><input type="number" id="cc-larg" step="0.01" placeholder="Ex: 3.07" oninput="calcCortina()"></div>
         <div class="f f2"><label>Altura (m)</label><input type="number" id="cc-alt" step="0.01" placeholder="Ex: 2.76" oninput="calcCortina()"></div>
-        <div class="f f2"><label>Valor do Tecido (R$/m)</label><input type="number" id="cc-valor" step="0.01" placeholder="Ex: 85.00" oninput="calcCortina()"></div>
+        <div class="f f2"><label>Valor do Tecido (R$/m)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="cc-valor" step="0.01" placeholder="Ex: 85.00" oninput="calcCortina()" style="flex:1"><button class="tab-pick-btn" onclick="tabAbrirPicker(function(v){document.getElementById('cc-valor').value=v;calcCortina();},'Valor do Tecido')">📋 Tabela</button></div></div>
       </div>
       <div class="row">
         <div class="f f2">
@@ -909,7 +909,7 @@
       <!-- Piso -->
       <div class="calc-section-title">Piso</div>
       <div class="row">
-        <div class="f f2"><label>Custo por m² (R$)</label><input type="number" id="cp-custo-m2" step="0.01" placeholder="Ex: 82.00" oninput="calcPiso()"></div>
+        <div class="f f2"><label>Custo por m² (R$)</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="cp-custo-m2" step="0.01" placeholder="Ex: 82.00" oninput="calcPiso()" style="flex:1"><button class="tab-pick-btn" onclick="tabAbrirPicker(function(v){document.getElementById('cp-custo-m2').value=v;calcPiso();},'Custo por m²')">📋 Tabela</button></div></div>
         <div class="f f2"><label>Markup (%)</label><input type="number" id="cp-markup" step="1" placeholder="Ex: 40" oninput="calcPiso()"></div>
         <div class="f f2"><label>Metragem sem perda (m²)</label><input type="number" id="cp-m2" step="0.01" placeholder="Ex: 22.00" oninput="calcPiso()"></div>
         <div class="f f2"><label>Rendimento da caixa (m²)</label><input type="number" id="cp-rend-cx" step="0.01" placeholder="Ex: 2.40" oninput="calcPiso()"></div>
@@ -1022,29 +1022,60 @@
 
   <!-- TABELAS DE PREÇO -->
   <div id="pg-tabelas" class="pg">
-    <div class="tab-toolbar">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:0">
-        <div class="kb-search-wrap" style="max-width:280px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="tab-search" placeholder="Buscar marca ou tabela..." oninput="renderTabelas()">
+    <!-- Sub-navegação -->
+    <div class="tab-subnav">
+      <button class="tab-sub-btn on" id="tab-sub-tabelas" onclick="tabNavegar('tabelas')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        Tabelas
+      </button>
+      <button class="tab-sub-btn" id="tab-sub-cadastros" onclick="tabNavegar('cadastros')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 11h6m-3-3v6"/></svg>
+        Fornecedores
+      </button>
+    </div>
+
+    <!-- PANE Tabelas -->
+    <div id="tab-pane-tabelas">
+      <div class="tab-toolbar">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:0">
+          <div class="kb-search-wrap" style="max-width:260px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="tab-search" placeholder="Buscar tabela..." oninput="renderTabelas()">
+          </div>
+          <select id="tab-filter-tipo" onchange="renderTabelas()" style="min-width:150px">
+            <option value="">Todos os tipos</option>
+            <option value="cortina">Cortina</option>
+            <option value="tapecaria">Tapeçaria</option>
+            <option value="papel-de-parede">Papel de Parede</option>
+          </select>
         </div>
-        <select id="tab-filter-tipo" onchange="renderTabelas()" style="min-width:160px">
-          <option value="">Todos os tipos</option>
-          <option value="cortina">Cortina</option>
-          <option value="tapecaria">Tapeçaria</option>
-          <option value="papel-de-parede">Papel de Parede</option>
-        </select>
-        <select id="tab-filter-marca" onchange="renderTabelas()" style="min-width:160px">
-          <option value="">Todas as marcas</option>
-        </select>
+        <button class="btn btn-s btn-xs" onclick="tabNovaTabela()" style="flex-shrink:0;white-space:nowrap">＋ Nova Tabela</button>
       </div>
-      <button class="btn btn-s btn-xs" onclick="tabNovaTabela()" style="flex-shrink:0;white-space:nowrap">＋ Nova Tabela</button>
+      <!-- Breadcrumb de pasta aberta -->
+      <div id="tab-pasta-header" style="display:none;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--bg2,#f8fafc);border-radius:10px;border:1px solid var(--brd,#e5e7eb)">
+        <button onclick="tabFecharPasta()" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--acc);font-size:13px;font-weight:600;padding:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Todos os fornecedores
+        </button>
+        <span style="color:var(--mid)">/</span>
+        <span id="tab-pasta-nome" style="font-weight:700;font-size:13px"></span>
+      </div>
+      <div id="tab-alert-vencidas" style="display:none;margin:0 0 14px;padding:10px 16px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="tab-alert-txt"></span>
+      </div>
+      <div id="tab-grid"></div>
     </div>
-    <div id="tab-alert-vencidas" style="display:none;margin:0 0 14px;padding:10px 16px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span id="tab-alert-txt"></span>
+
+    <!-- PANE Fornecedores/Cadastros -->
+    <div id="tab-pane-cadastros" style="display:none">
+      <div class="tab-toolbar">
+        <div style="font-size:13px;color:var(--mid)">Gerencie os fornecedores e marcas</div>
+        <button class="btn btn-s btn-xs" onclick="fornNovoModal()" style="flex-shrink:0;white-space:nowrap">＋ Novo Fornecedor</button>
+      </div>
+      <div id="forn-grid"></div>
     </div>
-    <div id="tab-grid"></div>
+
     <div id="tab-overlay" class="kb-overlay" style="display:none" onclick="if(event.target===this)tabCloseModal()"></div>
   </div>
 
@@ -3010,100 +3041,164 @@ function dbTabelasSave(arr){
   localStorage.setItem('cps_tabelas', JSON.stringify(arr));
   if(typeof dbSave==='function') dbSave('tabelas', arr);
 }
+function dbFornecedores(){
+  try{ var r=JSON.parse(localStorage.getItem('cps_fornecedores')||'[]'); return Array.isArray(r)?r:[]; }catch(e){return[];}
+}
+function dbFornecedoresSave(arr){
+  localStorage.setItem('cps_fornecedores', JSON.stringify(arr));
+  if(typeof dbSave==='function') dbSave('fornecedores', arr);
+}
+
+// ── Sub-navegação ──
+var _tabPane = 'tabelas';
+function tabNavegar(pane){
+  _tabPane = pane;
+  document.getElementById('tab-pane-tabelas').style.display  = pane==='tabelas'  ? '' : 'none';
+  document.getElementById('tab-pane-cadastros').style.display = pane==='cadastros' ? '' : 'none';
+  document.getElementById('tab-sub-tabelas').classList.toggle('on', pane==='tabelas');
+  document.getElementById('tab-sub-cadastros').classList.toggle('on', pane==='cadastros');
+  if(pane==='tabelas') renderTabelas();
+  if(pane==='cadastros') renderFornecedores();
+}
+
+// ── Pasta aberta ──
+var _tabPastaId = null; // null = mostra pastas; string = id fornecedor
+function tabAbrirPasta(fornId){
+  _tabPastaId = fornId;
+  renderTabelas();
+}
+function tabFecharPasta(){
+  _tabPastaId = null;
+  renderTabelas();
+}
 
 function renderTabelas(){
-  var busca = (document.getElementById('tab-search')||{}).value||'';
-  busca = busca.toLowerCase().trim();
-  var filtroTipo  = (document.getElementById('tab-filter-tipo')||{}).value||'';
-  var filtroMarca = (document.getElementById('tab-filter-marca')||{}).value||'';
-  var arr = dbTabelas();
-
-  // popular filtro marcas
-  var marcasSet = {};
-  arr.forEach(function(t){ if(t.marca) marcasSet[t.marca]=true; });
-  var marcasSel = document.getElementById('tab-filter-marca');
-  if(marcasSel){
-    var curVal = marcasSel.value;
-    marcasSel.innerHTML = '<option value="">Todas as marcas</option>';
-    Object.keys(marcasSet).sort().forEach(function(m){
-      var o=document.createElement('option');
-      o.value=m; o.textContent=m;
-      if(m===curVal) o.selected=true;
-      marcasSel.appendChild(o);
-    });
-  }
+  var busca      = ((document.getElementById('tab-search')||{}).value||'').toLowerCase().trim();
+  var filtroTipo = (document.getElementById('tab-filter-tipo')||{}).value||'';
+  var arr        = dbTabelas();
+  var forns      = dbFornecedores();
+  var hoje       = Date.now();
+  var MES        = 30*24*60*60*1000;
+  var grid       = document.getElementById('tab-grid');
+  if(!grid) return;
 
   // alerta vencidas
-  var hoje = Date.now();
-  var MES = 30*24*60*60*1000;
   var vencidas = arr.filter(function(t){ return t.dataUpload && (hoje - new Date(t.dataUpload).getTime()) > MES; });
-  var alertEl = document.getElementById('tab-alert-vencidas');
+  var alertEl  = document.getElementById('tab-alert-vencidas');
   var alertTxt = document.getElementById('tab-alert-txt');
   if(alertEl){
     if(vencidas.length){
       alertEl.style.display='flex';
-      alertTxt.textContent = vencidas.length + ' tabela'+(vencidas.length>1?'s':'')+' com mais de 30 dias — verifique se precisam ser atualizadas.';
-    } else {
-      alertEl.style.display='none';
-    }
+      alertTxt.textContent = vencidas.length+' tabela'+(vencidas.length>1?'s':'')+' com mais de 30 dias — verifique se precisam ser atualizadas.';
+    } else { alertEl.style.display='none'; }
   }
 
-  // filtrar
-  var lista = arr.filter(function(t){
-    if(filtroTipo  && t.tipo!==filtroTipo) return false;
-    if(filtroMarca && t.marca!==filtroMarca) return false;
-    if(busca && !(
-      (t.nome||'').toLowerCase().includes(busca)||
-      (t.marca||'').toLowerCase().includes(busca)||
-      (t.obs||'').toLowerCase().includes(busca)
-    )) return false;
-    return true;
-  });
-
-  var grid = document.getElementById('tab-grid');
-  if(!grid) return;
-
-  if(!lista.length){
-    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--mid);font-size:14px">'+(arr.length?'Nenhuma tabela encontrada.':'Nenhuma tabela cadastrada ainda. Clique em <b>＋ Nova Tabela</b> para começar.')+'</div>';
-    return;
+  // header de pasta aberta
+  var pastaHeader = document.getElementById('tab-pasta-header');
+  var pastaNome   = document.getElementById('tab-pasta-nome');
+  if(_tabPastaId){
+    var fornAtual = forns.find(function(f){return f.id===_tabPastaId;});
+    pastaHeader.style.display='flex';
+    pastaNome.textContent = fornAtual ? fornAtual.nome : 'Fornecedor';
+  } else {
+    pastaHeader.style.display='none';
   }
 
-  // agrupar por tipo
-  var grupos = {};
-  lista.forEach(function(t){
-    var k = t.tipo||'cortina';
-    if(!grupos[k]) grupos[k]=[];
-    grupos[k].push(t);
-  });
-  var ordemTipos = ['cortina','tapecaria','papel-de-parede'];
+  // ── Modo pasta fechada: mostrar folders por fornecedor ──
+  if(!_tabPastaId && !busca && !filtroTipo){
+    var semForn = arr.filter(function(t){return !t.fornecedorId;});
+    var html = '';
 
-  var html = '';
-  ordemTipos.forEach(function(tipo){
-    if(!grupos[tipo]||!grupos[tipo].length) return;
-    var tipoInfo = TAB_TIPOS[tipo]||{label:tipo};
-    html += '<div class="tab-secao-lbl">'+tipoInfo.label+'</div>';
-    grupos[tipo].forEach(function(t){
-      var cor = TAB_TIPO_COLORS[t.tipo||'cortina']||'#94a3b8';
-      var isVencida = t.dataUpload && (hoje - new Date(t.dataUpload).getTime()) > MES;
-      var dataFmt = t.dataUpload ? new Date(t.dataUpload).toLocaleDateString('pt-BR') : '—';
-      var tipoInfo2 = TAB_TIPOS[t.tipo]||{label:t.tipo};
-      html += '<div class="tab-card'+(isVencida?' tab-card-vencida':'')+'">'+
-        '<div class="tab-card-top" style="background:'+cor+'"></div>'+
-        '<div class="tab-card-body">'+
-          '<div class="tab-card-nome">'+esc(t.nome||'Sem nome')+'</div>'+
-          '<div class="tab-card-marca">'+esc(t.marca||'—')+'</div>'+
-          '<span class="tab-card-tipo tab-tipo-'+(t.tipo||'cortina')+'">'+tipoInfo2.label+'</span>'+
-          '<div class="tab-card-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Upload: '+dataFmt+'</div>'+
-          (isVencida?'<div class="tab-venc-badge">⚠ Atualização necessária</div>':'')+
-          (t.obs?'<div style="font-size:12px;color:var(--mid);margin-top:6px">'+esc(t.obs)+'</div>':'')+
-        '</div>'+
-        '<div class="tab-card-ft">'+
-          (t.arquivo?'<button class="tab-card-btn" onclick="tabVerArquivo(\''+esc(t.id)+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Ver</button>':'<span style="font-size:12px;color:var(--mid)">Sem arquivo</span>')+
-          '<button class="tab-card-btn" onclick="tabEditar(\''+t.id+'\')">✏️ Editar</button>'+
-          '<button class="tab-card-btn danger" onclick="tabExcluir(\''+t.id+'\')">🗑️</button>'+
+    forns.forEach(function(f){
+      var tabs = arr.filter(function(t){return t.fornecedorId===f.id;});
+      if(!tabs.length) return;
+      var cor = f.cor||'#94a3b8';
+      var tipoLabel = (TAB_TIPOS[f.tipo]||{label:'Geral'}).label;
+      html += '<div class="tab-pasta" onclick="tabAbrirPasta(\''+f.id+'\')">'+
+        '<div class="tab-pasta-topo" style="background:'+cor+'"></div>'+
+        '<div class="tab-pasta-body">'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="'+cor+'22" stroke="'+cor+'" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'+
+            '<span class="tab-pasta-nome">'+esc(f.nome)+'</span>'+
+            '<span class="tab-pasta-count">'+tabs.length+' tabela'+(tabs.length!==1?'s':'')+'</span>'+
+          '</div>'+
+          '<div class="tab-pasta-sub">'+
+            '<span class="tab-card-tipo tab-tipo-'+(f.tipo||'cortina')+'" style="margin:0">'+tipoLabel+'</span>'+
+            (f.contato?'<span style="color:var(--mid);font-size:11px">• '+esc(f.contato)+'</span>':'')+
+          '</div>'+
         '</div>'+
       '</div>';
     });
+
+    if(semForn.length){
+      html += '<div class="tab-pasta" onclick="tabAbrirPasta(\'__sem_forn__\')">'+
+        '<div class="tab-pasta-topo" style="background:#94a3b8"></div>'+
+        '<div class="tab-pasta-body">'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="#94a3b822" stroke="#94a3b8" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'+
+            '<span class="tab-pasta-nome">Sem fornecedor</span>'+
+            '<span class="tab-pasta-count">'+semForn.length+' tabela'+(semForn.length!==1?'s':'')+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }
+
+    if(!html){
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--mid);font-size:14px">'+
+        (arr.length?'Nenhum fornecedor com tabelas.':'Nenhuma tabela cadastrada ainda. Clique em <b>＋ Nova Tabela</b> para começar.')+'</div>';
+    } else {
+      grid.innerHTML = html;
+    }
+    return;
+  }
+
+  // ── Modo pasta aberta ou busca/filtro: mostrar cards de tabela ──
+  var lista = arr.filter(function(t){
+    if(_tabPastaId==='__sem_forn__'){
+      if(t.fornecedorId) return false;
+    } else if(_tabPastaId){
+      if(t.fornecedorId!==_tabPastaId) return false;
+    }
+    if(filtroTipo && t.tipo!==filtroTipo) return false;
+    if(busca && !((t.nome||'').toLowerCase().includes(busca)||(t.marca||'').toLowerCase().includes(busca)||(t.obs||'').toLowerCase().includes(busca))) return false;
+    return true;
+  });
+
+  if(!lista.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--mid);font-size:14px">Nenhuma tabela encontrada.</div>';
+    return;
+  }
+
+  var html = '';
+  lista.forEach(function(t){
+    var cor      = TAB_TIPO_COLORS[t.tipo||'cortina']||'#94a3b8';
+    var isVenc   = t.dataUpload && (hoje - new Date(t.dataUpload).getTime()) > MES;
+    var dataFmt  = t.dataUpload ? new Date(t.dataUpload).toLocaleDateString('pt-BR') : '—';
+    var tipoInfo = TAB_TIPOS[t.tipo]||{label:t.tipo||''};
+    var fornNome = '';
+    if(t.fornecedorId){
+      var f2 = forns.find(function(f){return f.id===t.fornecedorId;});
+      if(f2) fornNome = f2.nome;
+    } else if(t.marca){ fornNome = t.marca; }
+
+    html += '<div class="tab-card'+(isVenc?' tab-card-vencida':'')+'">'+
+      '<div class="tab-card-top" style="background:'+cor+'"></div>'+
+      '<div class="tab-card-body">'+
+        '<div class="tab-card-nome">'+esc(t.nome||'Sem nome')+'</div>'+
+        (fornNome?'<div class="tab-card-marca">'+esc(fornNome)+'</div>':'')+
+        '<span class="tab-card-tipo tab-tipo-'+(t.tipo||'cortina')+'">'+tipoInfo.label+'</span>'+
+        '<div class="tab-card-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> '+dataFmt+'</div>'+
+        (isVenc?'<div class="tab-venc-badge">⚠ Atualização necessária</div>':'')+
+        (t.obs?'<div style="font-size:11px;color:var(--mid);margin-top:5px">'+esc(t.obs)+'</div>':'')+
+      '</div>'+
+      '<div class="tab-card-ft">'+
+        (t.arquivo?'<button class="tab-card-btn" onclick="tabVerArquivo(\''+t.id+'\')">'+
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Abrir</button>':
+          '<span style="font-size:12px;color:var(--mid)">Sem arquivo</span>')+
+        '<button class="tab-card-btn" onclick="tabEditar(\''+t.id+'\')">✏️ Editar</button>'+
+        '<button class="tab-card-btn danger" onclick="tabExcluir(\''+t.id+'\')">🗑️</button>'+
+      '</div>'+
+    '</div>';
   });
   grid.innerHTML = html;
 }
@@ -3117,7 +3212,7 @@ function tabAbrirModal(id){
   var arr = dbTabelas();
   var t = id ? arr.find(function(x){return x.id===id;})||null : null;
   var isNew = !t;
-  if(isNew) t = {id:'',nome:'',marca:'',tipo:'cortina',obs:'',dataUpload:new Date().toISOString().slice(0,10),arquivo:''};
+  if(isNew) t = {id:'',nome:'',fornecedorId:'',marca:'',tipo:'cortina',obs:'',dataUpload:new Date().toISOString().slice(0,10),arquivo:''};
 
   var tipoOpts = Object.keys(TAB_TIPOS).map(function(k){
     return '<button type="button" class="tab-tipo-opt'+(t.tipo===k?' on':'')+'" data-tipo="'+k+'" onclick="tabSetTipo(this)">'+TAB_TIPOS[k].label+'</button>';
@@ -3130,7 +3225,16 @@ function tabAbrirModal(id){
     '</div>'+
     '<div class="tab-modal-body">'+
       '<div class="tab-field"><label>Nome da Tabela</label><input id="tabm-nome" type="text" value="'+esc(t.nome)+'" placeholder="Ex: Tabela Hunter Douglas 2024"></div>'+
-      '<div class="tab-field"><label>Marca / Fornecedor</label><input id="tabm-marca" type="text" value="'+esc(t.marca)+'" placeholder="Ex: Hunter Douglas, Karsten..."></div>'+
+      (function(){
+        var forns = dbFornecedores();
+        var opts = '<option value="">— Sem fornecedor —</option>'+forns.map(function(f){
+          return '<option value="'+f.id+'"'+(f.id===t.fornecedorId?' selected':'')+'>'+esc(f.nome)+'</option>';
+        }).join('');
+        return '<div class="tab-field"><label>Fornecedor</label>'+
+          '<select id="tabm-forn" style="width:100%">'+opts+'</select>'+
+          (forns.length===0?'<div style="font-size:11px;color:var(--mid);margin-top:4px">Cadastre fornecedores na aba <b>Fornecedores</b>.</div>':'')+
+        '</div>';
+      })()+
       '<div class="tab-field"><label>Tipo</label><div class="tab-tipo-grid" id="tabm-tipo-grid">'+tipoOpts+'</div><input type="hidden" id="tabm-tipo" value="'+esc(t.tipo)+'"></div>'+
       '<div class="tab-field"><label>Data do Upload</label><input id="tabm-data" type="date" value="'+esc(t.dataUpload||new Date().toISOString().slice(0,10))+'"></div>'+
       '<div class="tab-field"><label>Arquivo (PDF / Imagem / Planilha)</label>'+
@@ -3166,9 +3270,10 @@ function tabSetTipo(btn){
 }
 
 function tabSalvar(){
-  var nome  = (document.getElementById('tabm-nome')||{}).value||'';
-  var marca = (document.getElementById('tabm-marca')||{}).value||'';
-  var tipo  = (document.getElementById('tabm-tipo')||{}).value||'cortina';
+  var nome        = (document.getElementById('tabm-nome')||{}).value||'';
+  var fornecedorId= (document.getElementById('tabm-forn')||{}).value||'';
+  var marca       = '';
+  var tipo        = (document.getElementById('tabm-tipo')||{}).value||'cortina';
   var data  = (document.getElementById('tabm-data')||{}).value||new Date().toISOString().slice(0,10);
   var obs   = (document.getElementById('tabm-obs')||{}).value||'';
   if(!nome.trim()){ toast('Informe o nome da tabela.','err'); return; }
@@ -3181,13 +3286,13 @@ function tabSalvar(){
   function _salvarComArquivo(arquivoB64, arquivoNome){
     var obj;
     if(isNew){
-      obj = {id:uid(), nome:nome, marca:marca, tipo:tipo, dataUpload:data, obs:obs, arquivo:arquivoB64||'', arquivoNome:arquivoNome||''};
+      obj = {id:uid(), nome:nome, fornecedorId:fornecedorId, marca:marca, tipo:tipo, dataUpload:data, obs:obs, arquivo:arquivoB64||'', arquivoNome:arquivoNome||''};
       arr.push(obj);
     } else {
       var idx = arr.findIndex(function(x){return x.id===_tabEditId;});
       if(idx<0) return;
       var rm = rmCheck && rmCheck.checked;
-      arr[idx] = Object.assign({}, arr[idx], {nome:nome,marca:marca,tipo:tipo,dataUpload:data,obs:obs,
+      arr[idx] = Object.assign({}, arr[idx], {nome:nome,fornecedorId:fornecedorId,marca:marca,tipo:tipo,dataUpload:data,obs:obs,
         arquivo: rm ? '' : (arquivoB64||arr[idx].arquivo||''),
         arquivoNome: rm ? '' : (arquivoNome||arr[idx].arquivoNome||'')
       });
@@ -3224,44 +3329,69 @@ function tabExcluir(id, fromModal){
   toast('Tabela excluída.','ok');
 }
 
-function tabVerArquivo(id){
-  var t = dbTabelas().find(function(x){return x.id===id;});
+function tabVerArquivo(id, pickCallback){
+  var t = typeof id==='object' ? id : dbTabelas().find(function(x){return x.id===id;});
   if(!t||!t.arquivo){ toast('Nenhum arquivo disponível.','err'); return; }
 
-  var isPDF = t.arquivo.startsWith('data:application/pdf');
-  var isImg = t.arquivo.startsWith('data:image/');
-  var isSheet = t.arquivo.startsWith('data:application/vnd') ||
-                t.arquivo.startsWith('data:application/octet') ||
-                t.arquivo.startsWith('data:text/csv') ||
-                t.arquivo.startsWith('data:application/csv') ||
-                (t.arquivoNome && /\.(xlsx|xls|csv)$/i.test(t.arquivoNome));
+  var isPDF  = t.arquivo.startsWith('data:application/pdf');
+  var isImg  = t.arquivo.startsWith('data:image/');
+  var isSheet= !isPDF && !isImg;
 
-  if(isPDF){
+  if(isPDF && !pickCallback){
     var win = window.open();
     if(win) win.document.write('<iframe src="'+t.arquivo+'" style="width:100%;height:100vh;border:none"></iframe>');
-  } else if(isImg){
+  } else if(isImg && !pickCallback){
     var win = window.open();
     if(win) win.document.write('<img src="'+t.arquivo+'" style="max-width:100%;display:block;margin:auto">');
   } else {
-    // Planilha — renderizar inline como tabela
-    tabAbrirVisorPlanilha(t);
+    tabAbrirVisorPlanilha(t, pickCallback||null);
   }
 }
 
-function tabAbrirVisorPlanilha(t){
-  if(typeof XLSX === 'undefined'){ toast('Biblioteca de planilha não carregada.','err'); return; }
-  try {
-    // Extrair base64 puro
-    var base64 = t.arquivo.split(',')[1];
-    var workbook = XLSX.read(base64, {type:'base64'});
-    var sheetNames = workbook.SheetNames;
+var _tabPickCallback = null; // set quando chamado das calculadoras
 
-    var sheetsHtml = sheetNames.map(function(sName, idx){
+function tabAbrirVisorPlanilha(t, pickCallback){
+  if(typeof XLSX === 'undefined'){ toast('Biblioteca de planilha não carregada.','err'); return; }
+  _tabPickCallback = pickCallback||null;
+  try {
+    var base64    = t.arquivo.split(',')[1];
+    var workbook  = XLSX.read(base64, {type:'base64'});
+    var sheetNames= workbook.SheetNames;
+    var MAX_ROWS  = 300; // limitar para não travar
+
+    function sheetParaTabela(ws){
+      var aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(!aoa.length) return '<em style="color:#94a3b8;padding:20px;display:block">Aba vazia</em>';
+      var totalRows = aoa.length;
+      var rows = aoa.slice(0, MAX_ROWS);
+      var pickClass = _tabPickCallback ? ' tab-cell-pick' : '';
+      var html = '<table><thead><tr>'+rows[0].map(function(c){return '<th>'+esc(String(c))+'</th>';}).join('')+'</tr></thead><tbody>';
+      rows.slice(1).forEach(function(row){
+        html += '<tr>'+row.map(function(c){
+          var val = String(c);
+          var isNum = c!=='' && !isNaN(Number(String(c).replace(',','.')));
+          return '<td class="'+(isNum&&_tabPickCallback?'tab-cell-pick':'')+'" onclick="tabCelulaClick(this,\''+val.replace(/'/g,"\\'")+'\')" title="'+(isNum&&_tabPickCallback?'Clique para usar este valor':'')+'">'+esc(val)+'</td>';
+        }).join('')+'</tr>';
+      });
+      html += '</tbody></table>';
+      if(totalRows > MAX_ROWS) html += '<div style="padding:8px 14px;font-size:11px;color:#f59e0b;background:#fef3c7;border-top:1px solid #fde68a">Exibindo '+MAX_ROWS+' de '+totalRows+' linhas para melhor desempenho.</div>';
+      return html;
+    }
+
+    var pickBanner = _tabPickCallback ?
+      '<div style="background:#dbeafe;border-bottom:1px solid #bfdbfe;padding:8px 18px;font-size:12px;color:#1d4ed8;font-weight:600;flex-shrink:0">'+
+        '👆 Clique em um valor numérico para usá-lo na calculadora'+
+      '</div>' : '';
+
+    var tabsHtml = sheetNames.length>1 ?
+      '<div style="display:flex;gap:4px;padding:8px 18px;border-bottom:1px solid #e5e7eb;flex-shrink:0;overflow-x:auto" id="tab-sheet-tabs">'+
+        sheetNames.map(function(s,i){return '<button class="tab-sht-btn'+(i===0?' on':'')+'" data-idx="'+i+'" onclick="tabSelectSheet(this)">'+s+'</button>';}).join('')+
+      '</div>' : '';
+
+    var contentHtml = sheetNames.map(function(sName, idx){
       var ws = workbook.Sheets[sName];
-      var tableHtml = XLSX.utils.sheet_to_html(ws, {editable:false});
-      return '<div class="tab-sheet-tab'+(idx===0?' active':'')+'" data-idx="'+idx+'" onclick="tabSelectSheet(this)">'+sName+'</div>'+
-             '<div class="tab-sheet-content" data-idx="'+idx+'" style="'+(idx===0?'':'display:none')+'">'+tableHtml+'</div>';
-    });
+      return '<div class="tab-sheet-content" data-idx="'+idx+'" style="'+(idx!==0?'display:none':'')+';overflow:auto;flex:1">'+sheetParaTabela(ws)+'</div>';
+    }).join('');
 
     var modalHtml =
       '<div id="tab-visor-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;flex-direction:column;padding:16px;box-sizing:border-box" onclick="if(event.target===this)tabFecharVisor()">'+
@@ -3271,16 +3401,9 @@ function tabAbrirVisorPlanilha(t){
             '<span style="font-weight:700;font-size:14px;flex:1">'+esc(t.nome||'Planilha')+'</span>'+
             '<button onclick="tabFecharVisor()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;line-height:1">×</button>'+
           '</div>'+
-          (sheetNames.length>1?'<div style="display:flex;gap:4px;padding:8px 18px;border-bottom:1px solid #e5e7eb;flex-shrink:0;overflow-x:auto" id="tab-sheet-tabs">'+
-            sheetNames.map(function(s,i){return '<button class="tab-sht-btn'+(i===0?' on':'')+'" data-idx="'+i+'" onclick="tabSelectSheet(this)">'+s+'</button>';}).join('')+
-          '</div>':'') +
-          '<div style="overflow:auto;flex:1;padding:0">'+
-            sheetNames.map(function(sName, idx){
-              var ws = workbook.Sheets[sName];
-              var tableHtml = XLSX.utils.sheet_to_html(ws, {editable:false});
-              return '<div class="tab-sheet-content" data-idx="'+idx+'" style="'+(idx!==0?'display:none':'')+';min-width:max-content">'+tableHtml+'</div>';
-            }).join('')+
-          '</div>'+
+          pickBanner+
+          tabsHtml+
+          contentHtml+
         '</div>'+
       '</div>';
 
@@ -3289,24 +3412,34 @@ function tabAbrirVisorPlanilha(t){
     el.innerHTML = modalHtml;
     document.body.appendChild(el);
 
-    // Estilos da tabela
     if(!document.getElementById('tab-visor-style')){
       var s = document.createElement('style');
       s.id = 'tab-visor-style';
       s.textContent = [
-        '#tab-visor-wrap table{border-collapse:collapse;font-size:12px;font-family:inherit}',
+        '#tab-visor-wrap table{border-collapse:collapse;font-size:12px;font-family:inherit;width:100%}',
         '#tab-visor-wrap td,#tab-visor-wrap th{border:1px solid #e5e7eb;padding:5px 10px;white-space:nowrap;min-width:60px}',
-        '#tab-visor-wrap tr:first-child td,#tab-visor-wrap th{background:#f8fafc;font-weight:600;position:sticky;top:0;z-index:1}',
-        '#tab-visor-wrap tr:hover td{background:#f0fdf4}',
-        '.tab-sht-btn{padding:4px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap}',
+        '#tab-visor-wrap thead tr th{background:#f8fafc;font-weight:700;position:sticky;top:0;z-index:1}',
+        '#tab-visor-wrap tbody tr:hover td{background:#f0fdf4}',
+        '#tab-visor-wrap td.tab-cell-pick{cursor:pointer;color:#1d4ed8;}',
+        '#tab-visor-wrap td.tab-cell-pick:hover{background:#dbeafe!important;font-weight:700}',
+        '.tab-sht-btn{padding:4px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap;font-family:inherit}',
         '.tab-sht-btn.on{background:var(--acc,#2563eb);color:#fff;border-color:var(--acc,#2563eb)}'
       ].join('');
       document.head.appendChild(s);
     }
   } catch(e){
     console.error(e);
-    toast('Não foi possível abrir a planilha.','err');
+    toast('Não foi possível abrir a planilha. Verifique se o arquivo é um Excel ou CSV válido.','err');
   }
+}
+
+function tabCelulaClick(td, val){
+  if(!_tabPickCallback) return;
+  var num = parseFloat(String(val).replace(',','.'));
+  if(isNaN(num)) return;
+  _tabPickCallback(num);
+  tabFecharVisor();
+  toast('Valor R$ '+num.toFixed(2)+' importado!','ok');
 }
 
 function tabSelectSheet(btn){
@@ -3314,13 +3447,187 @@ function tabSelectSheet(btn){
   document.querySelectorAll('#tab-visor-wrap .tab-sht-btn').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
   document.querySelectorAll('#tab-visor-wrap .tab-sheet-content').forEach(function(c){
-    c.style.display = c.dataset.idx === idx ? '' : 'none';
+    c.style.display = c.dataset.idx===idx ? 'flex' : 'none';
+    if(c.dataset.idx===idx) c.style.flexDirection='column';
   });
 }
 
 function tabFecharVisor(){
+  _tabPickCallback = null;
   var el = document.getElementById('tab-visor-wrap');
   if(el) el.remove();
+}
+
+// Picker de tabela chamado das calculadoras
+function tabAbrirPicker(callback, labelCampo){
+  var forns  = dbFornecedores();
+  var tabelas= dbTabelas().filter(function(t){return t.arquivo;});
+  if(!tabelas.length){ toast('Nenhuma tabela com arquivo cadastrada.','err'); return; }
+
+  var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px" id="tab-pick-overlay" onclick="if(event.target===this)tabFecharPicker()">'+
+    '<div class="tab-pick-modal">'+
+      '<div class="tab-pick-modal-hd">'+
+        '<span>📋 Buscar valor para: <b>'+esc(labelCampo||'campo')+'</b></span>'+
+        '<button onclick="tabFecharPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b">×</button>'+
+      '</div>'+
+      tabelas.map(function(t){
+        var forn = t.fornecedorId ? forns.find(function(f){return f.id===t.fornecedorId;}) : null;
+        var cor  = forn ? (forn.cor||'#94a3b8') : (TAB_TIPO_COLORS[t.tipo||'cortina']||'#94a3b8');
+        var sub  = forn ? forn.nome : (t.marca||TAB_TIPOS[t.tipo||'cortina'].label);
+        return '<div class="tab-pick-item" onclick="tabPickSelecionarTabela(\''+t.id+'\')">'+
+          '<div class="tab-pick-item-dot" style="background:'+cor+'"></div>'+
+          '<div class="tab-pick-item-txt">'+
+            '<div class="tab-pick-item-nome">'+esc(t.nome||'Tabela')+'</div>'+
+            '<div class="tab-pick-item-sub">'+esc(sub)+'</div>'+
+          '</div>'+
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+
+  var el = document.createElement('div');
+  el.id  = 'tab-pick-wrap';
+  el.innerHTML = html;
+  document.body.appendChild(el);
+  window._tabPickCallbackTemp = callback;
+}
+
+function tabPickSelecionarTabela(tabelaId){
+  tabFecharPicker();
+  var t = dbTabelas().find(function(x){return x.id===tabelaId;});
+  if(!t||!t.arquivo){ toast('Tabela sem arquivo.','err'); return; }
+  var cb = window._tabPickCallbackTemp;
+  tabVerArquivo(t.id, cb);
+}
+
+function tabFecharPicker(){
+  var el = document.getElementById('tab-pick-wrap');
+  if(el) el.remove();
+}
+
+// ── FORNECEDORES ──────────────────────────────────────────
+var FORN_CORES = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#64748b','#ec4899','#84cc16'];
+var _fornEditId = null;
+
+function renderFornecedores(){
+  var forns = dbFornecedores();
+  var grid  = document.getElementById('forn-grid');
+  if(!grid) return;
+  if(!forns.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--mid);font-size:14px">Nenhum fornecedor cadastrado.<br>Clique em <b>＋ Novo Fornecedor</b> para começar.</div>';
+    return;
+  }
+  var tabelas = dbTabelas();
+  var html = '';
+  forns.forEach(function(f){
+    var qtd = tabelas.filter(function(t){return t.fornecedorId===f.id;}).length;
+    var tipoInfo = TAB_TIPOS[f.tipo]||{label:'Geral'};
+    var cor = f.cor||'#94a3b8';
+    html += '<div class="forn-card">'+
+      '<div class="forn-card-topo" style="background:'+cor+'"></div>'+
+      '<div class="forn-card-body">'+
+        '<div class="forn-card-nome">'+esc(f.nome)+'</div>'+
+        '<span class="forn-card-tipo tab-tipo-'+(f.tipo||'cortina')+'" style="font-size:11px;padding:2px 9px;border-radius:20px;display:inline-block;margin-bottom:8px">'+tipoInfo.label+'</span>'+
+        (f.contato?'<div class="forn-card-info">📞 '+esc(f.contato)+'</div>':'')+
+        (f.site?'<div class="forn-card-info">🌐 '+esc(f.site)+'</div>':'')+
+        (f.obs?'<div class="forn-card-info" style="margin-top:6px;font-style:italic">'+esc(f.obs)+'</div>':'')+
+      '</div>'+
+      '<div class="forn-card-ft">'+
+        '<span style="font-size:12px;color:var(--mid);flex:1">'+qtd+' tabela'+(qtd!==1?'s':'')+'</span>'+
+        '<button class="tab-card-btn" onclick="fornEditar(\''+f.id+'\')">✏️ Editar</button>'+
+        '<button class="tab-card-btn danger" onclick="fornExcluir(\''+f.id+'\')">🗑️</button>'+
+      '</div>'+
+    '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+function fornNovoModal(){ fornAbrirModal(null); }
+function fornEditar(id){ fornAbrirModal(id); }
+
+function fornAbrirModal(id){
+  _fornEditId = id;
+  var forns = dbFornecedores();
+  var f = id ? forns.find(function(x){return x.id===id;})||null : null;
+  var isNew = !f;
+  if(isNew) f = {id:'',nome:'',tipo:'cortina',cor:FORN_CORES[forns.length%FORN_CORES.length],contato:'',site:'',obs:''};
+
+  var tipoOpts = Object.keys(TAB_TIPOS).map(function(k){
+    return '<button type="button" class="tab-tipo-opt'+(f.tipo===k?' on':'')+'" data-tipo="'+k+'" onclick="tabSetTipo(this)">'+TAB_TIPOS[k].label+'</button>';
+  }).join('');
+
+  var coresHtml = FORN_CORES.map(function(c){
+    return '<button type="button" onclick="fornSetCor(this,\''+c+'\')" style="width:24px;height:24px;border-radius:50%;background:'+c+';border:'+(c===f.cor?'3px solid #1e293b':'2px solid transparent')+';cursor:pointer;transition:.12s" data-cor="'+c+'"></button>';
+  }).join('');
+
+  var html = '<div class="tab-modal">'+
+    '<div class="tab-modal-hd"><span>'+(isNew?'Novo Fornecedor':'Editar Fornecedor')+'</span>'+
+      '<button onclick="tabCloseModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mid);line-height:1">×</button></div>'+
+    '<div class="tab-modal-body">'+
+      '<div class="tab-field"><label>Nome do Fornecedor / Marca</label><input id="fornm-nome" type="text" value="'+esc(f.nome)+'" placeholder="Ex: Hunter Douglas, Karsten..."></div>'+
+      '<div class="tab-field"><label>Tipo principal</label><div class="tab-tipo-grid" id="tabm-tipo-grid">'+tipoOpts+'</div><input type="hidden" id="tabm-tipo" value="'+esc(f.tipo)+'"></div>'+
+      '<div class="tab-field"><label>Cor de identificação</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="forn-cores">'+coresHtml+'</div></div>'+
+      '<div class="tab-field"><label>Contato / Telefone</label><input id="fornm-contato" type="text" value="'+esc(f.contato)+'" placeholder="(11) 99999-9999 ou e-mail"></div>'+
+      '<div class="tab-field"><label>Site / Instagram</label><input id="fornm-site" type="text" value="'+esc(f.site)+'" placeholder="www.exemplo.com.br"></div>'+
+      '<div class="tab-field"><label>Observação</label><textarea id="fornm-obs" rows="2" placeholder="Informações adicionais...">'+esc(f.obs)+'</textarea></div>'+
+    '</div>'+
+    '<div class="tab-modal-ft">'+
+      '<div>'+(!isNew?'<button class="btn btn-d btn-xs" onclick="fornExcluir(\''+id+'\',true)">Excluir</button>':'')+'</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-xs" onclick="tabCloseModal()">Cancelar</button>'+
+        '<button class="btn btn-s btn-xs" onclick="fornSalvar()">Salvar</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  var ov = document.getElementById('tab-overlay');
+  ov.innerHTML = html;
+  ov.style.display='flex'; ov.style.alignItems='center'; ov.style.justifyContent='center'; ov.style.padding='20px';
+  setTimeout(function(){ var el=document.getElementById('fornm-nome'); if(el) el.focus(); },50);
+}
+
+function fornSetCor(btn, cor){
+  document.querySelectorAll('#forn-cores button').forEach(function(b){
+    b.style.border = b.dataset.cor===cor ? '3px solid #1e293b' : '2px solid transparent';
+  });
+  btn._fornCor = cor;
+  document.querySelectorAll('#forn-cores button').forEach(function(b){ b._isSelected=(b===btn); });
+}
+
+function _fornCorSelecionada(){
+  var sel = Array.from(document.querySelectorAll('#forn-cores button')).find(function(b){return b._isSelected;});
+  return sel ? sel.dataset.cor : (FORN_CORES[0]);
+}
+
+function fornSalvar(){
+  var nome    = (document.getElementById('fornm-nome')||{}).value||'';
+  var tipo    = (document.getElementById('tabm-tipo')||{}).value||'cortina';
+  var contato = (document.getElementById('fornm-contato')||{}).value||'';
+  var site    = (document.getElementById('fornm-site')||{}).value||'';
+  var obs     = (document.getElementById('fornm-obs')||{}).value||'';
+  var corSel  = _fornCorSelecionada();
+  if(!nome.trim()){ toast('Informe o nome do fornecedor.','err'); return; }
+  var forns = dbFornecedores();
+  if(_fornEditId){
+    var idx = forns.findIndex(function(x){return x.id===_fornEditId;});
+    if(idx>=0) forns[idx] = Object.assign({}, forns[idx], {nome:nome,tipo:tipo,cor:corSel,contato:contato,site:site,obs:obs});
+  } else {
+    forns.push({id:uid(),nome:nome,tipo:tipo,cor:corSel,contato:contato,site:site,obs:obs});
+  }
+  dbFornecedoresSave(forns);
+  tabCloseModal();
+  renderFornecedores();
+  toast(_fornEditId?'Fornecedor atualizado!':'Fornecedor cadastrado!','ok');
+}
+
+function fornExcluir(id, fromModal){
+  if(!confirm('Excluir este fornecedor? As tabelas vinculadas não serão excluídas.')) return;
+  var forns = dbFornecedores().filter(function(f){return f.id!==id;});
+  dbFornecedoresSave(forns);
+  if(fromModal) tabCloseModal();
+  renderFornecedores();
+  toast('Fornecedor excluído.','ok');
 }
 
 // ── QUADRO KANBAN ─────────────────────────────────────────
