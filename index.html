@@ -2752,8 +2752,9 @@ function renderHistCalcCortina(){
           '<span style="color:var(--mid);font-size:11px;margin-left:8px">'+r.data+'</span>'+
           '<span style="background:#eee;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:8px;color:var(--mid)">'+nAmb+' ambiente'+(nAmb>1?'s':'')+'</span>'+
         '</div>'+
-        '<div style="display:flex;gap:6px">'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
           '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cc\',\''+r.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>'+
+          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="histEnviarIA(\'cc\',\''+r.id+'\',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> IA</button>'+
           '<button class="btn btn-p" style="font-size:11px;padding:3px 10px" onclick="toggleHistCortItem(\''+r.id+'\')">Ver</button>'+
           '<button class="btn" style="font-size:11px;padding:3px 8px;background:#c0392b;color:#fff" onclick="excluirCalcCortina(\''+r.id+'\')">✕</button>'+
         '</div>'+
@@ -3030,8 +3031,9 @@ function renderHistCalcPiso(){
           '<span style="color:var(--mid);font-size:11px;margin-left:8px">'+r.data+'</span>'+
           '<span style="background:#eee;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:8px;color:var(--mid)">'+nAmb+' ambiente'+(nAmb>1?'s':'')+'</span>'+
         '</div>'+
-        '<div style="display:flex;gap:6px">'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
           '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="exportarHistPDF(\'cp\',\''+r.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF</button>'+
+          '<button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="histEnviarIA(\'cp\',\''+r.id+'\',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> IA</button>'+
           '<button class="btn btn-p" style="font-size:11px;padding:3px 10px" onclick="toggleHistPisoItem(\''+r.id+'\')">Ver</button>'+
           '<button class="btn" style="font-size:11px;padding:3px 8px;background:#b00;color:#fff" onclick="excluirCalcPiso(\''+r.id+'\')">✕</button>'+
         '</div>'+
@@ -6180,6 +6182,53 @@ function calcEnviarIA(prefixo) {
     if (data.erro) { toast('IA: ' + data.erro, 'err'); return; }
     var itens = data.itens || [];
     if (!itens.length) { toast('A IA não encontrou itens no cálculo.', 'err'); return; }
+    iaShowReview(texto, itens);
+  })
+  .catch(function() {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    toast('Erro ao contatar IA.', 'err');
+  });
+}
+
+function histEnviarIA(prefixo, id, btn) {
+  var chave = prefixo === 'cc' ? 'cort' : 'piso';
+  var arr = db(chave);
+  var reg = arr.filter(function(r){ return r.id === id; })[0];
+  if (!reg) { toast('Registro não encontrado.', 'err'); return; }
+
+  var ambientes = reg.ambientes || [];
+  if (!ambientes.length) { toast('Nenhum ambiente neste registro.', 'err'); return; }
+
+  var tipo = prefixo === 'cc' ? 'CORTINA' : 'PISO';
+  var linhas = ['Cliente: ' + (reg.cliente || 'sem nome'), 'Tipo: ' + tipo, 'Data: ' + (reg.data || ''), ''];
+
+  ambientes.forEach(function(amb) {
+    linhas.push('AMBIENTE: ' + (amb.ambiente || 'sem nome'));
+    var tmp = document.createElement('div');
+    tmp.innerHTML = amb.resHtml || '';
+    tmp.querySelectorAll('.res-row').forEach(function(row) {
+      var lbl = row.querySelector('.res-label');
+      var val = row.querySelector('.res-val, .res-total-val');
+      if (lbl && val) linhas.push('  ' + lbl.textContent.trim() + ': ' + val.textContent.trim());
+    });
+    linhas.push('');
+  });
+
+  var texto = linhas.join('\n');
+
+  if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
+
+  fetch('/ia/gerar-orcamento', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ texto: texto, exemplos: iaExemplos() })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    if (data.erro) { toast('IA: ' + data.erro, 'err'); return; }
+    var itens = data.itens || [];
+    if (!itens.length) { toast('A IA não encontrou itens.', 'err'); return; }
     iaShowReview(texto, itens);
   })
   .catch(function() {
