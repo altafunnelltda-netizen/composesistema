@@ -1505,9 +1505,14 @@ function renderPipeline(){
       if(s!==col.s) return false;
       var ts=o._ts||0;
       if(!ts&&o.data){var p=o.data.split('-');if(p.length===3)ts=new Date(p[0],p[1]-1,p[2]).getTime();}
-      // filtro de período: aplica a todos exceto "tudo"
-      if(range.ini && ts<range.ini) return false;
-      if(isMesPassado && ts>=range.fim) return false;
+      // lead e andamento persistem entre meses — não filtrar por período no mês atual
+      var persistente = (s==='lead'||s==='andamento');
+      // filtro de período: aplica a fechamento e perdido, e também a tudo no modo mês-passado
+      if(isMesPassado){
+        if(ts<range.ini||ts>=range.fim) return false;
+      } else if(!persistente && range.ini && ts<range.ini){
+        return false;
+      }
       // filtros temporais: só no mês atual e em "tudo" (não no mês passado — exibe histórico completo)
       if(!isMesPassado){
         if(s==='perdido') return ts&&(_agora-ts)<=_3dias;
