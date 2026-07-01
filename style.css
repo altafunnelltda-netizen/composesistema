@@ -198,7 +198,7 @@ body{
 .wrap-wide{max-width:none}
 /* ── (guias removidas) ── */
 .tab-bar-removed{
-  position:sticky;top:90px;z-index:49;
+  position:sticky;top:52px;z-index:49;
   background:var(--bg2,#f1f5f9);
   border-bottom:1px solid var(--border);
   display:flex;align-items:flex-end;
@@ -388,7 +388,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   padding:14px 18px;
   background:var(--white);
   border-bottom:1px solid var(--border);
-  position:sticky;top:90px;z-index:10;
+  position:sticky;top:52px;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 .kb-search-wrap{position:relative;flex:1;min-width:180px}
@@ -1502,7 +1502,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   padding:14px 18px;
   background:var(--white);
   border-bottom:1px solid var(--border);
-  position:sticky;top:90px;z-index:10;
+  position:sticky;top:52px;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 #tab-grid{
@@ -1612,7 +1612,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   display:flex;gap:4px;padding:10px 18px 0;
   border-bottom:1px solid var(--border);
   background:var(--white);
-  position:sticky;top:90px;z-index:11;
+  position:sticky;top:52px;z-index:11;
 }
 .tab-sub-btn{
   background:none;border:none;border-bottom:2.5px solid transparent;
@@ -1623,7 +1623,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .tab-sub-btn:hover{color:var(--txt);}
 .tab-sub-btn.on{color:var(--acc);border-bottom-color:var(--acc);}
 .tab-toolbar{
-  top:calc(90px + 43px)!important;
+  top:calc(52px + 43px)!important;
 }
 /* Pasta de fornecedor */
 .tab-pasta{
