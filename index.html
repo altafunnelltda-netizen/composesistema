@@ -3029,6 +3029,7 @@ var TAB_TIPOS = {
   cortina:       {label:'Cortina',       color:'#1d4ed8', bg:'#dbeafe'},
   tapecaria:     {label:'Tapeçaria',     color:'#6d28d9', bg:'#ede9fe'},
   'papel-de-parede':{label:'Papel de Parede',color:'#9d174d',bg:'#fce7f3'},
+  outro:         {label:'Outro',         color:'#374151', bg:'#f3f4f6'},
 };
 var TAB_TIPO_COLORS = {
   cortina:'#2563eb', tapecaria:'#7c3aed', 'papel-de-parede':'#db2777'
@@ -3113,7 +3114,7 @@ function renderTabelas(){
       var tabs = arr.filter(function(t){return t.fornecedorId===f.id;});
       if(!tabs.length) return;
       var cor = f.cor||'#94a3b8';
-      var tipoLabel = (TAB_TIPOS[f.tipo]||{label:'Geral'}).label;
+      var tipoLabel = f.tipo==='outro' ? (f.tipoLabel||'Outro') : (TAB_TIPOS[f.tipo]||{label:'Geral'}).label;
       html += '<div class="tab-pasta" onclick="tabAbrirPasta(\''+f.id+'\')">'+
         '<div class="tab-pasta-topo" style="background:'+cor+'"></div>'+
         '<div class="tab-pasta-body">'+
@@ -3267,6 +3268,8 @@ function tabSetTipo(btn){
   document.querySelectorAll('#tabm-tipo-grid .tab-tipo-opt').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
   document.getElementById('tabm-tipo').value = btn.dataset.tipo;
+  var outroWrap = document.getElementById('tabm-outro-wrap');
+  if(outroWrap) outroWrap.style.display = btn.dataset.tipo==='outro' ? '' : 'none';
 }
 
 function tabSalvar(){
@@ -3522,7 +3525,7 @@ function renderFornecedores(){
   var html = '';
   forns.forEach(function(f){
     var qtd = tabelas.filter(function(t){return t.fornecedorId===f.id;}).length;
-    var tipoInfo = TAB_TIPOS[f.tipo]||{label:'Geral'};
+    var tipoInfo = f.tipo==='outro' ? {label: f.tipoLabel||'Outro'} : (TAB_TIPOS[f.tipo]||{label:'Geral'});
     var cor = f.cor||'#94a3b8';
     html += '<div class="forn-card">'+
       '<div class="forn-card-topo" style="background:'+cor+'"></div>'+
@@ -3566,7 +3569,9 @@ function fornAbrirModal(id){
       '<button onclick="tabCloseModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mid);line-height:1">×</button></div>'+
     '<div class="tab-modal-body">'+
       '<div class="tab-field"><label>Nome do Fornecedor / Marca</label><input id="fornm-nome" type="text" value="'+esc(f.nome)+'" placeholder="Ex: Hunter Douglas, Karsten..."></div>'+
-      '<div class="tab-field"><label>Tipo principal</label><div class="tab-tipo-grid" id="tabm-tipo-grid">'+tipoOpts+'</div><input type="hidden" id="tabm-tipo" value="'+esc(f.tipo)+'"></div>'+
+      '<div class="tab-field"><label>Tipo principal</label><div class="tab-tipo-grid" id="tabm-tipo-grid">'+tipoOpts+'</div><input type="hidden" id="tabm-tipo" value="'+esc(f.tipo)+'">'+
+        '<div id="tabm-outro-wrap" style="margin-top:8px;'+(f.tipo==='outro'?'':'display:none')+'"><input id="tabm-outro-label" type="text" value="'+esc(f.tipoLabel||'')+'" placeholder="Ex: Persianas, Vidro, Iluminação..." style="width:100%"></div>'+
+      '</div>'+
       '<div class="tab-field"><label>Cor de identificação</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="forn-cores">'+coresHtml+'</div></div>'+
       '<div class="tab-field"><label>Contato / Telefone</label><input id="fornm-contato" type="text" value="'+esc(f.contato)+'" placeholder="(11) 99999-9999 ou e-mail"></div>'+
       '<div class="tab-field"><label>Site / Instagram</label><input id="fornm-site" type="text" value="'+esc(f.site)+'" placeholder="www.exemplo.com.br"></div>'+
@@ -3601,19 +3606,21 @@ function _fornCorSelecionada(){
 }
 
 function fornSalvar(){
-  var nome    = (document.getElementById('fornm-nome')||{}).value||'';
-  var tipo    = (document.getElementById('tabm-tipo')||{}).value||'cortina';
-  var contato = (document.getElementById('fornm-contato')||{}).value||'';
-  var site    = (document.getElementById('fornm-site')||{}).value||'';
-  var obs     = (document.getElementById('fornm-obs')||{}).value||'';
-  var corSel  = _fornCorSelecionada();
+  var nome       = (document.getElementById('fornm-nome')||{}).value||'';
+  var tipo       = (document.getElementById('tabm-tipo')||{}).value||'cortina';
+  var tipoLabel  = tipo==='outro' ? ((document.getElementById('tabm-outro-label')||{}).value||'Outro').trim() : '';
+  var contato    = (document.getElementById('fornm-contato')||{}).value||'';
+  var site       = (document.getElementById('fornm-site')||{}).value||'';
+  var obs        = (document.getElementById('fornm-obs')||{}).value||'';
+  var corSel     = _fornCorSelecionada();
   if(!nome.trim()){ toast('Informe o nome do fornecedor.','err'); return; }
+  if(tipo==='outro'&&!tipoLabel){ toast('Descreva o tipo do fornecedor.','err'); return; }
   var forns = dbFornecedores();
   if(_fornEditId){
     var idx = forns.findIndex(function(x){return x.id===_fornEditId;});
-    if(idx>=0) forns[idx] = Object.assign({}, forns[idx], {nome:nome,tipo:tipo,cor:corSel,contato:contato,site:site,obs:obs});
+    if(idx>=0) forns[idx] = Object.assign({}, forns[idx], {nome:nome,tipo:tipo,tipoLabel:tipoLabel,cor:corSel,contato:contato,site:site,obs:obs});
   } else {
-    forns.push({id:uid(),nome:nome,tipo:tipo,cor:corSel,contato:contato,site:site,obs:obs});
+    forns.push({id:uid(),nome:nome,tipo:tipo,tipoLabel:tipoLabel,cor:corSel,contato:contato,site:site,obs:obs});
   }
   dbFornecedoresSave(forns);
   tabCloseModal();
