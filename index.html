@@ -1166,7 +1166,9 @@ function dbSave(key,arr) {
   localStorage.setItem(K[key],JSON.stringify(arr));
   var changedKey = K[key];
   var doSave = function() {
-    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), cps_tabelas: dbTabelas(), cps_fornecedores: dbFornecedores(), _changed: changedKey };
+    var payload = { cps_orc: db('orc'), cps_cor: db('cor'), cps_tap: db('tap'), cps_piso: db('piso'), cps_cort: db('cort'), cps_kb: db('kb'), cps_notas: db('notas'), cps_lixeira: db('lixeira'), cps_agenda: db('agenda'), cps_colab: db('colab'), cps_conf: db('conf'), cps_fornecedores: dbFornecedores(), _changed: changedKey };
+    // Inclui tabelas (arquivos base64) somente quando é o dado que está sendo salvo — evita payload > 10 MB
+    if(changedKey === 'cps_tabelas') payload.cps_tabelas = dbTabelas();
     payload[changedKey] = arr;
     fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
       .then(function(r){ return r.json(); })
@@ -1180,7 +1182,8 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
 
 // ── SYNC AUTOMÁTICO ──────────────────────────────────────
 var _syncLM = 0;
-var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_tabelas','cps_fornecedores'];
+// cps_tabelas excluído do polling — arquivos base64 são grandes; sincroniza somente no init da página
+var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_fornecedores'];
 
 function _syncAplicar(d) {
   var changed = false;
@@ -1208,6 +1211,7 @@ function _syncRefresh() {
   else if(id==='notas') { if(typeof renderNotas==='function') renderNotas(); }
   else if(id==='colaboradores') { if(typeof renderColab==='function') renderColab(); }
   else if(id==='historico') { if(typeof renderHistorico==='function') renderHistorico(); }
+  else if(id==='tabelas') { if(typeof renderTabelas==='function') renderTabelas(); if(typeof renderFornecedores==='function') renderFornecedores(); }
   if(typeof atualizarTrashBadge==='function') atualizarTrashBadge();
 }
 
