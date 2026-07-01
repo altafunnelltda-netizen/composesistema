@@ -6,6 +6,7 @@
 <title>Composê — Sistema</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 .wrap-nopad { padding:0 !important; }
 /* sync badge */
@@ -3132,9 +3133,10 @@ function tabAbrirModal(id){
       '<div class="tab-field"><label>Marca / Fornecedor</label><input id="tabm-marca" type="text" value="'+esc(t.marca)+'" placeholder="Ex: Hunter Douglas, Karsten..."></div>'+
       '<div class="tab-field"><label>Tipo</label><div class="tab-tipo-grid" id="tabm-tipo-grid">'+tipoOpts+'</div><input type="hidden" id="tabm-tipo" value="'+esc(t.tipo)+'"></div>'+
       '<div class="tab-field"><label>Data do Upload</label><input id="tabm-data" type="date" value="'+esc(t.dataUpload||new Date().toISOString().slice(0,10))+'"></div>'+
-      '<div class="tab-field"><label>Arquivo (PDF / Imagem)</label>'+
+      '<div class="tab-field"><label>Arquivo (PDF / Imagem / Planilha)</label>'+
         (t.arquivo?'<div style="font-size:12px;color:var(--acc);margin-bottom:6px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Arquivo carregado</div>':'')+
-        '<input id="tabm-arquivo" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" style="font-size:13px">'+
+        '<input id="tabm-arquivo" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.csv" style="font-size:13px">'+
+        '<div style="font-size:11px;color:var(--mid);margin-top:4px">PDF, imagem ou planilha (Excel, CSV)</div>'+
         (t.arquivo?'<label style="display:flex;align-items:center;gap:5px;margin-top:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="tabm-rm-arquivo"> Remover arquivo atual</label>':'')+
       '</div>'+
       '<div class="tab-field"><label>Observação</label><textarea id="tabm-obs" rows="2" placeholder="Informações adicionais...">'+esc(t.obs)+'</textarea></div>'+
@@ -3176,17 +3178,18 @@ function tabSalvar(){
   var fileInput = document.getElementById('tabm-arquivo');
   var rmCheck = document.getElementById('tabm-rm-arquivo');
 
-  function _salvarComArquivo(arquivoB64){
+  function _salvarComArquivo(arquivoB64, arquivoNome){
     var obj;
     if(isNew){
-      obj = {id:uid(), nome:nome, marca:marca, tipo:tipo, dataUpload:data, obs:obs, arquivo:arquivoB64||''};
+      obj = {id:uid(), nome:nome, marca:marca, tipo:tipo, dataUpload:data, obs:obs, arquivo:arquivoB64||'', arquivoNome:arquivoNome||''};
       arr.push(obj);
     } else {
       var idx = arr.findIndex(function(x){return x.id===_tabEditId;});
       if(idx<0) return;
       var rm = rmCheck && rmCheck.checked;
       arr[idx] = Object.assign({}, arr[idx], {nome:nome,marca:marca,tipo:tipo,dataUpload:data,obs:obs,
-        arquivo: rm ? '' : (arquivoB64||arr[idx].arquivo||'')
+        arquivo: rm ? '' : (arquivoB64||arr[idx].arquivo||''),
+        arquivoNome: rm ? '' : (arquivoNome||arr[idx].arquivoNome||'')
       });
     }
     dbTabelasSave(arr);
@@ -3196,11 +3199,13 @@ function tabSalvar(){
   }
 
   if(fileInput && fileInput.files && fileInput.files[0]){
+    var file = fileInput.files[0];
+    var fileName = file.name;
     var reader = new FileReader();
-    reader.onload = function(ev){ _salvarComArquivo(ev.target.result); };
-    reader.readAsDataURL(fileInput.files[0]);
+    reader.onload = function(ev){ _salvarComArquivo(ev.target.result, fileName); };
+    reader.readAsDataURL(file);
   } else {
-    _salvarComArquivo(null);
+    _salvarComArquivo(null, null);
   }
 }
 
@@ -3222,14 +3227,100 @@ function tabExcluir(id, fromModal){
 function tabVerArquivo(id){
   var t = dbTabelas().find(function(x){return x.id===id;});
   if(!t||!t.arquivo){ toast('Nenhum arquivo disponível.','err'); return; }
-  var win = window.open();
-  if(win){
-    if(t.arquivo.startsWith('data:application/pdf')){
-      win.document.write('<iframe src="'+t.arquivo+'" style="width:100%;height:100vh;border:none"></iframe>');
-    } else {
-      win.document.write('<img src="'+t.arquivo+'" style="max-width:100%;display:block;margin:auto">');
-    }
+
+  var isPDF = t.arquivo.startsWith('data:application/pdf');
+  var isImg = t.arquivo.startsWith('data:image/');
+  var isSheet = t.arquivo.startsWith('data:application/vnd') ||
+                t.arquivo.startsWith('data:application/octet') ||
+                t.arquivo.startsWith('data:text/csv') ||
+                t.arquivo.startsWith('data:application/csv') ||
+                (t.arquivoNome && /\.(xlsx|xls|csv)$/i.test(t.arquivoNome));
+
+  if(isPDF){
+    var win = window.open();
+    if(win) win.document.write('<iframe src="'+t.arquivo+'" style="width:100%;height:100vh;border:none"></iframe>');
+  } else if(isImg){
+    var win = window.open();
+    if(win) win.document.write('<img src="'+t.arquivo+'" style="max-width:100%;display:block;margin:auto">');
+  } else {
+    // Planilha — renderizar inline como tabela
+    tabAbrirVisorPlanilha(t);
   }
+}
+
+function tabAbrirVisorPlanilha(t){
+  if(typeof XLSX === 'undefined'){ toast('Biblioteca de planilha não carregada.','err'); return; }
+  try {
+    // Extrair base64 puro
+    var base64 = t.arquivo.split(',')[1];
+    var workbook = XLSX.read(base64, {type:'base64'});
+    var sheetNames = workbook.SheetNames;
+
+    var sheetsHtml = sheetNames.map(function(sName, idx){
+      var ws = workbook.Sheets[sName];
+      var tableHtml = XLSX.utils.sheet_to_html(ws, {editable:false});
+      return '<div class="tab-sheet-tab'+(idx===0?' active':'')+'" data-idx="'+idx+'" onclick="tabSelectSheet(this)">'+sName+'</div>'+
+             '<div class="tab-sheet-content" data-idx="'+idx+'" style="'+(idx===0?'':'display:none')+'">'+tableHtml+'</div>';
+    });
+
+    var modalHtml =
+      '<div id="tab-visor-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;flex-direction:column;padding:16px;box-sizing:border-box" onclick="if(event.target===this)tabFecharVisor()">'+
+        '<div style="background:#fff;border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden;max-height:100%">'+
+          '<div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:10px;flex-shrink:0">'+
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>'+
+            '<span style="font-weight:700;font-size:14px;flex:1">'+esc(t.nome||'Planilha')+'</span>'+
+            '<button onclick="tabFecharVisor()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;line-height:1">×</button>'+
+          '</div>'+
+          (sheetNames.length>1?'<div style="display:flex;gap:4px;padding:8px 18px;border-bottom:1px solid #e5e7eb;flex-shrink:0;overflow-x:auto" id="tab-sheet-tabs">'+
+            sheetNames.map(function(s,i){return '<button class="tab-sht-btn'+(i===0?' on':'')+'" data-idx="'+i+'" onclick="tabSelectSheet(this)">'+s+'</button>';}).join('')+
+          '</div>':'') +
+          '<div style="overflow:auto;flex:1;padding:0">'+
+            sheetNames.map(function(sName, idx){
+              var ws = workbook.Sheets[sName];
+              var tableHtml = XLSX.utils.sheet_to_html(ws, {editable:false});
+              return '<div class="tab-sheet-content" data-idx="'+idx+'" style="'+(idx!==0?'display:none':'')+';min-width:max-content">'+tableHtml+'</div>';
+            }).join('')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+    var el = document.createElement('div');
+    el.id = 'tab-visor-wrap';
+    el.innerHTML = modalHtml;
+    document.body.appendChild(el);
+
+    // Estilos da tabela
+    if(!document.getElementById('tab-visor-style')){
+      var s = document.createElement('style');
+      s.id = 'tab-visor-style';
+      s.textContent = [
+        '#tab-visor-wrap table{border-collapse:collapse;font-size:12px;font-family:inherit}',
+        '#tab-visor-wrap td,#tab-visor-wrap th{border:1px solid #e5e7eb;padding:5px 10px;white-space:nowrap;min-width:60px}',
+        '#tab-visor-wrap tr:first-child td,#tab-visor-wrap th{background:#f8fafc;font-weight:600;position:sticky;top:0;z-index:1}',
+        '#tab-visor-wrap tr:hover td{background:#f0fdf4}',
+        '.tab-sht-btn{padding:4px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap}',
+        '.tab-sht-btn.on{background:var(--acc,#2563eb);color:#fff;border-color:var(--acc,#2563eb)}'
+      ].join('');
+      document.head.appendChild(s);
+    }
+  } catch(e){
+    console.error(e);
+    toast('Não foi possível abrir a planilha.','err');
+  }
+}
+
+function tabSelectSheet(btn){
+  var idx = btn.dataset.idx;
+  document.querySelectorAll('#tab-visor-wrap .tab-sht-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.querySelectorAll('#tab-visor-wrap .tab-sheet-content').forEach(function(c){
+    c.style.display = c.dataset.idx === idx ? '' : 'none';
+  });
+}
+
+function tabFecharVisor(){
+  var el = document.getElementById('tab-visor-wrap');
+  if(el) el.remove();
 }
 
 // ── QUADRO KANBAN ─────────────────────────────────────────
