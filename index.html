@@ -528,7 +528,7 @@
     </div>
     <div class="card no-print" id="card-cobrancas">
       <div class="card-title" style="display:flex;align-items:center;gap:10px;">
-        Cobranças — Aprovados
+        Cobranças — Aprovados e Em Negociação
         <span id="cobrancas-badge" style="display:none;background:#ef4444;color:#fff;border-radius:9px;padding:1px 8px;font-size:11px;font-weight:700"></span>
         <label style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-muted);display:flex;align-items:center;gap:5px;">
           Alertar após
@@ -1666,10 +1666,10 @@ function renderCobranças(){
   var agora=Date.now();
   var limite=dias*24*60*60*1000;
   var orcs=db('orc');
-  // cobranças = apenas orçamentos aprovados (finalizados) que ainda não receberam retorno
+  // cobranças = aprovados e em negociação que não receberam retorno
   var abertos=orcs.filter(function(o){
     var s=o.status||'lead';
-    if(s!=='aprovado') return false;
+    if(['aprovado','em-negociacao'].indexOf(s)===-1) return false;
     var ts=o._ts||0;
     if(!ts && o.data){
       var p=o.data.split('-'); if(p.length===3) ts=new Date(p[0],p[1]-1,p[2]).getTime();
