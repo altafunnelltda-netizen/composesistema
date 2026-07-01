@@ -1451,9 +1451,35 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   .det-line::before{content:'•';position:absolute;left:2px;font-size:10pt;color:#555}
   .det-line input{font-size:10pt!important;color:#1a1a1a!important;border:none!important;background:transparent!important;padding:0!important;text-transform:uppercase!important;letter-spacing:.2px!important}
   .print-header{display:block}
-  #pg-os-cortinas .card,#pg-os-tapecaria .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid;break-inside:avoid;margin-bottom:8px;padding:12px}
+  /* OS Cortinas — caber em uma folha */
+  #pg-os-cortinas,#pg-os-tapecaria{font-size:9pt}
+  #pg-os-cortinas .card,#pg-os-tapecaria .card{
+    box-shadow:none;border:1px solid #ddd;
+    page-break-inside:avoid;break-inside:avoid;
+    margin-bottom:6px;padding:8px;
+  }
+  #pg-os-cortinas .card-title,#pg-os-tapecaria .card-title{font-size:10pt;margin-bottom:4px}
+  #pg-os-cortinas label,#pg-os-tapecaria label{font-size:8pt}
+  #pg-os-cortinas input,#pg-os-cortinas select,#pg-os-cortinas textarea,
+  #pg-os-tapecaria input,#pg-os-tapecaria select,#pg-os-tapecaria textarea{font-size:9pt}
+  /* Desenho técnico — forçar exibição do canvas */
+  .desenho-wrap{
+    display:block!important;
+    border:1px solid #ccc;
+    page-break-inside:avoid;break-inside:avoid;
+    margin:6px 0;
+  }
+  .desenho-wrap canvas{
+    display:block!important;
+    max-width:100%!important;
+    height:auto!important;
+    width:100%!important;
+  }
+  .desenho-label{display:none!important}
+  /* Botões e controles desnecessários na OS */
+  .no-print,.btn-bar,.btn-s,.btn-p,.btn-d{display:none!important}
   .total-bar,.stat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .desenho-wrap{border:1px solid #ccc;page-break-inside:avoid;break-inside:avoid}
+  @page{margin:10mm 12mm;size:A4 portrait}
 }
 
 @media(max-width:640px){

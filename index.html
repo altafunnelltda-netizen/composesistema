@@ -1867,8 +1867,22 @@ function printDoc(syncFn, titulo) {
     });
   } catch(e){}
 
+  // Converter canvas para img antes de serializar (canvas não é copiado pelo outerHTML)
+  var pgClone = pg.cloneNode(true);
+  pg.querySelectorAll('canvas').forEach(function(canvas, i){
+    var imgs = pgClone.querySelectorAll('canvas');
+    if(!imgs[i]) return;
+    try {
+      var dataUrl = canvas.toDataURL('image/png');
+      var img = document.createElement('img');
+      img.src = dataUrl;
+      img.style.cssText = 'display:block;max-width:100%;width:100%;height:auto;border-radius:6px';
+      imgs[i].parentNode.replaceChild(img, imgs[i]);
+    } catch(e){}
+  });
+
   var docTitulo = titulo || 'Composê';
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+docTitulo+'</title><style>'+cssText+'</style></head><body><div class="main"><div class="wrap">'+pg.outerHTML+'</div></div></body></html>';
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+docTitulo+'</title><style>'+cssText+'</style></head><body><div class="main"><div class="wrap">'+pgClone.outerHTML+'</div></div></body></html>';
 
   var w = window.open('','_blank');
   if (!w) { window.print(); return; }
