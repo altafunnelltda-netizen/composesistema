@@ -78,7 +78,7 @@ if (!pool && !fs.existsSync(DADOS_PATH)) {
 }
 
 // ── MIDDLEWARES ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
   secret: SECRET,
@@ -356,6 +356,85 @@ Responda APENAS com o JSON, sem texto adicional:
 
     const itens = JSON.parse(jsonMatch[0]);
     res.json(itens);
+  } catch (e) {
+    console.error('[Gemini] erro:', e.message);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.post('/ia/ler-quantitativo', auth, async (req, res) => {
+  if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
+
+  const { arquivos, tipo } = req.body;
+  if (!Array.isArray(arquivos) || !arquivos.length) return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
+  if (arquivos.length > 6) return res.status(400).json({ erro: 'Envie no máximo 6 arquivos por vez.' });
+
+  const partesArquivo = [];
+  for (const a of arquivos) {
+    if (!a || !a.mimeType || !a.data) return res.status(400).json({ erro: 'Arquivo inválido.' });
+    if (!/^(image\/|application\/pdf)/.test(a.mimeType)) return res.status(400).json({ erro: 'Tipo de arquivo não suportado: ' + a.mimeType });
+    partesArquivo.push({ inline_data: { mime_type: a.mimeType, data: a.data } });
+  }
+
+  const ehPiso = tipo === 'piso';
+  const prompt = ehPiso
+    ? `Você é um assistente que lê fotos ou PDFs de um quantitativo/planilha de medidas de piso e extrai os dados por ambiente.
+
+Para cada ambiente encontrado, extraia:
+- "ambiente": nome do ambiente (ex: "SALA", "QUARTO 1")
+- "area": metragem quadrada (m²) do ambiente, como número (ex: 22.5). Se só houver largura e comprimento, calcule a área multiplicando-os.
+- "rodape": metragem linear (ml) de rodapé do ambiente, como número, se houver essa informação. Caso não exista, use null.
+
+Responda APENAS com o JSON, sem texto adicional:
+{"ambientes": [{"ambiente": "...", "area": 0, "rodape": null}]}`
+    : `Você é um assistente que lê fotos ou PDFs de um quantitativo/planilha de medidas de cortina e extrai os dados por ambiente.
+
+Para cada ambiente encontrado, extraia:
+- "ambiente": nome do ambiente (ex: "SALA", "QUARTO 1")
+- "largura": largura do vão/ambiente em metros, como número (ex: 3.07)
+- "altura": altura em metros, como número (ex: 2.76)
+
+Responda APENAS com o JSON, sem texto adicional:
+{"ambientes": [{"ambiente": "...", "largura": 0, "altura": 0}]}`;
+
+  const geminiCall = (body) => new Promise((resolve, reject) => {
+    const opts = {
+      hostname: 'generativelanguage.googleapis.com',
+      path: '/v1beta/models/gemini-flash-latest:generateContent',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) }
+    };
+    const req2 = https.request(opts, r => {
+      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
+    });
+    req2.on('error', reject); req2.write(body); req2.end();
+  });
+
+  try {
+    const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...partesArquivo] }] });
+
+    let result;
+    for (let t = 1; t <= 3; t++) {
+      result = await geminiCall(body);
+      if (result.status !== 503) break;
+      console.log(`[Gemini] 503 sobrecarga, tentativa ${t}/3...`);
+      await sleep(2000 * t);
+    }
+
+    if (result.status !== 200) {
+      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
+      let detalhe = '';
+      try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
+      return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
+    }
+
+    const parsed = JSON.parse(result.body);
+    const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(502).json({ erro: 'IA não retornou JSON válido.' });
+
+    const dados = JSON.parse(jsonMatch[0]);
+    res.json({ ambientes: dados.ambientes || [] });
   } catch (e) {
     console.error('[Gemini] erro:', e.message);
     res.status(500).json({ erro: e.message });

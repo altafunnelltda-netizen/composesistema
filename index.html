@@ -876,6 +876,7 @@
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
         <button class="btn btn-p" onclick="calcEnviarOrcamento('cc')" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Enviar para Orçamento</button>
         <button class="btn btn-s" onclick="calcEnviarIA('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Gerar com IA</button>
+        <button class="btn btn-s" onclick="quantAbrirLeitor('cc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="2"/><path d="M14 17l-1.5-1.5"/></svg> Ler Quantitativo (IA)</button>
       </div>
       <!-- Painel de sessão (ambientes adicionados) -->
       <div id="cc-sessao-panel" style="display:none;margin-top:14px;border:2px solid var(--acc,#c9a84c);border-radius:12px;overflow:hidden">
@@ -972,6 +973,7 @@
       </div>
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
         <button class="btn btn-p" onclick="calcEnviarOrcamento('cp')" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Enviar para Orçamento</button>
+        <button class="btn btn-s" onclick="quantAbrirLeitor('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="2"/><path d="M14 17l-1.5-1.5"/></svg> Ler Quantitativo (IA)</button>
         <button class="btn btn-s" onclick="calcEnviarIA('cp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Gerar com IA</button>
       </div>
       <!-- Painel de sessão -->
@@ -6423,6 +6425,186 @@ function iaShowReview(textoOriginal, itens){
     toast('Orçamento criado para '+nomeCliente+'!','ok');
     // abre o orçamento criado
     setTimeout(function(){ ir('quadro',document.getElementById('nav-quadro')); renderPipeline(); },300);
+  };
+}
+
+// ── LEITOR DE QUANTITATIVO (IA) ────────────────────────
+
+function quantAbrirLeitor(prefixo){
+  var tipoLabel = prefixo==='cc' ? 'cortina' : 'piso';
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:14px;padding:24px;width:420px;max-width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35);';
+
+  box.innerHTML=
+    '<div style="font-weight:700;font-size:16px;color:#1a1a1a;margin-bottom:4px;">Ler Quantitativo de '+(tipoLabel==='cortina'?'Cortina':'Piso')+'</div>'+
+    '<div style="font-size:12px;color:#777;margin-bottom:16px;">Envie fotos ou um PDF do quantitativo/planilha de medidas. A IA vai extrair os ambientes automaticamente.</div>'+
+    '<input type="file" id="quant-file" accept="image/*,.pdf" multiple style="width:100%;font-size:13px;margin-bottom:16px">'+
+    '<div style="display:flex;gap:8px;">'+
+      '<button class="btn btn-p" style="flex:1;" id="quant-ok">Ler com IA</button>'+
+      '<button class="btn btn-s" id="quant-cancel">Cancelar</button>'+
+    '</div>';
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  document.getElementById('quant-cancel').onclick=function(){ document.body.removeChild(ov); };
+  ov.onclick=function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  document.getElementById('quant-ok').onclick=function(){
+    var input=document.getElementById('quant-file');
+    var files=Array.prototype.slice.call(input.files||[]);
+    if(!files.length){ toast('Selecione ao menos um arquivo.','err'); return; }
+    if(files.length>6){ toast('Envie no máximo 6 arquivos.','err'); return; }
+
+    var btn=document.getElementById('quant-ok');
+    btn.disabled=true; btn.textContent='Lendo...';
+
+    Promise.all(files.map(function(f){
+      return new Promise(function(resolve,reject){
+        var reader=new FileReader();
+        reader.onload=function(){
+          var b64=reader.result.split(',')[1];
+          resolve({mimeType:f.type||'application/octet-stream', data:b64});
+        };
+        reader.onerror=reject;
+        reader.readAsDataURL(f);
+      });
+    })).then(function(arquivos){
+      return fetch('/ia/ler-quantitativo',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({arquivos:arquivos, tipo:(prefixo==='cc'?'cortina':'piso')})
+      });
+    }).then(function(r){ return r.json(); })
+    .then(function(data){
+      document.body.removeChild(ov);
+      if(data.erro){ toast('IA: '+data.erro,'err'); return; }
+      var ambientes=data.ambientes||[];
+      if(!ambientes.length){ toast('A IA não encontrou ambientes no quantitativo.','err'); return; }
+      quantShowReview(prefixo, ambientes);
+    }).catch(function(){
+      btn.disabled=false; btn.textContent='Ler com IA';
+      toast('Erro ao ler o quantitativo.','err');
+    });
+  };
+}
+
+function quantShowReview(prefixo, ambientes){
+  var ehPiso = prefixo!=='cc';
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:14px;padding:24px;width:560px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.35);';
+
+  var html='<div style="font-weight:700;font-size:16px;color:#1a1a1a;margin-bottom:4px;">Ambientes encontrados no quantitativo</div>'+
+    '<div style="font-size:12px;color:#777;margin-bottom:16px;">Revise os valores antes de preencher a calculadora ou gerar o orçamento.</div>';
+
+  ambientes.forEach(function(a,i){
+    html+='<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)">'+
+      '<input type="checkbox" id="qr-inc-'+i+'" checked style="flex-shrink:0">'+
+      '<input type="text" id="qr-amb-'+i+'" value="'+esc(a.ambiente||'Ambiente '+(i+1))+'" placeholder="Ambiente" style="flex:2;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">'+
+      (ehPiso
+        ? '<input type="number" step="0.01" id="qr-area-'+i+'" value="'+(a.area!=null?a.area:'')+'" placeholder="m²" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">'
+        : '<input type="number" step="0.01" id="qr-larg-'+i+'" value="'+(a.largura!=null?a.largura:'')+'" placeholder="Largura" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">'+
+          '<input type="number" step="0.01" id="qr-alt-'+i+'" value="'+(a.altura!=null?a.altura:'')+'" placeholder="Altura" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">'
+      )+
+    '</div>';
+  });
+
+  html+='<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+
+    '<button class="btn btn-p" style="flex:1;" id="qr-preencher">Preencher Calculadora</button>'+
+    '<button class="btn btn-s" style="flex:1;" id="qr-orcamento">Gerar Orçamento Direto</button>'+
+    '<button class="btn btn-s" id="qr-cancelar">Cancelar</button>'+
+  '</div>';
+
+  box.innerHTML=html;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  document.getElementById('qr-cancelar').onclick=function(){ document.body.removeChild(ov); };
+  ov.onclick=function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  function coletarSelecionados(){
+    var out=[];
+    ambientes.forEach(function(a,i){
+      var inc=document.getElementById('qr-inc-'+i);
+      if(!inc || !inc.checked) return;
+      var ambiente=(document.getElementById('qr-amb-'+i).value||'').trim()||('Ambiente '+(i+1));
+      if(ehPiso){
+        var area=parseFloat(document.getElementById('qr-area-'+i).value);
+        out.push({ambiente:ambiente, area:isNaN(area)?0:area});
+      } else {
+        var larg=parseFloat(document.getElementById('qr-larg-'+i).value);
+        var alt=parseFloat(document.getElementById('qr-alt-'+i).value);
+        out.push({ambiente:ambiente, largura:isNaN(larg)?0:larg, altura:isNaN(alt)?0:alt});
+      }
+    });
+    return out;
+  }
+
+  document.getElementById('qr-preencher').onclick=function(){
+    var itens=coletarSelecionados();
+    if(!itens.length){ toast('Selecione ao menos um ambiente.','err'); return; }
+
+    var cliente=(document.getElementById(prefixo+'-cliente').value||'').trim();
+    if(!cliente){ toast('Informe o nome do cliente antes de preencher.','err'); document.body.removeChild(ov); return; }
+
+    var falhas=0;
+    itens.forEach(function(it){
+      document.getElementById(prefixo+'-ambiente').value=it.ambiente;
+      if(ehPiso){
+        document.getElementById('cp-m2').value=it.area||'';
+        calcPiso();
+      } else {
+        document.getElementById('cc-larg').value=it.largura||'';
+        document.getElementById('cc-alt').value=it.altura||'';
+        calcCortina();
+      }
+      var resEl=document.getElementById(prefixo+'-res');
+      if(resEl.querySelector('span[style*="--mid"]')){ falhas++; return; }
+      if(ehPiso) cpAdicionarAmbiente(); else ccAdicionarAmbiente();
+    });
+
+    document.body.removeChild(ov);
+    if(falhas) toast(falhas+' ambiente(s) não foram adicionados — complete os campos obrigatórios (valor, custo, etc.) e adicione manualmente.','err');
+    else toast(itens.length+' ambiente(s) adicionados à sessão!','ok');
+  };
+
+  document.getElementById('qr-orcamento').onclick=function(){
+    var itens=coletarSelecionados();
+    if(!itens.length){ toast('Selecione ao menos um ambiente.','err'); return; }
+
+    var cliente=(document.getElementById(prefixo+'-cliente').value||'').trim();
+    var linhas=['Cliente: '+(cliente||'sem nome'), 'Tipo: '+(ehPiso?'PISO':'CORTINA'), ''];
+    itens.forEach(function(it){
+      linhas.push('AMBIENTE: '+it.ambiente);
+      if(ehPiso) linhas.push('  Metragem: '+it.area+' m²');
+      else { linhas.push('  Largura: '+it.largura+' m'); linhas.push('  Altura: '+it.altura+' m'); }
+      linhas.push('');
+    });
+    var texto=linhas.join('\n');
+
+    var btn=document.getElementById('qr-orcamento');
+    btn.disabled=true; btn.textContent='Gerando...';
+
+    fetch('/ia/gerar-orcamento',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({texto:texto, exemplos:iaExemplos()})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      document.body.removeChild(ov);
+      if(data.erro){ toast('IA: '+data.erro,'err'); return; }
+      var itensOrc=data.itens||[];
+      if(!itensOrc.length){ toast('A IA não encontrou itens.','err'); return; }
+      iaShowReview(texto, itensOrc);
+    })
+    .catch(function(){
+      btn.disabled=false; btn.textContent='Gerar Orçamento Direto';
+      toast('Erro ao contatar IA.','err');
+    });
   };
 }
 </script>
