@@ -1183,6 +1183,15 @@
 .chatia-bolha{max-width:88%;padding:6px 10px;border-radius:9px;font-size:12px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
 .chatia-bolha.user{align-self:flex-end;background:var(--gold-dark,#b8903a);color:#fff}
 .chatia-bolha.model{align-self:flex-start;background:var(--white,#fff);color:var(--txt,#1a1a1a);border:1px solid var(--brd,var(--border))}
+.chatia-dots{display:inline-flex;gap:3px;align-items:center;padding:2px 0}
+.chatia-dots span{width:5px;height:5px;border-radius:50%;background:var(--txt2,var(--mid));animation:chatiaBounce 1.2s infinite ease-in-out}
+.chatia-dots span:nth-child(2){animation-delay:.15s}
+.chatia-dots span:nth-child(3){animation-delay:.3s}
+@keyframes chatiaBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-3px);opacity:1}}
+.chatia-pend-item{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;padding:3px 0}
+.chatia-pend-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatia-baixa-btn{flex-shrink:0;background:rgba(16,185,129,.15);color:#059669;border:1px solid rgba(16,185,129,.3);border-radius:6px;font-size:10px;font-weight:700;padding:2px 7px;cursor:pointer;font-family:inherit}
+.chatia-baixa-btn:hover{background:rgba(16,185,129,.25)}
 #chatia-anexos{display:none;padding:5px 12px;font-size:10.5px;color:var(--txt2,var(--mid));background:var(--bg2,var(--cream-dark));border-top:1px solid var(--brd,var(--border))}
 #chatia-footer{padding:8px;border-top:1px solid var(--brd,var(--border));display:flex;gap:5px;align-items:flex-end;background:var(--white,#fff);flex-shrink:0}
 #chatia-anexar-btn{background:var(--bg2,var(--cream-dark));border:1px solid var(--brd,var(--border));border-radius:7px;width:30px;height:30px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt2,var(--mid))}
@@ -6492,11 +6501,22 @@ function chatIaRenderBoasVindas(){
   var msgs=document.getElementById('chatia-msgs');
   var pendentes=chatIaOrcamentosPendentes();
   var avisoPendentes = pendentes.length
-    ? '<div style="font-size:11.5px;color:#b45309;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:8px 10px;margin-bottom:10px">'+
-        '⚠ Você tem '+pendentes.length+' orçamento(s) sem cobrança há 3+ dias: '+pendentes.slice(0,4).map(function(o){return esc(o.cliente||'sem nome');}).join(', ')+(pendentes.length>4?'…':'')+
+    ? '<div style="font-size:11px;color:#b45309;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:6px 8px;margin-bottom:8px">'+
+        '<div style="font-weight:700;margin-bottom:4px">⚠ '+pendentes.length+' pendente(s):</div>'+
+        pendentes.slice(0,6).map(function(o){
+          return '<div class="chatia-pend-item"><span class="chatia-pend-nome">'+esc(o.cliente||'sem nome')+'</span>'+
+            '<button class="chatia-baixa-btn" onclick="chatIaBaixarPendencia(\''+o.id+'\',this)">✓ Cobrei</button></div>';
+        }).join('')+
       '</div>'
     : '';
-  msgs.innerHTML=avisoPendentes+'<div style="font-size:11.5px;color:var(--txt2,var(--mid));text-align:center;padding:10px 6px">Oi! Sou a assistente da Composê. Conheço orçamentos, tabelas e agenda cadastrados — me pergunte o que precisar ou envie uma foto/PDF de quantitativo.</div>';
+  msgs.innerHTML=avisoPendentes+'<div style="font-size:11px;color:var(--txt2,var(--mid));text-align:center;padding:6px">Oi! Pergunte sobre orçamentos, tabelas ou agenda, ou envie foto/PDF de quantitativo.</div>';
+}
+
+function chatIaBaixarPendencia(id, btn){
+  cobrarOrc(id);
+  var item=btn.closest('.chatia-pend-item');
+  if(item) item.remove();
+  chatIaAtualizarBadge();
 }
 
 function chatIaNovo(){
@@ -6534,6 +6554,16 @@ function chatIaAddBolha(texto, autor){
   var b=document.createElement('div');
   b.className='chatia-bolha '+(autor==='user'?'user':'model');
   b.textContent=texto;
+  msgs.appendChild(b);
+  msgs.scrollTop=msgs.scrollHeight;
+  return b;
+}
+
+function chatIaAddLoading(){
+  var msgs=document.getElementById('chatia-msgs');
+  var b=document.createElement('div');
+  b.className='chatia-bolha model';
+  b.innerHTML='<span class="chatia-dots"><span></span><span></span><span></span></span>';
   msgs.appendChild(b);
   msgs.scrollTop=msgs.scrollHeight;
   return b;
@@ -6612,7 +6642,7 @@ function chatIaEnviar(){
   document.getElementById('chatia-anexos').style.display='none';
 
   _chatIaEnviando=true;
-  var loading=chatIaAddBolha('Digitando...', 'model');
+  var loading=chatIaAddLoading();
 
   // Injeta o contexto atual do sistema só na cópia enviada, sem poluir o histórico exibido.
   var payload = _chatIaHist.slice(0,-1).concat([{

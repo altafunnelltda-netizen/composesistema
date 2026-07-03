@@ -475,7 +475,7 @@ app.post('/ia/chat', auth, async (req, res) => {
 
 A cada mensagem, você recebe um bloco "[CONTEXTO ATUAL DO SISTEMA]" com dados reais e atualizados (tabelas cadastradas, orçamentos pendentes de cobrança, próximos compromissos da agenda) — use esses dados para responder com precisão, cite nomes e números reais quando fizer sentido, e não invente informações que não estejam lá. Nunca repita esse bloco de contexto de volta para o usuário, apenas use-o para embasar a resposta.
 
-Seja direto, prático e converse em português, como um colega de trabalho que conhece o negócio. Quando o usuário enviar fotos ou PDFs de quantitativos, leia com atenção e responda com os ambientes e medidas encontrados, tirando dúvidas quando a leitura estiver ambígua.` }]
+Seja MUITO direto e breve: respostas curtas, de preferência 1 a 4 frases ou uma lista curta. Sem introduções longas, sem repetir a pergunta, sem parágrafos de contexto desnecessário. Só se aprofunde se o usuário pedir mais detalhes. Converse em português, como um colega de trabalho que conhece o negócio. Quando o usuário enviar fotos ou PDFs de quantitativos, leia com atenção e responda direto com os ambientes e medidas encontrados, tirando dúvidas apenas quando a leitura estiver ambígua.` }]
   };
 
   const geminiCall = (body) => new Promise((resolve, reject) => {
