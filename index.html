@@ -716,7 +716,7 @@
       <div class="radio-group" style="margin-bottom:10px">
         <label class="radio-opt"><input type="radio" name="cor-tipo2" value="NENHUM" onchange="toggleCor2()" checked> Nenhum</label>
         <label class="radio-opt"><input type="radio" name="cor-tipo2" value="XALE" onchange="toggleCor2()"> Xale</label>
-        <label class="radio-opt"><input type="radio" name="cor-tipo2" value="FORRO" onchange="toggleCor2()"> Forro + Voil</label>
+        <label class="radio-opt"><input type="radio" name="cor-tipo2" value="FORRO" onchange="toggleCor2()"> Forro</label>
       </div>
       <div id="cor-xale-sec" style="display:none">
         <div style="font-size:10px;font-weight:700;color:var(--gold-dark);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">Xale</div>
@@ -734,13 +734,6 @@
           <div class="f f1"><label>Qtd (m)</label><input type="number" id="cor-forro-qtd" step="0.01"></div>
           <div class="f f2"><label>Prega</label><select id="cor-forro-prega" onchange="gerarDesenho()"><option value="">—</option><option>Wave</option><option>Franzida</option><option>Americana</option></select></div>
           <div class="f f2"><label>Obs</label><input type="text" id="cor-forro-obs"></div>
-        </div>
-        <div style="font-size:10px;font-weight:700;color:var(--gold-dark);margin:8px 0 7px;text-transform:uppercase;letter-spacing:.5px">Voil</div>
-        <div class="row">
-          <div class="f f3"><label>Referência / Cor</label><input type="text" id="cor-voil-ref" oninput="gerarDesenho()"></div>
-          <div class="f f1"><label>Qtd (m)</label><input type="number" id="cor-voil-qtd" step="0.01"></div>
-          <div class="f f2"><label>Prega</label><select id="cor-voil-prega" onchange="gerarDesenho()"><option value="">—</option><option>Wave</option><option>Franzida</option><option>Americana</option></select></div>
-          <div class="f f2"><label>Obs</label><input type="text" id="cor-voil-obs"></div>
         </div>
       </div>
     </div>
@@ -2204,9 +2197,9 @@ function limparOsCortinas(){
   corId=null;
   sv('cor-num','');sv('cor-data',hoje());sv('cor-consultor','Maicom Polieri');
   ['cor-cliente','cor-ambiente','cor-end','cor-produto','cor-tec1-ref','cor-tec1-obs',
-   'cor-xale-ref','cor-xale-obs','cor-forro-ref','cor-forro-obs','cor-voil-ref','cor-voil-obs','cor-obs'
+   'cor-xale-ref','cor-xale-obs','cor-forro-ref','cor-forro-obs','cor-obs'
   ].forEach(function(id){sv(id,'');});
-  ['cor-largura','cor-altura','cor-altura2','cor-tec1-qtd','cor-xale-qtd','cor-forro-qtd','cor-voil-qtd'
+  ['cor-largura','cor-altura','cor-altura2','cor-tec1-qtd','cor-xale-qtd','cor-forro-qtd'
   ].forEach(function(id){sv(id,'');});
   document.querySelector('input[name="cor-tipo2"][value="NENHUM"]').checked=true;
   toggleCor2();
@@ -2229,7 +2222,6 @@ function corSerializar(){
     tipo2:document.querySelector('input[name="cor-tipo2"]:checked').value,
     xale:{ref:v('cor-xale-ref'),qtd:v('cor-xale-qtd'),prega:v('cor-xale-prega'),obs:v('cor-xale-obs')},
     forro:{ref:v('cor-forro-ref'),qtd:v('cor-forro-qtd'),prega:v('cor-forro-prega'),obs:v('cor-forro-obs')},
-    voil:{ref:v('cor-voil-ref'),qtd:v('cor-voil-qtd'),prega:v('cor-voil-prega'),obs:v('cor-voil-obs')},
     obs:v('cor-obs')};
 }
 
@@ -2253,7 +2245,6 @@ function corRestaurar(o){
   toggleCor2();
   var x=o.xale||{};sv('cor-xale-ref',x.ref);sv('cor-xale-qtd',x.qtd);sv('cor-xale-prega',x.prega);sv('cor-xale-obs',x.obs);
   var f=o.forro||{};sv('cor-forro-ref',f.ref);sv('cor-forro-qtd',f.qtd);sv('cor-forro-prega',f.prega);sv('cor-forro-obs',f.obs);
-  var vl=o.voil||{};sv('cor-voil-ref',vl.ref);sv('cor-voil-qtd',vl.qtd);sv('cor-voil-prega',vl.prega);sv('cor-voil-obs',vl.obs);
   sv('cor-obs',o.obs);
   gerarDesenho();
   ir('os-cortinas',document.getElementById('nav-os-cortinas'));
@@ -2363,7 +2354,7 @@ function gerarDesenho(){
     ctx.fillStyle='rgba(100,70,20,0.6)';
     ctx.font='10px Segoe UI,sans-serif';
     ctx.textAlign='right';
-    ctx.fillText(tipo2==='XALE'?'+ Xale':'+ Forro/Voil',cX+cW-4,cY+12);
+    ctx.fillText(tipo2==='XALE'?'+ Xale':'+ Forro',cX+cW-4,cY+12);
   }
 
   // Title
