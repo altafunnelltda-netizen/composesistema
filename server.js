@@ -441,6 +441,76 @@ Responda APENAS com o JSON, sem texto adicional:
   }
 });
 
+app.post('/ia/chat', auth, async (req, res) => {
+  if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
+
+  const { mensagens } = req.body;
+  if (!Array.isArray(mensagens) || !mensagens.length) return res.status(400).json({ erro: 'Nenhuma mensagem enviada.' });
+  if (mensagens.length > 40) return res.status(400).json({ erro: 'Conversa muito longa, inicie um novo chat.' });
+
+  const contents = [];
+  for (const m of mensagens) {
+    if (!m || (m.role !== 'user' && m.role !== 'model')) return res.status(400).json({ erro: 'Mensagem inválida.' });
+    const parts = [];
+    if (m.texto) parts.push({ text: String(m.texto) });
+    if (Array.isArray(m.arquivos)) {
+      for (const a of m.arquivos) {
+        if (!a || !a.mimeType || !a.data) continue;
+        if (!/^(image\/|application\/pdf)/.test(a.mimeType)) return res.status(400).json({ erro: 'Tipo de arquivo não suportado: ' + a.mimeType });
+        parts.push({ inline_data: { mime_type: a.mimeType, data: a.data } });
+      }
+    }
+    if (!parts.length) continue;
+    contents.push({ role: m.role, parts });
+  }
+  if (!contents.length) return res.status(400).json({ erro: 'Mensagens vazias.' });
+
+  const systemInstruction = {
+    parts: [{ text: `Você é a assistente de IA da Composê Home, empresa de cortinas, persianas, tapetes, pisos e tapeçaria em Santos-SP. Ajude o usuário (um vendedor/orçamentista da empresa) a interpretar quantitativos, fotos de medidas, planilhas e anotações de clientes, e a montar orçamentos e cálculos. Seja direto, prático e converse em português. Quando o usuário enviar fotos ou PDFs de quantitativos, leia com atenção e responda com os ambientes e medidas encontrados, tirando dúvidas quando a leitura estiver ambígua.` }]
+  };
+
+  const geminiCall = (body) => new Promise((resolve, reject) => {
+    const opts = {
+      hostname: 'generativelanguage.googleapis.com',
+      path: '/v1beta/models/gemini-flash-latest:generateContent',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) }
+    };
+    const req2 = https.request(opts, r => {
+      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
+    });
+    req2.on('error', reject); req2.write(body); req2.end();
+  });
+
+  try {
+    const body = JSON.stringify({ system_instruction: systemInstruction, contents });
+
+    let result;
+    for (let t = 1; t <= 3; t++) {
+      result = await geminiCall(body);
+      if (result.status !== 503) break;
+      console.log(`[Gemini] 503 sobrecarga, tentativa ${t}/3...`);
+      await sleep(2000 * t);
+    }
+
+    if (result.status !== 200) {
+      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
+      let detalhe = '';
+      try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
+      return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
+    }
+
+    const parsed = JSON.parse(result.body);
+    const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) return res.status(502).json({ erro: 'IA não retornou resposta.' });
+
+    res.json({ resposta: text });
+  } catch (e) {
+    console.error('[Gemini] erro:', e.message);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Composê rodando em http://localhost:${PORT}`);
   console.log(`Senha de acesso: ${SENHA}`);
