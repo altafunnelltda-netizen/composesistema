@@ -6667,7 +6667,13 @@ function chatIaOrcamentosPendentes(){
 }
 
 function chatIaContextoSistema(){
+  var agora=new Date();
+  var diasSemana=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  var hojeStr=agora.toISOString().slice(0,10);
+  var amanha=new Date(agora.getTime()+86400000).toISOString().slice(0,10);
   var linhas=['[CONTEXTO ATUAL DO SISTEMA — use para responder com precisão, não repita isso ao usuário]'];
+  linhas.push('Data de hoje: '+hojeStr+' ('+diasSemana[agora.getDay()]+'). Data de amanhã: '+amanha+'. Use SEMPRE essas datas reais para calcular "hoje", "amanhã", "esta semana" etc — nunca assuma outra data.');
+  linhas.push('');
 
   var tabelas = (typeof dbTabelas==='function' ? dbTabelas() : []);
   var forns = (typeof dbFornecedores==='function' ? dbFornecedores() : []);
@@ -6686,10 +6692,10 @@ function chatIaContextoSistema(){
     linhas.push('- '+(o.cliente||'sem nome')+' | status: '+(o.status||'lead')+' | há '+dias+' dias sem contato');
   });
 
-  var evs = (db('agenda')||[]).filter(function(e){return e.status==='agendado';}).sort(function(a,b){return (a.data||'').localeCompare(b.data||'');});
+  var evs = (db('agenda')||[]).filter(function(e){return e.status==='agendado' && (e.data||'')>=hojeStr;}).sort(function(a,b){return (a.data||'').localeCompare(b.data||'');});
   linhas.push('');
-  linhas.push('Próximos compromissos na agenda ('+evs.length+'):');
-  evs.slice(0,10).forEach(function(e){
+  linhas.push('Próximos compromissos na agenda a partir de hoje ('+evs.length+'):');
+  evs.slice(0,15).forEach(function(e){
     linhas.push('- '+(e.data||'')+' '+(e.hora||'')+' | '+(e.titulo||e.tipo||'compromisso')+(e.cliente?' | cliente: '+e.cliente:''));
   });
 
