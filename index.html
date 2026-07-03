@@ -6545,19 +6545,43 @@ function iaShowReview(textoOriginal, itens){
 
 // ── CHAT DE SUPORTE (IA) ────────────────────────
 
-var _chatIaHist = [];
+var CHATIA_HIST_KEY = 'cps_chatia_hist';
+var _chatIaHist = chatIaCarregarHist();
 var _chatIaAnexosPendentes = [];
 var _chatIaEnviando = false;
 var _chatIaPendentesCache = null;
+var _chatIaPanelRenderizado = false;
+
+function chatIaCarregarHist(){
+  try{ var r=JSON.parse(localStorage.getItem(CHATIA_HIST_KEY)||'[]'); return Array.isArray(r)?r:[]; }catch(e){ return []; }
+}
+function chatIaSalvarHist(){
+  if(_chatIaHist.length>40) _chatIaHist=_chatIaHist.slice(-40);
+  // Persiste só texto (sem anexos em base64, para não estourar o localStorage).
+  var leve=_chatIaHist.map(function(m){ return {role:m.role, texto:m.texto}; });
+  localStorage.setItem(CHATIA_HIST_KEY, JSON.stringify(leve));
+}
 
 function chatIaToggle(){
   var panel=document.getElementById('chatia-panel');
   var aberto = panel.style.display==='flex';
   panel.style.display = aberto ? 'none' : 'flex';
   if(!aberto){
-    if(!_chatIaHist.length) chatIaRenderBoasVindas();
+    if(!_chatIaPanelRenderizado){
+      if(_chatIaHist.length) chatIaRenderHistorico();
+      else chatIaRenderBoasVindas();
+      _chatIaPanelRenderizado=true;
+    }
     setTimeout(function(){ document.getElementById('chatia-input').focus(); },50);
   }
+}
+
+function chatIaRenderHistorico(){
+  var msgs=document.getElementById('chatia-msgs');
+  msgs.innerHTML='';
+  _chatIaHist.forEach(function(m){
+    if(m.texto) chatIaAddBolha(m.texto, m.role);
+  });
 }
 
 function chatIaRenderBoasVindas(){
@@ -6584,6 +6608,7 @@ function chatIaBaixarPendencia(id, btn){
 
 function chatIaNovo(){
   _chatIaHist=[];
+  chatIaSalvarHist();
   _chatIaAnexosPendentes=[];
   document.getElementById('chatia-anexos').style.display='none';
   chatIaRenderBoasVindas();
@@ -6725,6 +6750,7 @@ function chatIaEnviar(){
 
   var arquivosMsg = anexos.map(function(a){return {mimeType:a.mimeType,data:a.data};});
   _chatIaHist.push({role:'user', texto:texto, arquivos:arquivosMsg});
+  chatIaSalvarHist();
 
   input.value='';
   _chatIaAnexosPendentes=[];
@@ -6751,6 +6777,7 @@ function chatIaEnviar(){
     loading.remove();
     if(data.erro){ chatIaAddBolha('Erro: '+data.erro, 'model'); return; }
     _chatIaHist.push({role:'model', texto:data.resposta});
+    chatIaSalvarHist();
     chatIaAddBolha(data.resposta, 'model');
   })
   .catch(function(){
