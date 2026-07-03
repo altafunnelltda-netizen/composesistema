@@ -2054,10 +2054,13 @@ function printDoc(syncFn, titulo) {
     try {
       var dataUrl = canvas.toDataURL('image/png');
       var img = document.createElement('img');
+      img.width = canvas.width;
+      img.height = canvas.height;
+      img.style.cssText = 'display:block;max-width:100%;width:100%;height:auto;aspect-ratio:'+canvas.width+'/'+canvas.height+';border-radius:6px';
+      img.onerror = function(){ console.error('Falha ao carregar imagem do desenho técnico na impressão.'); };
       img.src = dataUrl;
-      img.style.cssText = 'display:block;max-width:100%;width:100%;height:auto;border-radius:6px';
       imgs[i].parentNode.replaceChild(img, imgs[i]);
-    } catch(e){}
+    } catch(e){ console.error('Falha ao converter canvas em imagem para impressão:', e); }
   });
 
   var docTitulo = titulo || 'Composê';
@@ -2076,9 +2079,24 @@ function printDoc(syncFn, titulo) {
     w.print();
     w.onafterprint = function(){ w.close(); };
   }
-  if (w.document.readyState === 'complete') { doPrint(); }
-  else { w.onload = doPrint; }
-  setTimeout(doPrint, 900);
+  // Só imprime depois que TODAS as imagens (ex: desenho técnico convertido de canvas)
+  // já terminaram de carregar/decodificar — senão o print pode sair com a imagem em branco.
+  function aguardarImagensEImprimir() {
+    var imgs = w.document.images;
+    var pendentes = 0;
+    Array.prototype.forEach.call(imgs, function(img) {
+      if (!img.complete) {
+        pendentes++;
+        img.addEventListener('load', verificar);
+        img.addEventListener('error', verificar);
+      }
+    });
+    function verificar() { pendentes--; if (pendentes <= 0) doPrint(); }
+    if (pendentes === 0) doPrint();
+  }
+  if (w.document.readyState === 'complete') { aguardarImagensEImprimir(); }
+  else { w.onload = aguardarImagensEImprimir; }
+  setTimeout(doPrint, 1500);
 }
 
 function sincronizarPrintOrc(){
