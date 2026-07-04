@@ -712,7 +712,7 @@
     </div>
 
     <div class="card">
-      <div class="card-title">2º Tecido</div>
+      <div class="card-title" id="cor-tipo2-titulo">2º Tecido</div>
       <div class="radio-group" style="margin-bottom:10px">
         <label class="radio-opt"><input type="radio" name="cor-tipo2" value="NENHUM" onchange="toggleCor2()" checked> Nenhum</label>
         <label class="radio-opt"><input type="radio" name="cor-tipo2" value="XALE" onchange="toggleCor2()"> Xale</label>
@@ -2206,10 +2206,12 @@ function limparOsCortinas(){
   gerarDesenho();
 }
 
+var COR_TIPO2_LABELS={NENHUM:'2º Tecido',XALE:'Xale',FORRO:'Forro'};
 function toggleCor2(){
   var val=document.querySelector('input[name="cor-tipo2"]:checked').value;
   document.getElementById('cor-xale-sec').style.display=val==='XALE'?'':'none';
   document.getElementById('cor-forro-sec').style.display=val==='FORRO'?'':'none';
+  document.getElementById('cor-tipo2-titulo').textContent=COR_TIPO2_LABELS[val]||'2º Tecido';
   gerarDesenho();
 }
 
