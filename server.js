@@ -127,6 +127,12 @@ app.get('/update-gif.gif', (req, res) => {
   res.sendFile(path.join(__dirname, 'update-gif.gif'));
 });
 
+app.get('/update-video.mp4', (req, res) => {
+  const videoPath = path.join(__dirname, 'update-video.mp4');
+  if (!fs.existsSync(videoPath)) return res.status(404).end();
+  res.sendFile(videoPath);
+});
+
 app.get('/update-audio.mp3', (req, res) => {
   const audioPath = path.join(__dirname, 'update-audio.mp3');
   if (!fs.existsSync(audioPath)) return res.status(404).end();

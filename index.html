@@ -1395,33 +1395,41 @@ function _mostrarAvisoAtualizacao(){
   if(document.getElementById('upd-overlay')) return;
   var ov=document.createElement('div');
   ov.id='upd-overlay';
-  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;'+
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;overflow:hidden;'+
     'background:rgba(10,8,4,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:updFadeIn .3s ease;';
-  var TOTAL=10, AUDIO_INICIO=5; // pula os 5s iniciais do áudio, entra direto na parte boa
+  var TOTAL=10;
   ov.innerHTML=
     '<style>@keyframes updFadeIn{from{opacity:0}to{opacity:1}}@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}</style>'+
-    '<img src="/update-gif.gif" style="max-width:min(360px,80vw);border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.5);animation:updPulse 1.4s ease-in-out infinite">'+
-    '<div style="font-size:19px;font-weight:800;color:#f5e9c8;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)">Nova atualização kkkk</div>'+
-    '<div id="upd-cron" style="font-size:15px;font-weight:700;color:var(--gold,#c9a961)">Reiniciando em '+TOTAL+'...</div>'+
-    '<audio id="upd-audio" src="/update-audio.mp3" preload="auto"></audio>';
+    '<video id="upd-video" src="/update-video.mp4" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4"></video>'+
+    '<div style="position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">'+
+      '<img src="/update-gif.gif" style="max-width:min(360px,80vw);border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.5);animation:updPulse 1.4s ease-in-out infinite">'+
+      '<div style="font-size:19px;font-weight:800;color:#f5e9c8;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)">Nova atualização kkkk</div>'+
+      '<div id="upd-cron" style="font-size:15px;font-weight:700;color:var(--gold,#c9a961)">Reiniciando em '+TOTAL+'...</div>'+
+      '<audio id="upd-audio" src="/update-audio.mp3" preload="auto"></audio>'+
+    '</div>';
   document.body.appendChild(ov);
 
-  var s=TOTAL;
   var cronEl=document.getElementById('upd-cron');
   var audioEl=document.getElementById('upd-audio');
-  if(audioEl){
-    var iniciarAudio=function(){
-      audioEl.currentTime=AUDIO_INICIO;
-      audioEl.play().catch(function(){});
-    };
-    if(audioEl.readyState>=1) iniciarAudio();
-    else audioEl.addEventListener('loadedmetadata',iniciarAudio,{once:true});
+  var recarregou=false;
+  function recarregar(){
+    if(recarregou)return; recarregou=true;
+    if(cronEl) cronEl.textContent='Reiniciando...';
+    location.reload();
   }
-  var iv=setInterval(function(){
-    s--;
-    if(s<=0){ clearInterval(iv); if(cronEl) cronEl.textContent='Reiniciando...'; location.reload(); return; }
-    if(cronEl) cronEl.textContent='Reiniciando em '+s+'...';
-  },1000);
+  if(audioEl){
+    // O próprio relógio do áudio é a contagem: o número mostrado vem do
+    // currentTime real da vinheta, não de um timer separado rodando em paralelo.
+    audioEl.addEventListener('timeupdate',function(){
+      var restante=Math.ceil(TOTAL-audioEl.currentTime);
+      if(restante<=0){ recarregar(); return; }
+      if(cronEl) cronEl.textContent='Reiniciando em '+restante+'...';
+    });
+    audioEl.addEventListener('ended',recarregar);
+    audioEl.play().catch(function(){});
+  }
+  // Fallback: se o áudio não tocar (ex: bloqueado pelo navegador), recarrega mesmo assim.
+  setTimeout(recarregar, (TOTAL+2)*1000);
 }
 
 // ── INIT: carrega dados do servidor no localStorage ───────
