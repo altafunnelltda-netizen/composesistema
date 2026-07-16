@@ -1388,7 +1388,10 @@ function _versaoPull() {
     }).catch(function(){});
 }
 _versaoPull(); // captura versão atual imediatamente ao carregar
-setInterval(function(){ if(!document.hidden) _versaoPull(); }, 15000);
+// Sem checar document.hidden de propósito: deve detectar e avisar sobre
+// atualização mesmo com a aba em segundo plano, não só quando o usuário
+// está olhando a tela.
+setInterval(_versaoPull, 15000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) _versaoPull(); });
 
 function _mostrarAvisoAtualizacao(){
@@ -1400,7 +1403,11 @@ function _mostrarAvisoAtualizacao(){
   var TOTAL=10;
   ov.innerHTML=
     '<style>@keyframes updFadeIn{from{opacity:0}to{opacity:1}}@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}</style>'+
-    '<video id="upd-video" src="/update-video.mp4" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4"></video>'+
+    '<video id="upd-video" src="/update-video.mp4" muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;background:#000"></video>'+
+    '<button id="upd-close" title="Fechar e continuar usando o sistema" style="position:absolute;top:16px;right:16px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s">✕</button>'+
+    '<button id="upd-mute" title="Silenciar" style="position:absolute;top:16px;right:60px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s">'+
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>'+
+    '</button>'+
     '<div style="position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">'+
       '<img src="/update-gif.gif" style="max-width:min(360px,80vw);border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.5);animation:updPulse 1.4s ease-in-out infinite">'+
       '<div style="font-size:19px;font-weight:800;color:#f5e9c8;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)">Nova atualização kkkk</div>'+
@@ -1411,16 +1418,35 @@ function _mostrarAvisoAtualizacao(){
 
   var cronEl=document.getElementById('upd-cron');
   var audioEl=document.getElementById('upd-audio');
+  var videoEl=document.getElementById('upd-video');
+  var timersAtivos=true;
   var recarregou=false;
   function recarregar(){
-    if(recarregou)return; recarregou=true;
+    if(recarregou||!timersAtivos)return; recarregou=true;
     if(cronEl) cronEl.textContent='Reiniciando...';
     location.reload();
+  }
+  function fecharAviso(){
+    timersAtivos=false;
+    if(audioEl) audioEl.pause();
+    if(videoEl) videoEl.pause();
+    ov.remove();
+  }
+  document.getElementById('upd-close').onclick=fecharAviso;
+  document.getElementById('upd-mute').onclick=function(){
+    if(!audioEl) return;
+    audioEl.muted=!audioEl.muted;
+    this.style.opacity=audioEl.muted?'.45':'1';
+  };
+  if(videoEl){
+    videoEl.play().catch(function(){});
+    videoEl.addEventListener('error',function(){ console.error('Vídeo do aviso de atualização falhou ao carregar.'); });
   }
   if(audioEl){
     // O próprio relógio do áudio é a contagem: o número mostrado vem do
     // currentTime real da vinheta, não de um timer separado rodando em paralelo.
     audioEl.addEventListener('timeupdate',function(){
+      if(!timersAtivos)return;
       var restante=Math.ceil(TOTAL-audioEl.currentTime);
       if(restante<=0){ recarregar(); return; }
       if(cronEl) cronEl.textContent='Reiniciando em '+restante+'...';
