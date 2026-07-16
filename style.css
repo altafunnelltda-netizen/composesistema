@@ -1200,6 +1200,49 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
   background:linear-gradient(135deg,var(--gold),var(--gold-dark));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
+/* ── HISTÓRICO DE CÁLCULOS ── */
+.hist-calc-card{
+  border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;
+  margin-bottom:12px;background:var(--white);
+  box-shadow:var(--shadow-xs);transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease;
+}
+.hist-calc-card:hover{box-shadow:var(--shadow-md);border-color:rgba(201,169,97,.35);transform:translateY(-1px)}
+.hist-calc-hd{
+  padding:13px 16px;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(135deg,var(--cream-dark),rgba(201,169,97,.05));
+  flex-wrap:wrap;gap:8px;
+}
+.hist-calc-cliente{font-size:14.5px;font-weight:700;color:var(--charcoal);letter-spacing:-.2px}
+.hist-calc-data{color:var(--mid);font-size:11.5px;margin-left:9px;font-weight:500}
+.hist-calc-badge{
+  background:rgba(201,169,97,.16);color:var(--gold-dark);border-radius:999px;
+  font-size:10.5px;font-weight:700;padding:2px 10px;margin-left:9px;letter-spacing:.2px;
+  display:inline-block;
+}
+.hist-calc-actions{display:flex;gap:6px;flex-wrap:wrap}
+.hist-calc-body{padding:14px;background:var(--bg2);animation:histCalcReveal .22s ease}
+@keyframes histCalcReveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.hist-calc-amb{
+  margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius-md);
+  overflow:hidden;background:var(--white);transition:border-color .15s ease,box-shadow .15s ease;
+}
+.hist-calc-amb:last-child{margin-bottom:0}
+.hist-calc-amb:hover{border-color:rgba(201,169,97,.35);box-shadow:0 2px 10px rgba(201,169,97,.1)}
+.hist-calc-amb-hd{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:9px 13px;background:rgba(201,169,97,.08);
+  border-bottom:1px solid rgba(201,169,97,.14);
+}
+.hist-calc-amb-nome{font-size:13px;font-weight:700;color:var(--gold-dark);letter-spacing:-.1px}
+.hist-calc-amb .calc-res{margin-top:0;border:none;background:transparent;padding:11px 13px;border-radius:0}
+.hist-calc-edit-btn{
+  display:inline-flex;align-items:center;gap:4px;background:var(--white);
+  border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--mid);
+  cursor:pointer;font-size:11px;font-weight:600;padding:3px 9px;font-family:inherit;
+  transition:.15s;
+}
+.hist-calc-edit-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark);background:rgba(201,169,97,.08)}
+
 .check-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .calc-section-title{
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;
