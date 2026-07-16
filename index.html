@@ -1384,12 +1384,34 @@ function _versaoPull() {
     .then(function(d){
       if(!d||!d.v) return;
       if(_versaoAtual === 0) { _versaoAtual = d.v; return; }
-      if(d.v !== _versaoAtual) { location.reload(); }
+      if(d.v !== _versaoAtual) { _mostrarAvisoAtualizacao(); }
     }).catch(function(){});
 }
 _versaoPull(); // captura versão atual imediatamente ao carregar
 setInterval(function(){ if(!document.hidden) _versaoPull(); }, 15000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) _versaoPull(); });
+
+function _mostrarAvisoAtualizacao(){
+  if(document.getElementById('upd-overlay')) return;
+  var ov=document.createElement('div');
+  ov.id='upd-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;'+
+    'background:rgba(10,8,4,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:updFadeIn .3s ease;';
+  ov.innerHTML=
+    '<style>@keyframes updFadeIn{from{opacity:0}to{opacity:1}}@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}</style>'+
+    '<img src="/update-gif.gif" style="max-width:min(360px,80vw);border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.5);animation:updPulse 1.4s ease-in-out infinite">'+
+    '<div style="font-size:19px;font-weight:800;color:#f5e9c8;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)">Nova atualização kkkk</div>'+
+    '<div id="upd-cron" style="font-size:15px;font-weight:700;color:var(--gold,#c9a961)">Reiniciando em 5...</div>';
+  document.body.appendChild(ov);
+
+  var s=5;
+  var cronEl=document.getElementById('upd-cron');
+  var iv=setInterval(function(){
+    s--;
+    if(s<=0){ clearInterval(iv); if(cronEl) cronEl.textContent='Reiniciando...'; location.reload(); return; }
+    if(cronEl) cronEl.textContent='Reiniciando em '+s+'...';
+  },1000);
+}
 
 // ── INIT: carrega dados do servidor no localStorage ───────
 (function(){
@@ -3278,6 +3300,15 @@ function exportarHistPDF(prefixo, id){
   var r = arr.find(function(x){return x.id===id;});
   if(!r)return;
   var ambientes = r.ambientes || [{id:r.id,ambiente:'Ambiente 1',campos:r,resHtml:r.resumoHtml||r.resHtml||''}];
+  if(prefixo==='cc'){
+    ambientes = ambientes.map(function(amb){
+      var c=amb.campos||{};
+      var jaTemMedida=/Largura x Altura/.test(amb.resHtml||'');
+      if(jaTemMedida||!c.larg||!c.alt) return amb;
+      var medidaHtml='<div class="res-row"><span class="res-label">Largura x Altura</span><span class="res-val">'+parseFloat(c.larg).toFixed(2)+' x '+parseFloat(c.alt).toFixed(2)+' m</span></div>';
+      return Object.assign({},amb,{resHtml:medidaHtml+(amb.resHtml||'')});
+    });
+  }
   var tipo = prefixo==='cc'?'Cortina':'Piso';
   _abrirPDF(r.cliente, r.data, tipo, ambientes);
 }

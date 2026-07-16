@@ -123,6 +123,10 @@ app.get('/logo.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'logo_transp.png'));
 });
 
+app.get('/update-gif.gif', (req, res) => {
+  res.sendFile(path.join(__dirname, 'update-gif.gif'));
+});
+
 app.get('/versao', (req, res) => {
   res.json({ v: VERSAO });
 });
