@@ -1397,7 +1397,7 @@ function _mostrarAvisoAtualizacao(){
   ov.id='upd-overlay';
   ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;'+
     'background:rgba(10,8,4,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:updFadeIn .3s ease;';
-  var TOTAL=10, AUDIO_A_PARTIR_DE=5;
+  var TOTAL=10, AUDIO_INICIO=5; // pula os 5s iniciais do áudio, entra direto na parte boa
   ov.innerHTML=
     '<style>@keyframes updFadeIn{from{opacity:0}to{opacity:1}}@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}</style>'+
     '<img src="/update-gif.gif" style="max-width:min(360px,80vw);border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.5);animation:updPulse 1.4s ease-in-out infinite">'+
@@ -1409,13 +1409,16 @@ function _mostrarAvisoAtualizacao(){
   var s=TOTAL;
   var cronEl=document.getElementById('upd-cron');
   var audioEl=document.getElementById('upd-audio');
-  var audioTocou=false;
+  if(audioEl){
+    var iniciarAudio=function(){
+      audioEl.currentTime=AUDIO_INICIO;
+      audioEl.play().catch(function(){});
+    };
+    if(audioEl.readyState>=1) iniciarAudio();
+    else audioEl.addEventListener('loadedmetadata',iniciarAudio,{once:true});
+  }
   var iv=setInterval(function(){
     s--;
-    if(s===TOTAL-AUDIO_A_PARTIR_DE && !audioTocou){
-      audioTocou=true;
-      if(audioEl) audioEl.play().catch(function(){});
-    }
     if(s<=0){ clearInterval(iv); if(cronEl) cronEl.textContent='Reiniciando...'; location.reload(); return; }
     if(cronEl) cronEl.textContent='Reiniciando em '+s+'...';
   },1000);
