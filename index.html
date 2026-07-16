@@ -2912,10 +2912,18 @@ function renderHistCalcCortina(){
         '</div>'+
       '</div>'+
       '<div id="hi-cc-'+r.id+'" style="display:none;padding:12px 14px">'+
-        ambientes.map(function(amb){
+        ambientes.map(function(amb,ai){
+          var c=amb.campos||{};
+          var jaTemMedida=/Largura x Altura/.test(amb.resHtml||'');
+          var medidaHtml=(!jaTemMedida&&c.larg&&c.alt)
+            ?'<div class="res-row"><span class="res-label">Largura x Altura</span><span class="res-val">'+parseFloat(c.larg).toFixed(2)+' x '+parseFloat(c.alt).toFixed(2)+' m</span></div>'
+            :'';
           return '<div style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:8px">'+
-            '<div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--acc)">'+esc(amb.ambiente||'Ambiente')+'</div>'+
-            '<div style="font-size:12px">'+amb.resHtml+'</div>'+
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+              '<div style="font-weight:700;font-size:13px;color:var(--acc)">'+esc(amb.ambiente||'Ambiente')+'</div>'+
+              '<button onclick="ccEditarAmbienteHist(\''+r.id+'\','+ai+')" style="background:none;border:1px solid rgba(0,0,0,.15);border-radius:5px;color:#555;cursor:pointer;font-size:11px;padding:2px 8px;font-weight:600;font-family:inherit" title="Editar"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Editar</button>'+
+            '</div>'+
+            '<div style="font-size:12px">'+medidaHtml+amb.resHtml+'</div>'+
           '</div>';
         }).join('')+
       '</div>'+
@@ -2933,6 +2941,48 @@ function excluirCalcCortina(id){
   dbSave('cort',db('cort').filter(function(r){return r.id!==id;}));
   toast('Excluído.','ok');
   renderHistCalcCortina();
+}
+
+// Carrega um ambiente de um cálculo salvo (histórico) de volta nos campos da
+// calculadora para edição, removendo-o do registro salvo (some pra sessão atual).
+function ccEditarAmbienteHist(recordId, ambIndex){
+  var arr=db('cort');
+  var ridx=arr.findIndex(function(r){return r.id===recordId;});
+  if(ridx<0)return;
+  var rec=arr[ridx];
+  var ambientes=rec.ambientes||[{id:rec.id,ambiente:'Ambiente 1',campos:rec.campos,resHtml:rec.resHtml}];
+  var amb=ambientes[ambIndex];
+  if(!amb)return;
+  var c=amb.campos||{};
+
+  document.getElementById('cc-cliente').value=rec.cliente||'';
+  document.getElementById('cc-ambiente').value=amb.ambiente||'';
+  document.getElementById('cc-larg').value=c.larg||'';
+  document.getElementById('cc-alt').value=c.alt||'';
+  document.getElementById('cc-valor').value=c.valor||'';
+  document.getElementById('cc-prega').value=c.prega||'wave';
+  document.getElementById('cc-forro').checked=!!c.forro;
+  document.getElementById('cc-faixa').checked=!!c.faixa;
+  toggleFaixa();
+  document.getElementById('cc-larg-tec').value=c.largTec||'';
+  document.getElementById('cc-barra').value=c.barra||'';
+  calcCortina();
+
+  if(rec.ambientes){
+    rec.ambientes.splice(ambIndex,1);
+    if(!rec.ambientes.length) arr.splice(ridx,1);
+  } else {
+    arr.splice(ridx,1);
+  }
+  dbSave('cort',arr);
+  renderHistCalcCortina();
+
+  ir('calculadoras',document.getElementById('nav-calculadoras'));
+  setTimeout(function(){
+    var el=document.getElementById('cc-ambiente');
+    if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+  },100);
+  toast('Ambiente carregado para edição. Ajuste e clique em "Adicionar Ambiente".','ok');
 }
 
 function calcPiso(){
