@@ -4484,6 +4484,7 @@ function renderNotas(){
   filtrados.forEach(function(c,idx){
     var btn=document.createElement('button');
     btn.className='nb-client-item'+(c.id===_nbClienteId?' on':'');
+    btn.dataset.id=c.id;
     btn.style.setProperty('--nb-i', idx);
     var initials=nbInitials(c.cliente);
     var grad=nbGradiente(c.cliente);
@@ -4834,6 +4835,29 @@ function nbClearDraw(){
   if(c&&_nbCtx){ _nbCtx.clearRect(0,0,c.width,c.height); if(_nbCurrentCli) nbAutoSave(_nbCurrentCli,null,''); }
 }
 
+// Atualiza só o preview/data do item na lista lateral, sem recriar a lista
+// inteira (recriar tudo a cada autosave causava o piscar da barra lateral).
+function nbAtualizarItemSidebar(cliId){
+  var clientes=nbClientes();
+  var c=clientes.find(function(x){return x.id===cliId;});
+  if(!c) return;
+  var btn=document.querySelector('.nb-client-item[data-id="'+cliId+'"]');
+  if(!btn){ renderNotas(); return; }
+  var info=btn.querySelector('.nb-client-info');
+  var previewEl=btn.querySelector('.nb-client-preview');
+  var dateEl=btn.querySelector('.nb-client-date');
+  var preview=(c.texto||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,46)||(c.tel||'');
+  var tempo=nbTempoAtras(c._ts);
+  if(preview){
+    if(!previewEl){ previewEl=document.createElement('div'); previewEl.className='nb-client-preview'; info.insertBefore(previewEl,dateEl||null); }
+    previewEl.textContent=preview;
+  } else if(previewEl){ previewEl.remove(); }
+  if(tempo){
+    if(!dateEl){ dateEl=document.createElement('div'); dateEl.className='nb-client-date'; info.appendChild(dateEl); }
+    dateEl.textContent=tempo;
+  } else if(dateEl){ dateEl.remove(); }
+}
+
 function nbAutoSave(cliId, html, desenho){
   var statusEl=document.getElementById('nb-status');
   var txtEl=document.getElementById('nb-status-txt');
@@ -4847,7 +4871,7 @@ function nbAutoSave(cliId, html, desenho){
       if(desenho!==null) clientes[idx].desenho=desenho;
       clientes[idx]._ts=Date.now();
       dbSave('notas',clientes);
-      renderNotas();
+      nbAtualizarItemSidebar(cliId);
     }
     if(statusEl){ statusEl.className='nb-status saved'; if(txtEl) txtEl.textContent='Salvo'; }
     setTimeout(function(){if(statusEl){statusEl.className='nb-status';if(txtEl)txtEl.textContent='';}},2200);
