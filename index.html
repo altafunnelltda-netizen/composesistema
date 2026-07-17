@@ -1400,7 +1400,7 @@ function _mostrarAvisoAtualizacao(){
   ov.id='upd-overlay';
   ov.style.cssText='position:fixed;inset:0;z-index:99999;overflow:hidden;'+
     'background:rgba(10,8,4,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:updFadeIn .3s ease;';
-  var TOTAL=10;
+  var TOTAL=17; // duração real do áudio/vídeo da vinheta (~17s) — ajustado dinamicamente abaixo
   ov.innerHTML=
     '<style>@keyframes updFadeIn{from{opacity:0}to{opacity:1}}@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}</style>'+
     '<video id="upd-video" src="/update-video.mp4" muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;background:#000"></video>'+
@@ -1421,11 +1421,30 @@ function _mostrarAvisoAtualizacao(){
   var videoEl=document.getElementById('upd-video');
   var timersAtivos=true;
   var recarregou=false;
+  var fallbackTimer=null;
+  function agendarFallback(){
+    if(fallbackTimer) clearTimeout(fallbackTimer);
+    fallbackTimer=setTimeout(recarregar,(TOTAL+2)*1000);
+  }
   function recarregar(){
     if(recarregou||!timersAtivos)return; recarregou=true;
     if(cronEl) cronEl.textContent='Reiniciando...';
     location.reload();
   }
+  // Sincroniza a duração total do aviso com a duração real do áudio E do vídeo
+  // (o maior dos dois), pra tudo terminar junto em vez de cortar um no meio.
+  function ajustarDuracaoTotal(){
+    var duracaoAudio=(audioEl&&audioEl.duration)||0;
+    var duracaoVideo=(videoEl&&videoEl.duration)||0;
+    var maior=Math.max(duracaoAudio,duracaoVideo);
+    if(maior>0){
+      TOTAL=Math.ceil(maior);
+      if(cronEl&&!recarregou) cronEl.textContent='Reiniciando em '+TOTAL+'...';
+      agendarFallback();
+    }
+  }
+  if(audioEl) audioEl.addEventListener('loadedmetadata',ajustarDuracaoTotal,{once:true});
+  if(videoEl) videoEl.addEventListener('loadedmetadata',ajustarDuracaoTotal,{once:true});
   function fecharAviso(){
     timersAtivos=false;
     if(audioEl) audioEl.pause();
@@ -1455,7 +1474,7 @@ function _mostrarAvisoAtualizacao(){
     audioEl.play().catch(function(){});
   }
   // Fallback: se o áudio não tocar (ex: bloqueado pelo navegador), recarrega mesmo assim.
-  setTimeout(recarregar, (TOTAL+2)*1000);
+  agendarFallback();
 }
 
 // ── INIT: carrega dados do servidor no localStorage ───────
