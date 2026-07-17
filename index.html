@@ -1394,6 +1394,15 @@ _versaoPull(); // captura versão atual imediatamente ao carregar
 setInterval(_versaoPull, 15000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) _versaoPull(); });
 
+// Pré-carrega o vídeo/áudio/gif do aviso de atualização assim que o sistema
+// abre, pra já estarem em cache do navegador quando o aviso realmente for
+// exibido (senão o vídeo de ~3.6MB só começa a baixar na hora e demora).
+(function _precarregarAssetsAviso(){
+  var v=document.createElement('video'); v.preload='auto'; v.muted=true; v.src='/update-video.mp4';
+  var a=document.createElement('audio'); a.preload='auto'; a.src='/update-audio.mp3';
+  var img=new Image(); img.src='/update-gif.gif';
+})();
+
 function _mostrarAvisoAtualizacao(){
   if(document.getElementById('upd-overlay')) return;
   var ov=document.createElement('div');
@@ -1403,7 +1412,7 @@ function _mostrarAvisoAtualizacao(){
   var TOTAL=17; // duração real do áudio/vídeo da vinheta (~17s) — ajustado dinamicamente abaixo
   ov.innerHTML=
     '<style>@keyframes updFadeIn{from{opacity:0}to{opacity:1}}@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}</style>'+
-    '<video id="upd-video" src="/update-video.mp4" muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;background:#000"></video>'+
+    '<video id="upd-video" src="/update-video.mp4" preload="auto" muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;background:#000"></video>'+
     '<button id="upd-close" title="Fechar e continuar usando o sistema" style="position:absolute;top:16px;right:16px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s">✕</button>'+
     '<button id="upd-mute" title="Silenciar" style="position:absolute;top:16px;right:60px;z-index:3;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s">'+
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>'+
