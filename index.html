@@ -5564,7 +5564,13 @@ function _agAnoHtml() {
 }
 
 function agOpenModal(ev) {
-  var isEdit=!!ev, today=new Date().toISOString().split('T')[0];
+  // isEdit precisa checar se o evento já existe salvo, não só se um objeto
+  // foi passado — chamadas como agNovoEventoData/agWkClick passam um objeto
+  // "stub" (com id novo, ainda não salvo) para pré-preencher a data, o que
+  // fazia !!ev virar true incorretamente e agSave() tentar "atualizar" um
+  // evento inexistente (sem criar nada).
+  var isEdit=!!(ev && db('agenda').some(function(e){return e.id===ev.id;}));
+  var today=new Date().toISOString().split('T')[0];
   var initDate=(_agView==='dia')?_ds(_agDate):today;
   ev=ev||{id:uid(),tipo:'instalacao',cliente:'',endereco:'',data:initDate,horaInicio:'08:00',horaFim:'',colaboradores:[],obs:'',status:'agendado'};
   var colabs=db('colab'), modal=document.getElementById('ag-modal');
