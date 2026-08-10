@@ -168,14 +168,17 @@ app.post('/dados', auth, async (req, res) => {
     const changedKey = incoming._changed || null;
     const lm = Date.now();
 
-    // Merge inteligente: protege arrays existentes de serem apagados por arrays vazios
-    // A chave explicitamente alterada (_changed) sempre é aplicada — inclusive se vazia (deleção intencional)
+    // Só a chave explicitamente alterada (_changed) é aplicada — mesmo vazia
+    // (deleção intencional). As demais chaves do payload são ignoradas: o
+    // cliente envia uma cópia local de TODOS os dados a cada save por
+    // conveniência, mas essa cópia pode estar desatualizada (ex: outro
+    // computador salvou algo há poucos segundos e este cliente ainda não
+    // sincronizou). Sobrescrever tudo com esse payload apagava silenciosamente
+    // mudanças recentes de outros dispositivos — essa era a causa de dados
+    // "sumindo" precisando ser refeitos.
     const merged = Object.assign({}, existing);
-    for (const [k, v] of Object.entries(incoming)) {
-      if (k.startsWith('_')) continue;
-      if (k === changedKey) { merged[k] = v; continue; } // deleção intencional permitida
-      if (Array.isArray(v) && v.length === 0 && Array.isArray(existing[k]) && existing[k].length > 0) continue;
-      merged[k] = v;
+    if (changedKey && Object.prototype.hasOwnProperty.call(incoming, changedKey)) {
+      merged[changedKey] = incoming[changedKey];
     }
     merged._lastModified = lm;
 
