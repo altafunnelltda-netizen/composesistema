@@ -213,7 +213,7 @@ button[type=submit]:active{transform:translateY(0)}
 
     <div class="erro" id="msg-erro" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Senha incorreta. Tente novamente.
+      <span id="msg-erro-txt">Senha incorreta. Tente novamente.</span>
     </div>
 
     <form method="POST" action="/login">
@@ -235,8 +235,12 @@ button[type=submit]:active{transform:translateY(0)}
 </div>
 
 <script>
-if (new URLSearchParams(location.search).get('erro')) {
-  document.getElementById('msg-erro').style.display = 'flex';
+var _erroParam = new URLSearchParams(location.search).get('erro');
+if (_erroParam) {
+  var _erroEl = document.getElementById('msg-erro');
+  var _erroTxt = document.getElementById('msg-erro-txt');
+  _erroEl.style.display = 'flex';
+  if (_erroParam === '2') _erroTxt.textContent = 'Muitas tentativas. Aguarde 15 minutos.';
 }
 function toggleSenha() {
   var inp = document.getElementById('senha');

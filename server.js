@@ -1,14 +1,37 @@
 const express  = require('express');
 const session  = require('express-session');
 const fs       = require('fs');
+const fsp      = require('fs').promises;
 const path     = require('path');
 const https    = require('https');
+const crypto   = require('crypto');
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
-const VERSAO = Date.now(); // timestamp de inicialização — muda a cada novo deploy
 const SENHA  = process.env.SENHA_SISTEMA || 'compose2024';
-const SECRET = process.env.SESSION_SECRET || 'cps-' + Math.random().toString(36).slice(2);
+
+// ── VERSÃO estável: hash dos arquivos principais ─────────────────────────────
+// Usa SHA-1 dos arquivos em vez de Date.now(), então restarts sem mudança de
+// código não geram uma nova versão e não forçam reload nos clientes.
+function _hashArquivo(p) {
+  try { return crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 10); }
+  catch (_) { return '0'; }
+}
+const VERSAO = _hashArquivo(path.join(__dirname, 'index.html')) +
+               _hashArquivo(path.join(__dirname, 'style.css'));
+
+// ── SESSION SECRET persistente ────────────────────────────────────────────────
+// Se SESSION_SECRET não está no env, lê de um arquivo local (criado na 1ª vez).
+// Assim restarts não invalidam sessões abertas.
+const SECRET_PATH = path.join(__dirname, '.session-secret');
+function _getSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  try { return fs.readFileSync(SECRET_PATH, 'utf8').trim(); } catch (_) {}
+  const s = 'cps-' + crypto.randomBytes(32).toString('hex');
+  try { fs.writeFileSync(SECRET_PATH, s); } catch (_) {}
+  return s;
+}
+const SECRET = _getSecret();
 
 // ── STORAGE: PostgreSQL (produção) ou arquivo JSON (dev local) ──────────────
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -16,11 +39,7 @@ let pool = null;
 
 if (DATABASE_URL) {
   const { Pool } = require('pg');
-  pool = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-  // Garante que a tabela existe
+  pool = new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
   pool.query(`
     CREATE TABLE IF NOT EXISTS dados (
       id    TEXT PRIMARY KEY,
@@ -34,21 +53,23 @@ if (DATABASE_URL) {
 
 const DADOS_PATH = path.join(process.env.DADOS_DIR || __dirname, 'dados.json');
 
+// Cache in-memory do lastModified para evitar carregar o payload inteiro no polling
+let _lastModifiedCache = null;
+
 async function lerDados() {
   if (pool) {
     try {
       const r = await pool.query("SELECT valor FROM dados WHERE id = 'main'");
-      return r.rows[0] ? r.rows[0].valor : {};
-    } catch (e) {
-      console.error('lerDados erro:', e.message);
-      return {};
-    }
+      const d = r.rows[0] ? r.rows[0].valor : {};
+      if (_lastModifiedCache === null) _lastModifiedCache = d._lastModified || 0;
+      return d;
+    } catch (e) { console.error('lerDados erro:', e.message); return {}; }
   }
   try {
-    return JSON.parse(fs.readFileSync(DADOS_PATH, 'utf8'));
-  } catch {
-    return {};
-  }
+    const d = JSON.parse(fs.readFileSync(DADOS_PATH, 'utf8'));
+    if (_lastModifiedCache === null) _lastModifiedCache = d._lastModified || 0;
+    return d;
+  } catch { return {}; }
 }
 
 async function salvarDados(data) {
@@ -59,13 +80,21 @@ async function salvarDados(data) {
          ON CONFLICT(id) DO UPDATE SET valor = $1`,
         [JSON.stringify(data)]
       );
-    } catch (e) {
-      console.error('salvarDados erro:', e.message);
-      throw e;
-    }
+    } catch (e) { console.error('salvarDados erro:', e.message); throw e; }
     return;
   }
-  fs.writeFileSync(DADOS_PATH, JSON.stringify(data, null, 2));
+  // Modo dev: escreve de forma assíncrona (não bloqueia o event loop)
+  await fsp.writeFile(DADOS_PATH, JSON.stringify(data, null, 2));
+}
+
+// ── MUTEX de escrita ──────────────────────────────────────────────────────────
+// Serializa todas as chamadas de leitura-modificação-escrita em fila para
+// eliminar race condition quando dois dispositivos salvam ao mesmo tempo.
+let _writeLock = Promise.resolve();
+function writeLocked(fn) {
+  const result = _writeLock.then(fn);
+  _writeLock = result.catch(function () {}); // erro não quebra a fila
+  return result;
 }
 
 // Inicializa arquivo JSON local se necessário
@@ -92,6 +121,33 @@ function auth(req, res, next) {
   res.redirect('/login');
 }
 
+// ── RATE LIMITING DO LOGIN ────────────────────────────────────────────────────
+const _loginAttempts = new Map();
+const LOGIN_MAX    = 10;                // máx tentativas
+const LOGIN_JANELA = 15 * 60 * 1000;   // janela de 15 minutos
+
+function _loginBloqueado(ip) {
+  const agora = Date.now();
+  const e = _loginAttempts.get(ip) || { n: 0, inicio: agora };
+  if (agora - e.inicio > LOGIN_JANELA) {
+    _loginAttempts.set(ip, { n: 1, inicio: agora });
+    return false;
+  }
+  if (e.n >= LOGIN_MAX) return true;
+  e.n++;
+  _loginAttempts.set(ip, e);
+  return false;
+}
+function _loginReset(ip) { _loginAttempts.delete(ip); }
+
+// Limpa entradas antigas a cada hora
+setInterval(() => {
+  const agora = Date.now();
+  for (const [ip, e] of _loginAttempts) {
+    if (agora - e.inicio > LOGIN_JANELA) _loginAttempts.delete(ip);
+  }
+}, 60 * 60 * 1000);
+
 // ── ROTAS ────────────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {
   if (req.session && req.session.logado) return res.redirect('/');
@@ -99,7 +155,12 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  if (_loginBloqueado(ip)) {
+    return res.redirect('/login?erro=2'); // erro=2 → bloqueado
+  }
   if (req.body.senha === SENHA) {
+    _loginReset(ip);
     req.session.logado = true;
     res.redirect('/');
   } else {
@@ -111,87 +172,63 @@ app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login'));
 });
 
-app.get('/', auth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/style.css', auth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'style.css'));
-});
-
-app.get('/logo.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'logo_transp.png'));
-});
-
-app.get('/update-gif.gif', (req, res) => {
-  res.sendFile(path.join(__dirname, 'update-gif.gif'));
-});
+app.get('/', auth, (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/style.css', auth, (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
+app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo_transp.png')));
+app.get('/update-gif.gif', (req, res) => res.sendFile(path.join(__dirname, 'update-gif.gif')));
 
 app.get('/update-video.mp4', (req, res) => {
-  const videoPath = path.join(__dirname, 'update-video.mp4');
-  if (!fs.existsSync(videoPath)) return res.status(404).end();
-  res.sendFile(videoPath);
+  const p = path.join(__dirname, 'update-video.mp4');
+  if (!fs.existsSync(p)) return res.status(404).end();
+  res.sendFile(p);
 });
-
 app.get('/update-audio.mp3', (req, res) => {
-  const audioPath = path.join(__dirname, 'update-audio.mp3');
-  if (!fs.existsSync(audioPath)) return res.status(404).end();
-  res.sendFile(audioPath);
+  const p = path.join(__dirname, 'update-audio.mp3');
+  if (!fs.existsSync(p)) return res.status(404).end();
+  res.sendFile(p);
 });
 
-app.get('/versao', (req, res) => {
-  res.json({ v: VERSAO });
-});
+app.get('/versao', (req, res) => res.json({ v: VERSAO }));
 
 app.get('/dados', auth, async (req, res) => {
-  try {
-    res.json(await lerDados());
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
+  try { res.json(await lerDados()); }
+  catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-// Endpoint leve — só retorna o timestamp da última modificação
-app.get('/dados/status', auth, async (req, res) => {
-  try {
-    const d = await lerDados();
-    res.json({ lastModified: d._lastModified || 0 });
-  } catch (e) {
-    res.json({ lastModified: 0 });
-  }
+// Endpoint leve de polling — retorna só o timestamp da última modificação.
+// Usa cache in-memory, sem carregar o payload inteiro do banco a cada 12s.
+app.get('/dados/status', auth, (req, res) => {
+  res.json({ lastModified: _lastModifiedCache || 0 });
 });
 
 app.post('/dados', auth, async (req, res) => {
   try {
-    const existing = await lerDados();
-    const incoming = req.body;
-    const changedKey = incoming._changed || null;
-    const lm = Date.now();
+    const lm = await writeLocked(async () => {
+      const existing = await lerDados();
+      const incoming = req.body;
+      const changedKey = incoming._changed || null;
+      const ts = Date.now();
 
-    // Só a chave explicitamente alterada (_changed) é aplicada — mesmo vazia
-    // (deleção intencional). As demais chaves do payload são ignoradas: o
-    // cliente envia uma cópia local de TODOS os dados a cada save por
-    // conveniência, mas essa cópia pode estar desatualizada (ex: outro
-    // computador salvou algo há poucos segundos e este cliente ainda não
-    // sincronizou). Sobrescrever tudo com esse payload apagava silenciosamente
-    // mudanças recentes de outros dispositivos — essa era a causa de dados
-    // "sumindo" precisando ser refeitos.
-    const merged = Object.assign({}, existing);
-    if (changedKey && Object.prototype.hasOwnProperty.call(incoming, changedKey)) {
-      merged[changedKey] = incoming[changedKey];
-    }
-    merged._lastModified = lm;
-
-    // Backup automático diário (mantém o último do dia em dados_backup_YYYY-MM-DD.json)
-    if (!pool) {
-      const today = new Date().toISOString().slice(0, 10);
-      const backupPath = path.join(process.env.DADOS_DIR || __dirname, `dados_backup_${today}.json`);
-      if (!fs.existsSync(backupPath) && fs.existsSync(DADOS_PATH)) {
-        try { fs.copyFileSync(DADOS_PATH, backupPath); } catch (_) {}
+      const merged = Object.assign({}, existing);
+      if (changedKey && Object.prototype.hasOwnProperty.call(incoming, changedKey)) {
+        merged[changedKey] = incoming[changedKey];
       }
-    }
+      merged._lastModified = ts;
 
-    await salvarDados(merged);
+      // Backup automático diário em dev (arquivo local)
+      if (!pool) {
+        const today = new Date().toISOString().slice(0, 10);
+        const backupPath = path.join(process.env.DADOS_DIR || __dirname, `dados_backup_${today}.json`);
+        if (!fs.existsSync(backupPath) && fs.existsSync(DADOS_PATH)) {
+          try { await fsp.copyFile(DADOS_PATH, backupPath); } catch (_) {}
+        }
+      }
+
+      await salvarDados(merged);
+      _lastModifiedCache = ts; // atualiza cache
+      return ts;
+    });
+
     res.json({ ok: true, lastModified: lm });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
@@ -202,37 +239,45 @@ app.post('/dados', auth, async (req, res) => {
 app.get('/backup', auth, async (req, res) => {
   try {
     const d = await lerDados();
-    const filename = `compose_backup_${new Date().toISOString().slice(0,10)}.json`;
+    const filename = `compose_backup_${new Date().toISOString().slice(0, 10)}.json`;
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(d, null, 2));
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
+  } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
 app.post('/importar', auth, async (req, res) => {
   try {
     const { senha, dados } = req.body;
-    if (!senha || senha !== SENHA) {
+    if (!senha || senha !== SENHA)
       return res.status(403).json({ ok: false, erro: 'Senha incorreta.' });
-    }
-    if (!dados || typeof dados !== 'object') {
+    if (!dados || typeof dados !== 'object' || Array.isArray(dados))
       return res.status(400).json({ ok: false, erro: 'Arquivo inválido.' });
-    }
+
+    // Valida que ao menos uma chave conhecida existe — impede importar JSON aleatório
+    const CHAVES_VALIDAS = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort',
+                            'cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab'];
+    const temChaveValida = CHAVES_VALIDAS.some(k => k in dados);
+    if (!temChaveValida)
+      return res.status(400).json({ ok: false, erro: 'Arquivo não parece ser um backup Composê válido.' });
+
     const lm = Date.now();
     const payload = Object.assign({}, dados, { _lastModified: lm });
+
     // Backup do estado atual antes de sobrescrever
     if (!pool) {
       const today = new Date().toISOString().slice(0, 10);
       const backupPath = path.join(process.env.DADOS_DIR || __dirname, `dados_backup_pre_import_${today}.json`);
-      try { const cur = await lerDados(); fs.writeFileSync(backupPath, JSON.stringify(cur, null, 2)); } catch (_) {}
+      try { const cur = await lerDados(); await fsp.writeFile(backupPath, JSON.stringify(cur, null, 2)); } catch (_) {}
     }
-    await salvarDados(payload);
+
+    await writeLocked(async () => {
+      await salvarDados(payload);
+      _lastModifiedCache = lm;
+    });
+
     res.json({ ok: true, lastModified: lm });
-  } catch (e) {
-    res.status(500).json({ ok: false, erro: e.message });
-  }
+  } catch (e) { res.status(500).json({ ok: false, erro: e.message }); }
 });
 
 // ── PROXY AUGE API ───────────────────────────────────────────────────────────
@@ -272,45 +317,65 @@ app.get('/auge/orcamentos', auth, async (req, res) => {
     const qs = new URLSearchParams(req.query).toString();
     const { status, body } = await augeRequest('dyn/fn/Orcamento' + (qs ? '?' + qs : ''));
     if (status !== 200) return res.status(status).json({ erro: 'Auge retornou ' + status });
-    const lista = xmlParseList(body, 'Orcamento');
-    res.json(lista);
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
+    res.json(xmlParseList(body, 'Orcamento'));
+  } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
 app.get('/auge/orcamento-itens/:id', auth, async (req, res) => {
   try {
     const { status, body } = await augeRequest('dyn/fn/OrcamentoItem?idOrcamento=' + encodeURIComponent(req.params.id));
-    console.log('[Auge itens] status:', status, '| body:', body.slice(0, 500));
     if (status !== 200) return res.status(status).json({ erro: 'Auge retornou ' + status });
-    const lista = xmlParseList(body, 'OrcamentoItem');
-    console.log('[Auge itens] parsed:', lista.length, 'itens');
-    res.json(lista);
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
+    res.json(xmlParseList(body, 'OrcamentoItem'));
+  } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-// rota de debug — retorna XML bruto (remover após diagnóstico)
-app.get('/auge/raw/:caminho(*)', auth, async (req, res) => {
-  try {
-    const { status, body } = await augeRequest(req.params.caminho);
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.send(`STATUS: ${status}\n\n${body}`);
-  } catch (e) {
-    res.send('ERRO: ' + e.message);
-  }
-});
+// Rota de debug do Auge — disponível apenas se AUGE_DEBUG=true no ambiente
+if (process.env.AUGE_DEBUG === 'true') {
+  app.get('/auge/raw/:caminho(*)', auth, async (req, res) => {
+    try {
+      const { status, body } = await augeRequest(req.params.caminho);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.send(`STATUS: ${status}\n\n${body}`);
+    } catch (e) { res.send('ERRO: ' + e.message); }
+  });
+}
 
 // ── IA — GEMINI ─────────────────────────────────────────────────────────────
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
-
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function geminiCall(body) {
+  return new Promise((resolve, reject) => {
+    const opts = {
+      hostname: 'generativelanguage.googleapis.com',
+      path: '/v1beta/models/gemini-flash-latest:generateContent',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': GEMINI_KEY,
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+    const req2 = https.request(opts, r => {
+      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
+    });
+    req2.on('error', reject); req2.write(body); req2.end();
+  });
+}
+
+async function geminiComRetry(body) {
+  let result;
+  for (let t = 1; t <= 3; t++) {
+    result = await geminiCall(body);
+    if (result.status !== 503) break;
+    console.log(`[Gemini] 503 sobrecarga, tentativa ${t}/3...`);
+    await sleep(2000 * t);
+  }
+  return result;
+}
 
 app.post('/ia/gerar-orcamento', auth, async (req, res) => {
   if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
-
   const { texto, exemplos } = req.body;
   if (!texto) return res.status(400).json({ erro: 'Texto das anotações não informado.' });
 
@@ -337,53 +402,22 @@ Com base nas anotações acima, gere os itens do orçamento no formato JSON abai
 Responda APENAS com o JSON, sem texto adicional:
 {"itens": [...]}`;
 
-  const geminiCall = (body) => new Promise((resolve, reject) => {
-    const opts = {
-      hostname: 'generativelanguage.googleapis.com',
-      path: '/v1beta/models/gemini-flash-latest:generateContent',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) }
-    };
-    const req2 = https.request(opts, r => {
-      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
-    });
-    req2.on('error', reject); req2.write(body); req2.end();
-  });
-
   try {
-    const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
-
-    let result;
-    for (let t = 1; t <= 3; t++) {
-      result = await geminiCall(body);
-      if (result.status !== 503) break;
-      console.log(`[Gemini] 503 sobrecarga, tentativa ${t}/3...`);
-      await sleep(2000 * t);
-    }
-
+    const result = await geminiComRetry(JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }));
     if (result.status !== 200) {
-      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
-      let detalhe = '';
-      try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
+      let detalhe = ''; try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
       return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
     }
-
     const parsed = JSON.parse(result.body);
     const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return res.status(502).json({ erro: 'IA não retornou JSON válido.' });
-
-    const itens = JSON.parse(jsonMatch[0]);
-    res.json(itens);
-  } catch (e) {
-    console.error('[Gemini] erro:', e.message);
-    res.status(500).json({ erro: e.message });
-  }
+    res.json(JSON.parse(jsonMatch[0]));
+  } catch (e) { console.error('[Gemini] erro:', e.message); res.status(500).json({ erro: e.message }); }
 });
 
 app.post('/ia/ler-quantitativo', auth, async (req, res) => {
   if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
-
   const { arquivos, tipo } = req.body;
   if (!Array.isArray(arquivos) || !arquivos.length) return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
   if (arquivos.length > 6) return res.status(400).json({ erro: 'Envie no máximo 6 arquivos por vez.' });
@@ -397,72 +431,27 @@ app.post('/ia/ler-quantitativo', auth, async (req, res) => {
 
   const ehPiso = tipo === 'piso';
   const prompt = ehPiso
-    ? `Você é um assistente que lê fotos ou PDFs de um quantitativo/planilha de medidas de piso e extrai os dados por ambiente.
-
-Para cada ambiente encontrado, extraia:
-- "ambiente": nome do ambiente (ex: "SALA", "QUARTO 1")
-- "area": metragem quadrada (m²) do ambiente, como número (ex: 22.5). Se só houver largura e comprimento, calcule a área multiplicando-os.
-- "rodape": metragem linear (ml) de rodapé do ambiente, como número, se houver essa informação. Caso não exista, use null.
-
-Responda APENAS com o JSON, sem texto adicional:
-{"ambientes": [{"ambiente": "...", "area": 0, "rodape": null}]}`
-    : `Você é um assistente que lê fotos ou PDFs de um quantitativo/planilha de medidas de cortina e extrai os dados por ambiente.
-
-Para cada ambiente encontrado, extraia:
-- "ambiente": nome do ambiente (ex: "SALA", "QUARTO 1")
-- "largura": largura do vão/ambiente em metros, como número (ex: 3.07)
-- "altura": altura em metros, como número (ex: 2.76)
-
-Responda APENAS com o JSON, sem texto adicional:
-{"ambientes": [{"ambiente": "...", "largura": 0, "altura": 0}]}`;
-
-  const geminiCall = (body) => new Promise((resolve, reject) => {
-    const opts = {
-      hostname: 'generativelanguage.googleapis.com',
-      path: '/v1beta/models/gemini-flash-latest:generateContent',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) }
-    };
-    const req2 = https.request(opts, r => {
-      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
-    });
-    req2.on('error', reject); req2.write(body); req2.end();
-  });
+    ? `Você é um assistente que lê fotos ou PDFs de um quantitativo/planilha de medidas de piso e extrai os dados por ambiente.\n\nPara cada ambiente encontrado, extraia:\n- "ambiente": nome do ambiente (ex: "SALA", "QUARTO 1")\n- "area": metragem quadrada (m²) do ambiente, como número (ex: 22.5). Se só houver largura e comprimento, calcule a área multiplicando-os.\n- "rodape": metragem linear (ml) de rodapé do ambiente, como número, se houver essa informação. Caso não exista, use null.\n\nResponda APENAS com o JSON, sem texto adicional:\n{"ambientes": [{"ambiente": "...", "area": 0, "rodape": null}]}`
+    : `Você é um assistente que lê fotos ou PDFs de um quantitativo/planilha de medidas de cortina e extrai os dados por ambiente.\n\nPara cada ambiente encontrado, extraia:\n- "ambiente": nome do ambiente (ex: "SALA", "QUARTO 1")\n- "largura": largura do vão/ambiente em metros, como número (ex: 3.07)\n- "altura": altura em metros, como número (ex: 2.76)\n\nResponda APENAS com o JSON, sem texto adicional:\n{"ambientes": [{"ambiente": "...", "largura": 0, "altura": 0}]}`;
 
   try {
     const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...partesArquivo] }] });
-
-    let result;
-    for (let t = 1; t <= 3; t++) {
-      result = await geminiCall(body);
-      if (result.status !== 503) break;
-      console.log(`[Gemini] 503 sobrecarga, tentativa ${t}/3...`);
-      await sleep(2000 * t);
-    }
-
+    const result = await geminiComRetry(body);
     if (result.status !== 200) {
-      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
-      let detalhe = '';
-      try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
+      let detalhe = ''; try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
       return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
     }
-
     const parsed = JSON.parse(result.body);
     const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return res.status(502).json({ erro: 'IA não retornou JSON válido.' });
-
     const dados = JSON.parse(jsonMatch[0]);
     res.json({ ambientes: dados.ambientes || [] });
-  } catch (e) {
-    console.error('[Gemini] erro:', e.message);
-    res.status(500).json({ erro: e.message });
-  }
+  } catch (e) { console.error('[Gemini] erro:', e.message); res.status(500).json({ erro: e.message }); }
 });
 
 app.post('/ia/chat', auth, async (req, res) => {
   if (!GEMINI_KEY) return res.status(503).json({ erro: 'IA não configurada (GEMINI_API_KEY ausente).' });
-
   const { mensagens } = req.body;
   if (!Array.isArray(mensagens) || !mensagens.length) return res.status(400).json({ erro: 'Nenhuma mensagem enviada.' });
   if (mensagens.length > 40) return res.status(400).json({ erro: 'Conversa muito longa, inicie um novo chat.' });
@@ -499,49 +488,21 @@ Seja MUITO direto e breve: respostas curtas, de preferência 1 a 4 frases ou uma
 REGRA CRÍTICA DE CONFERÊNCIA: antes de enviar QUALQUER resposta que envolva números, medidas, datas ou cálculo (metragem, valores, quantidades, prazos, leitura de quantitativo, etc.), refaça o cálculo mentalmente do zero e confira o resultado no mínimo 4 vezes, inclusive testando o cálculo por um caminho diferente (ex: refazer a conta na ordem inversa, ou conferir a soma somando os termos em outra sequência) até bater as 4 conferências. Se alguma conferência der um resultado diferente, refaça tudo de novo até as 4 baterem. Não mostre essas conferências ao usuário — faça isso silenciosamente e só entregue a resposta final já revisada. Se não tiver certeza absoluta de um número após conferir, diga isso claramente em vez de arriscar um valor errado.` }]
   };
 
-  const geminiCall = (body) => new Promise((resolve, reject) => {
-    const opts = {
-      hostname: 'generativelanguage.googleapis.com',
-      path: '/v1beta/models/gemini-flash-latest:generateContent',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_KEY, 'Content-Length': Buffer.byteLength(body) }
-    };
-    const req2 = https.request(opts, r => {
-      let raw = ''; r.on('data', d => raw += d); r.on('end', () => resolve({ status: r.statusCode, body: raw }));
-    });
-    req2.on('error', reject); req2.write(body); req2.end();
-  });
-
   try {
     const body = JSON.stringify({ system_instruction: systemInstruction, contents });
-
-    let result;
-    for (let t = 1; t <= 3; t++) {
-      result = await geminiCall(body);
-      if (result.status !== 503) break;
-      console.log(`[Gemini] 503 sobrecarga, tentativa ${t}/3...`);
-      await sleep(2000 * t);
-    }
-
+    const result = await geminiComRetry(body);
     if (result.status !== 200) {
-      console.error('[Gemini] status', result.status, result.body.slice(0, 500));
-      let detalhe = '';
-      try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
+      let detalhe = ''; try { detalhe = JSON.parse(result.body)?.error?.message || ''; } catch(_) {}
       return res.status(502).json({ erro: 'Gemini ' + result.status + (detalhe ? ': ' + detalhe : '') });
     }
-
     const parsed = JSON.parse(result.body);
     const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (!text) return res.status(502).json({ erro: 'IA não retornou resposta.' });
-
     res.json({ resposta: text });
-  } catch (e) {
-    console.error('[Gemini] erro:', e.message);
-    res.status(500).json({ erro: e.message });
-  }
+  } catch (e) { console.error('[Gemini] erro:', e.message); res.status(500).json({ erro: e.message }); }
 });
 
 app.listen(PORT, () => {
   console.log(`Composê rodando em http://localhost:${PORT}`);
-  console.log(`Senha de acesso: ${SENHA}`);
+  console.log(`Versão: ${VERSAO}`);
 });

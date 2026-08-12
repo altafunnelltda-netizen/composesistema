@@ -1290,48 +1290,74 @@
 var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas', fornecedores:'cps_fornecedores' };
 var _initDone = false;
 var _saveQueue = [];
-function db(key) { try { return JSON.parse(localStorage.getItem(K[key])||'[]'); } catch(e) { return []; } }
+
+function db(key) {
+  try { return JSON.parse(localStorage.getItem(K[key]) || '[]'); }
+  catch(e) { return []; }
+}
+
+function _lsSet(chave, valor) {
+  try { localStorage.setItem(chave, JSON.stringify(valor)); return true; }
+  catch(e) {
+    // localStorage cheio (quota exceeded)
+    console.error('[storage] Quota excedida ao salvar', chave);
+    if(typeof toast==='function') toast('⚠️ Armazenamento local cheio. Limpe dados antigos.','err');
+    return false;
+  }
+}
+
 function _flushQueue() {
   var q = _saveQueue.slice(); _saveQueue = [];
   q.forEach(function(fn){ fn(); });
 }
-function dbSave(key,arr) {
-  localStorage.setItem(K[key],JSON.stringify(arr));
+
+function dbSave(key, arr) {
+  if(!_lsSet(K[key], arr)) return; // aborta se localStorage estiver cheio
+
   var changedKey = K[key];
-  var doSave = function() {
-    // Envia só a chave alterada — o servidor aplica somente ela (_changed) e
-    // ignora o resto, então não há motivo pra mandar uma cópia local
-    // (potencialmente desatualizada) de tudo mais.
-    var payload = { _changed: changedKey };
-    payload[changedKey] = arr;
-    fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
-      .then(function(r){ return r.json(); })
-      .then(function(d){ if(d.lastModified) _syncLM = d.lastModified; })
-      .catch(function(){});
-  };
-  if(!_initDone) { _saveQueue.push(doSave); return; }
-  doSave();
+  var payload = { _changed: changedKey };
+  payload[changedKey] = arr;
+
+  function doSave(tentativa) {
+    fetch('/dados', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { if(d.lastModified) _syncLM = d.lastModified; })
+    .catch(function() {
+      if(tentativa < 3) {
+        setTimeout(function(){ doSave(tentativa + 1); }, 2000 * tentativa);
+      } else {
+        if(typeof toast==='function') toast('⚠️ Falha ao salvar. Verifique a conexão.','err');
+      }
+    });
+  }
+
+  if(!_initDone) { _saveQueue.push(function(){ doSave(1); }); return; }
+  doSave(1);
 }
-function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// uid com mais entropia para eliminar risco de colisão
+function uid() {
+  return Date.now().toString(36) +
+    Math.random().toString(36).slice(2, 8) +
+    Math.random().toString(36).slice(2, 6);
+}
 
 // ── SYNC AUTOMÁTICO ──────────────────────────────────────
 var _syncLM = 0;
-// cps_tabelas excluído do polling — arquivos base64 são grandes; sincroniza somente no init da página
+// cps_tabelas excluído do polling (arquivos base64 grandes) — sincronizado só no init
 var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_fornecedores'];
 
 function _syncAplicar(d) {
   var changed = false;
-  _syncKeys.forEach(function(k){
-    if(d[k] === undefined) return;
-    // Não sobrescreve dado local com array vazio vindo do servidor
-    // (proteção contra race condition no init de outro computador)
-    if(Array.isArray(d[k]) && d[k].length === 0) {
-      var local = localStorage.getItem(k);
-      try { if(JSON.parse(local||'[]').length > 0) return; } catch(e){}
-    }
+  _syncKeys.forEach(function(k) {
+    if(d[k] === undefined) return; // chave ausente no servidor → mantém local
     var cur = localStorage.getItem(k);
     var nov = JSON.stringify(d[k]);
-    if(cur !== nov){ localStorage.setItem(k, nov); changed = true; }
+    if(cur !== nov) { _lsSet(k, d[k]); changed = true; }
   });
   return changed;
 }
@@ -1339,13 +1365,13 @@ function _syncAplicar(d) {
 function _syncRefresh() {
   var pgEl = document.querySelector('.pg.on');
   var id = pgEl ? pgEl.id.replace('pg-','') : 'dashboard';
-  if(id==='dashboard') { if(typeof atualizarDash==='function') atualizarDash(); }
-  else if(id==='agenda') { if(typeof renderAgenda==='function') renderAgenda(); }
-  else if(id==='quadro') { if(typeof renderQuadro==='function') renderQuadro(); }
-  else if(id==='notas') { if(typeof renderNotas==='function') renderNotas(); }
+  if(id==='dashboard')      { if(typeof atualizarDash==='function') atualizarDash(); }
+  else if(id==='agenda')    { if(typeof renderAgenda==='function') renderAgenda(); }
+  else if(id==='quadro')    { if(typeof renderQuadro==='function') renderQuadro(); }
+  else if(id==='notas')     { if(typeof renderNotas==='function') renderNotas(); }
   else if(id==='colaboradores') { if(typeof renderColab==='function') renderColab(); }
   else if(id==='historico') { if(typeof renderHistorico==='function') renderHistorico(); }
-  else if(id==='tabelas') { if(typeof renderTabelas==='function') renderTabelas(); if(typeof renderFornecedores==='function') renderFornecedores(); }
+  else if(id==='tabelas')   { if(typeof renderTabelas==='function') renderTabelas(); if(typeof renderFornecedores==='function') renderFornecedores(); }
   if(typeof atualizarTrashBadge==='function') atualizarTrashBadge();
 }
 
@@ -1359,10 +1385,7 @@ function _syncPull() {
           .then(function(r){ return r.json(); })
           .then(function(d){
             _syncLM = d._lastModified || lm;
-            if(_syncAplicar(d)) {
-              _syncRefresh();
-              _syncBadge();
-            }
+            if(_syncAplicar(d)) { _syncRefresh(); _syncBadge(); }
           }).catch(function(){});
       } else if(_syncLM === 0) {
         _syncLM = lm || Date.now();
@@ -1378,7 +1401,7 @@ function _syncBadge() {
   el._t = setTimeout(function(){ el.classList.remove('on'); }, 3000);
 }
 
-// Inicia polling: a cada 12s quando aba visível, verifica ao volcar visibilidade
+// Polling a cada 12s (aba visível) + ao voltar visibilidade
 setInterval(function(){ if(!document.hidden) _syncPull(); }, 12000);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) _syncPull(); });
 
@@ -1496,21 +1519,21 @@ function _mostrarAvisoAtualizacao(){
 }
 
 // ── INIT: carrega dados do servidor no localStorage ───────
+// O servidor é a fonte de verdade. Aplica TODAS as chaves presentes,
+// inclusive arrays vazios (deleção intencional em outro dispositivo).
 (function(){
   fetch('/dados').then(function(r){ return r.json(); }).then(function(d){
     _syncLM = d._lastModified || Date.now();
-    if(d.cps_orc && d.cps_orc.length) localStorage.setItem('cps_orc', JSON.stringify(d.cps_orc));
-    if(d.cps_cor && d.cps_cor.length) localStorage.setItem('cps_cor', JSON.stringify(d.cps_cor));
-    if(d.cps_tap && d.cps_tap.length) localStorage.setItem('cps_tap', JSON.stringify(d.cps_tap));
-    if(d.cps_piso && d.cps_piso.length) localStorage.setItem('cps_piso', JSON.stringify(d.cps_piso));
-    if(d.cps_cort && d.cps_cort.length) localStorage.setItem('cps_cort', JSON.stringify(d.cps_cort));
-    if(d.cps_kb) localStorage.setItem('cps_kb', JSON.stringify(d.cps_kb));
-    if(d.cps_notas && d.cps_notas.length) localStorage.setItem('cps_notas', JSON.stringify(d.cps_notas));
-    if(d.cps_lixeira) localStorage.setItem('cps_lixeira', JSON.stringify(d.cps_lixeira));
-    if(d.cps_agenda && d.cps_agenda.length) localStorage.setItem('cps_agenda', JSON.stringify(d.cps_agenda));
-    if(d.cps_colab && d.cps_colab.length) localStorage.setItem('cps_colab', JSON.stringify(d.cps_colab));
-    if(d.cps_conf && d.cps_conf.length) localStorage.setItem('cps_conf', JSON.stringify(d.cps_conf));
-    if(d.cps_fornecedores && d.cps_fornecedores.length) localStorage.setItem('cps_fornecedores', JSON.stringify(d.cps_fornecedores));
+    // Chaves de array simples — aplica sempre que existir no servidor
+    ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort',
+     'cps_notas','cps_agenda','cps_colab','cps_conf','cps_fornecedores'].forEach(function(k){
+      if(d[k] !== undefined) _lsSet(k, d[k]);
+    });
+    // Chaves de objeto — aplica se existir
+    if(d.cps_kb !== undefined)      _lsSet('cps_kb', d.cps_kb);
+    if(d.cps_lixeira !== undefined) _lsSet('cps_lixeira', d.cps_lixeira);
+    // Tabelas de preço — só existe no init (não entra no polling por tamanho)
+    if(d.cps_tabelas !== undefined) _lsSet('cps_tabelas', d.cps_tabelas);
     _initDone = true;
     _flushQueue();
     if(typeof atualizarDash === 'function') atualizarDash();
