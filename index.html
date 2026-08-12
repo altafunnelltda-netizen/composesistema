@@ -390,8 +390,11 @@
 </head>
 <body>
 
+<!-- Overlay mobile para fechar sidebar -->
+<div class="mob-sb-overlay" id="mob-sb-overlay" onclick="toggleMobileMenu()"></div>
+
 <!-- SIDEBAR -->
-<aside class="sb">
+<aside class="sb" id="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-name">Composê</div>
     <div class="sb-logo-sub">Santos — SP · (13) 9 8195-0001</div>
@@ -494,8 +497,13 @@
 <!-- MAIN -->
 <div class="main">
   <div class="topbar no-print">
-    <span class="topbar-title" id="topbar-title">Dashboard</span>
-    <div style="display:flex;align-items:center;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+      <button class="mob-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
       <span class="topbar-date" id="topbar-date"></span>
       <span class="sync-badge" id="sync-badge" title="Dados atualizados">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -1512,6 +1520,23 @@ function _mostrarAvisoAtualizacao(){
   }).catch(function(){ _initDone = true; _flushQueue(); });
 })();
 
+// ── MENU MOBILE ───────────────────────────────────────────
+function toggleMobileMenu() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('mob-sb-overlay');
+  if (!sb) return;
+  var open = sb.classList.toggle('mob-open');
+  ov.classList.toggle('on', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function fecharMenuMobile() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('mob-sb-overlay');
+  if (sb) sb.classList.remove('mob-open');
+  if (ov) ov.classList.remove('on');
+  document.body.style.overflow = '';
+}
+
 // ── NAV ───────────────────────────────────────────────────
 var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', tabelas:'Tabelas de Preço', auge:'Importar Auge' };
 function ir(id,el) {
@@ -1532,6 +1557,7 @@ function ir(id,el) {
   document.querySelector('.wrap').classList.toggle('wrap-wide', id==='quadro'||id==='notas'||id==='agenda'||id==='tabelas');
   document.querySelector('.wrap').classList.toggle('wrap-nopad', id==='agenda');
   window.scrollTo({top:0,behavior:'smooth'});
+  fecharMenuMobile();
   if (window.location.hash !== '#'+id) window.location.hash = id;
   if(id==='dashboard') atualizarDash();
   if(id==='quadro') renderQuadro();
