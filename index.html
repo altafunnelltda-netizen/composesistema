@@ -425,6 +425,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
         Pedidos
       </a>
+      <a class="sb-item" id="nav-clientes" href="#clientes" onclick="ir('clientes',this);renderClientes();return false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clientes
+      </a>
     </div>
     <div class="sb-group">
       <div class="sb-lbl">Gestão</div>
@@ -605,7 +609,7 @@
         <div class="f f2"><label>Consultor</label><input type="text" id="orc-consultor" value="Maicom Polieri"></div>
       </div>
       <div class="row">
-        <div class="f f3"><label>Cliente</label><input type="text" id="orc-cliente"></div>
+        <div class="f f3"><label>Cliente</label><input type="hidden" id="orc-clienteId"><input type="text" id="orc-cliente" autocomplete="off" oninput="_cliAc(this,'orc-clienteId','orc-fone')" onblur="_cliHideDelay()"></div>
         <div class="f f2"><label>Telefone</label><input type="text" id="orc-fone"></div>
       </div>
       <div class="row"><div class="f fw"><label>Endereço</label><input type="text" id="orc-end"></div></div>
@@ -694,7 +698,7 @@
         <div class="f f2"><label>Consultor</label><input type="text" id="cor-consultor" value="Maicom Polieri"></div>
       </div>
       <div class="row">
-        <div class="f f3"><label>Cliente</label><input type="text" id="cor-cliente"></div>
+        <div class="f f3"><label>Cliente</label><input type="hidden" id="cor-clienteId"><input type="text" id="cor-cliente" autocomplete="off" oninput="_cliAc(this,'cor-clienteId',null)" onblur="_cliHideDelay()"></div>
         <div class="f f2"><label>Ambiente</label><input type="text" id="cor-ambiente"></div>
       </div>
       <div class="row"><div class="f fw"><label>Endereço</label><input type="text" id="cor-end"></div></div>
@@ -797,7 +801,7 @@
         <div class="f f2"><label>Consultor</label><input type="text" id="tap-consultor" value="Maicom Polieri"></div>
       </div>
       <div class="row">
-        <div class="f f3"><label>Cliente</label><input type="text" id="tap-cliente"></div>
+        <div class="f f3"><label>Cliente</label><input type="hidden" id="tap-clienteId"><input type="text" id="tap-cliente" autocomplete="off" oninput="_cliAc(this,'tap-clienteId','tap-fone')" onblur="_cliHideDelay()"></div>
         <div class="f f2"><label>Telefone</label><input type="text" id="tap-fone"></div>
       </div>
       <div class="row"><div class="f fw"><label>Endereço de Retirada</label><input type="text" id="tap-end"></div></div>
@@ -1225,6 +1229,23 @@
 <!-- PEDIDO OVERLAY -->
 <div id="ped-overlay" onclick="if(event.target===this)pedFecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;align-items:center;justify-content:center;padding:10px"></div>
 
+<!-- CLIENTES -->
+<div id="pg-clientes" class="pg">
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <input type="text" id="cli-busca" placeholder="Buscar por nome, telefone..." oninput="renderClientes()" style="flex:1;min-width:200px">
+      <button class="btn btn-p" onclick="cliNovoModal()">+ Novo Cliente</button>
+    </div>
+  </div>
+  <div id="cli-lista"></div>
+</div>
+
+<!-- CLIENTE OVERLAY (ficha + edição) -->
+<div id="cli-overlay" onclick="if(event.target===this)cliFecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;align-items:center;justify-content:center;padding:10px"></div>
+
+<!-- AUTOCOMPLETE DROPDOWN (único, compartilhado) -->
+<div id="_cli-drop" style="display:none;position:fixed;z-index:99999;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.18);max-height:220px;overflow-y:auto;min-width:220px"></div>
+
 </div><!-- /main -->
 
 <div class="toast" id="toast"></div>
@@ -1345,7 +1366,7 @@
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas', fornecedores:'cps_fornecedores', catalogo:'cps_catalogo', ped:'cps_ped' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas', fornecedores:'cps_fornecedores', catalogo:'cps_catalogo', ped:'cps_ped', clientes:'cps_clientes' };
 var _initDone = false;
 var _saveQueue = [];
 
@@ -1465,7 +1486,7 @@ function uid() {
 // ── SYNC AUTOMÁTICO ──────────────────────────────────────
 var _syncLM = 0;
 // cps_tabelas excluído do polling (arquivos base64 grandes) — sincronizado só no init
-var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_catalogo','cps_ped'];
+var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_catalogo','cps_ped','cps_clientes'];
 
 function _syncAplicar(d) {
   var changed = false;
@@ -1641,7 +1662,7 @@ function _mostrarAvisoAtualizacao(){
   function _aplicarServidor(d){
     _syncLM = d._lastModified || Date.now();
     ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort',
-     'cps_notas','cps_agenda','cps_colab','cps_conf','cps_fornecedores'].forEach(function(k){
+     'cps_notas','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_clientes'].forEach(function(k){
       if(d[k] !== undefined) _lsSet(k, d[k]);
     });
     if(d.cps_kb !== undefined)      _lsSet('cps_kb', d.cps_kb);
@@ -2290,7 +2311,7 @@ function orcSerializar(){
     });
   });
   return {id:orcId||uid(),_ts:Date.now(),num:v('orc-num'),data:v('orc-data'),consultor:v('orc-consultor'),
-    cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
+    clienteId:v('orc-clienteId'),cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
     prazo:v('orc-prazo'),pagamento:v('orc-pagamento'),validade:v('orc-validade'),obs:v('orc-obs'),
     status:v('orc-status')||'pendente',
     itens:itens,total:orcCalc()};
@@ -2429,6 +2450,8 @@ function orcGerarOS(){
 function salvarOrcamento(){
   sincronizarPrintOrc();
   var d=orcSerializar();
+  d.clienteId=_cliAutoReg(d.clienteId,d.cliente,d.fone);
+  sv('orc-clienteId',d.clienteId);
   var arr=db('orc'); var i=arr.findIndex(function(o){return o.id===d.id;});
   if(i>=0)arr[i]=d;else arr.push(d);
   dbSave('orc',arr); orcId=d.id;
@@ -2442,7 +2465,7 @@ function orcRestaurar(o){
   document.getElementById('orc-titulo').textContent='Orçamento #'+(o.num||o.id.slice(0,6));
   document.getElementById('orc-ph-title').textContent='ORÇAMENTO Nº '+(o.num||'');
   sv('orc-num',o.num);sv('orc-data',o.data);sv('orc-consultor',o.consultor);
-  sv('orc-cliente',o.cliente);sv('orc-fone',o.fone);sv('orc-end',o.end);
+  sv('orc-clienteId',o.clienteId||'');sv('orc-cliente',o.cliente);sv('orc-fone',o.fone);sv('orc-end',o.end);
   sv('orc-intro',o.intro);sv('orc-prazo',o.prazo);sv('orc-pagamento',o.pagamento);
   sv('orc-validade',o.validade);sv('orc-obs',o.obs);
   setOrcStatus(o.status||'pendente');
@@ -2707,7 +2730,7 @@ function pedMontarFormulario(p){
     // Cliente
     '<div><div style="font-weight:700;font-size:12px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Dados do Cliente</div>'+
     '<div class="row">'+
-      '<div class="f fw"><label>Cliente</label><input type="text" id="pedm-cliente" value="'+esc(p.cliente||'')+'"></div>'+
+      '<div class="f fw"><label>Cliente</label><input type="hidden" id="pedm-clienteId" value="'+esc(p.clienteId||'')+'"><input type="text" id="pedm-cliente" value="'+esc(p.cliente||'')+'" autocomplete="off" oninput="_cliAc(this,\'pedm-clienteId\',\'pedm-fone\')" onblur="_cliHideDelay()"></div>'+
       '<div class="f f2"><label>CPF / CNPJ</label><input type="text" id="pedm-cpf" value="'+esc(p.cpf||'')+'"></div>'+
       '<div class="f f2"><label>Telefone</label><input type="text" id="pedm-fone" value="'+esc(p.fone||'')+'"></div>'+
     '</div>'+
@@ -2879,6 +2902,7 @@ function pedSalvar(){
     data:document.getElementById('pedm-data').value,
     consultor:document.getElementById('pedm-consultor').value.trim(),
     status:document.getElementById('pedm-status').value,
+    clienteId:(document.getElementById('pedm-clienteId')||{}).value||'',
     cliente:cliente,
     cpf:document.getElementById('pedm-cpf').value.trim(),
     fone:document.getElementById('pedm-fone').value.trim(),
@@ -2889,6 +2913,7 @@ function pedSalvar(){
     parcelas:_pedParcelas.map(function(p){return Object.assign({},p);}),
     obs:document.getElementById('pedm-obs').value.trim()
   };
+  ped.clienteId=_cliAutoReg(ped.clienteId,ped.cliente,ped.fone);
   var i=arr.findIndex(function(x){return x.id===ped.id;});
   if(i>=0)arr[i]=ped;else arr.push(ped);
   dbSave('ped',arr);pedFecharModal();renderPedidos();toast('Pedido salvo!','ok');
@@ -2957,7 +2982,7 @@ function toggleCor2(){
 function corSerializar(){
   return {id:corId||uid(),_ts:Date.now(),
     num:v('cor-num'),data:v('cor-data'),consultor:v('cor-consultor'),
-    cliente:v('cor-cliente'),ambiente:v('cor-ambiente'),end:v('cor-end'),
+    clienteId:v('cor-clienteId'),cliente:v('cor-cliente'),ambiente:v('cor-ambiente'),end:v('cor-end'),
     produto:v('cor-produto'),largura:v('cor-largura'),altura:v('cor-altura'),altura2:v('cor-altura2'),
     tec1:{ref:v('cor-tec1-ref'),qtd:v('cor-tec1-qtd'),prega:v('cor-tec1-prega'),obs:v('cor-tec1-obs')},
     tipo2:document.querySelector('input[name="cor-tipo2"]:checked').value,
@@ -2972,6 +2997,8 @@ function salvarOsCortinas(){
   if(!d.produto){toast('Informe a Descrição do Produto.','err');document.getElementById('cor-produto').focus();return;}
   if(!d.largura){toast('Informe a Largura.','err');document.getElementById('cor-largura').focus();return;}
   if(!d.altura){toast('Informe a Altura da Cortina.','err');document.getElementById('cor-altura').focus();return;}
+  d.clienteId=_cliAutoReg(d.clienteId,d.cliente,'');
+  sv('cor-clienteId',d.clienteId);
   var arr=db('cor'); var i=arr.findIndex(function(o){return o.id===d.id;});
   if(i>=0)arr[i]=d;else arr.push(d);
   dbSave('cor',arr); corId=d.id;
@@ -2981,7 +3008,7 @@ function salvarOsCortinas(){
 function corRestaurar(o){
   corId=o.id;
   sv('cor-num',o.num);sv('cor-data',o.data);sv('cor-consultor',o.consultor);
-  sv('cor-cliente',o.cliente);sv('cor-ambiente',o.ambiente);sv('cor-end',o.end);
+  sv('cor-clienteId',o.clienteId||'');sv('cor-cliente',o.cliente);sv('cor-ambiente',o.ambiente);sv('cor-end',o.end);
   sv('cor-produto',o.produto);sv('cor-largura',o.largura);sv('cor-altura',o.altura);sv('cor-altura2',o.altura2);
   var t1=o.tec1||{};
   sv('cor-tec1-ref',t1.ref);sv('cor-tec1-qtd',t1.qtd);sv('cor-tec1-prega',t1.prega);sv('cor-tec1-obs',t1.obs);
@@ -3199,7 +3226,7 @@ function limparOsTapecaria(){
 function tapSerializar(){
   return {id:tapId||uid(),_ts:Date.now(),
     num:v('tap-num'),data:v('tap-data'),consultor:v('tap-consultor'),
-    cliente:v('tap-cliente'),fone:v('tap-fone'),end:v('tap-end'),
+    clienteId:v('tap-clienteId'),cliente:v('tap-cliente'),fone:v('tap-fone'),end:v('tap-end'),
     tipo:v('tap-tipo'),prazo:v('tap-prazo'),descricao:v('tap-descricao'),
     tec:{ref:v('tap-tec-ref'),cor:v('tap-tec-cor'),qtd:v('tap-tec-qtd')},
     obs:v('tap-obs')};
@@ -3209,6 +3236,8 @@ function salvarOsTapecaria(){
   var d=tapSerializar();
   if(!d.cliente){toast('Informe o nome do cliente.','err');document.getElementById('tap-cliente').focus();return;}
   if(!d.descricao){toast('Informe a Descrição do Serviço.','err');document.getElementById('tap-descricao').focus();return;}
+  d.clienteId=_cliAutoReg(d.clienteId,d.cliente,d.fone);
+  sv('tap-clienteId',d.clienteId);
   var arr=db('tap'); var i=arr.findIndex(function(o){return o.id===d.id;});
   if(i>=0)arr[i]=d;else arr.push(d);
   dbSave('tap',arr); tapId=d.id;
@@ -3219,7 +3248,7 @@ function salvarOsTapecaria(){
 function tapRestaurar(o){
   tapId=o.id;
   sv('tap-num',o.num);sv('tap-data',o.data);sv('tap-consultor',o.consultor);
-  sv('tap-cliente',o.cliente);sv('tap-fone',o.fone);sv('tap-end',o.end);
+  sv('tap-clienteId',o.clienteId||'');sv('tap-cliente',o.cliente);sv('tap-fone',o.fone);sv('tap-end',o.end);
   sv('tap-tipo',o.tipo);sv('tap-prazo',o.prazo);sv('tap-descricao',o.descricao);
   var t=o.tec||{};sv('tap-tec-ref',t.ref);sv('tap-tec-cor',t.cor);sv('tap-tec-qtd',t.qtd);
   sv('tap-obs',o.obs);
@@ -7875,6 +7904,298 @@ function quantShowReview(prefixo, ambientes){
     });
   };
 }
+
+// ══════════════════════════════════════════════════════════
+// MÓDULO CLIENTES — CRM
+// ══════════════════════════════════════════════════════════
+
+// ── Helpers ──────────────────────────────────────────────
+function _cliNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
+
+// Retorna ou cria cliente pelo nome. Salva em cps_clientes.
+// Usado automaticamente no save de cada documento.
+function _cliAutoReg(existingId, nome, fone){
+  if(!nome) return '';
+  var clientes=db('clientes');
+  // Se já temos ID válido, atualiza fone se veio vazio
+  if(existingId){
+    var found=clientes.find(function(c){return c.id===existingId;});
+    if(found){
+      if(fone && !found.fone){ found.fone=fone; dbSave('clientes',clientes); }
+      return existingId;
+    }
+  }
+  // Tenta encontrar pelo nome normalizado
+  var norm=_cliNorm(nome);
+  var existing=clientes.find(function(c){return _cliNorm(c.nome)===norm;});
+  if(existing){
+    if(fone && !existing.fone){ existing.fone=fone; dbSave('clientes',clientes); }
+    return existing.id;
+  }
+  // Cria novo
+  var novo={id:uid(),_ts:Date.now(),nome:nome,fone:fone||'',email:'',obs:''};
+  clientes.push(novo);
+  dbSave('clientes',clientes);
+  return novo.id;
+}
+
+// ── Autocomplete ──────────────────────────────────────────
+var _cliAcTarget=null; // {inputEl, hiddenId, foneId}
+var _cliHideTimer=null;
+
+function _cliAc(inputEl, hiddenId, foneId){
+  _cliAcTarget={inputEl:inputEl,hiddenId:hiddenId,foneId:foneId};
+  var q=_cliNorm(inputEl.value);
+  // Limpa o ID se o usuário editou o texto manualmente
+  var hid=document.getElementById(hiddenId);
+  if(hid) hid.value='';
+  var drop=document.getElementById('_cli-drop');
+  if(!q||q.length<1){ drop.style.display='none'; return; }
+  var clientes=db('clientes');
+  var matches=clientes.filter(function(c){return _cliNorm(c.nome).indexOf(q)>=0;}).slice(0,8);
+  var rect=inputEl.getBoundingClientRect();
+  drop.style.top=(rect.bottom+window.scrollY+2)+'px';
+  drop.style.left=(rect.left+window.scrollX)+'px';
+  drop.style.width=rect.width+'px';
+  var html='';
+  matches.forEach(function(c){
+    html+='<div class="_cli-opt" onmousedown="_cliSelect(\''+c.id+'\')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)">'
+      +'<div style="font-weight:600">'+esc(c.nome)+'</div>'
+      +(c.fone?'<div style="font-size:11px;color:var(--text-muted)">'+esc(c.fone)+'</div>':'')
+      +'</div>';
+  });
+  // Opção de criar novo se não houver correspondência exata
+  var exactMatch=clientes.some(function(c){return _cliNorm(c.nome)===q;});
+  if(!exactMatch&&inputEl.value.trim()){
+    html+='<div class="_cli-opt" onmousedown="_cliCriarNovo(\''+esc(inputEl.value.trim())+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--accent);border-top:1px solid var(--border)">'
+      +'+ Criar cliente: <strong>'+esc(inputEl.value.trim())+'</strong></div>';
+  }
+  if(!html){ drop.style.display='none'; return; }
+  drop.innerHTML=html;
+  drop.style.display='block';
+}
+
+function _cliSelect(id){
+  var drop=document.getElementById('_cli-drop');
+  drop.style.display='none';
+  if(!_cliAcTarget) return;
+  var clientes=db('clientes');
+  var c=clientes.find(function(x){return x.id===id;});
+  if(!c) return;
+  _cliAcTarget.inputEl.value=c.nome;
+  var hid=document.getElementById(_cliAcTarget.hiddenId);
+  if(hid) hid.value=c.id;
+  if(_cliAcTarget.foneId && c.fone){
+    var foneEl=document.getElementById(_cliAcTarget.foneId);
+    if(foneEl && !foneEl.value) foneEl.value=c.fone;
+  }
+}
+
+function _cliCriarNovo(nome){
+  var drop=document.getElementById('_cli-drop');
+  drop.style.display='none';
+  if(!nome) return;
+  var novo={id:uid(),_ts:Date.now(),nome:nome,fone:'',email:'',obs:''};
+  var clientes=db('clientes');
+  clientes.push(novo);
+  dbSave('clientes',clientes);
+  if(_cliAcTarget){
+    _cliAcTarget.inputEl.value=nome;
+    var hid=document.getElementById(_cliAcTarget.hiddenId);
+    if(hid) hid.value=novo.id;
+  }
+  toast('Cliente "'+nome+'" criado.','ok');
+}
+
+function _cliHideDelay(){
+  _cliHideTimer=setTimeout(function(){
+    var drop=document.getElementById('_cli-drop');
+    if(drop) drop.style.display='none';
+  },200);
+}
+
+// ── Página Clientes ──────────────────────────────────────
+function renderClientes(){
+  var el=document.getElementById('cli-lista'); if(!el) return;
+  var q=_cliNorm((document.getElementById('cli-busca')||{}).value||'');
+  var clientes=db('clientes').slice().sort(function(a,b){return (a.nome||'').localeCompare(b.nome||'','pt-BR');});
+  if(q) clientes=clientes.filter(function(c){return _cliNorm(c.nome).indexOf(q)>=0||_cliNorm(c.fone||'').indexOf(q)>=0;});
+  if(!clientes.length){el.innerHTML='<div class="empty">Nenhum cliente cadastrado ainda. Clientes são criados automaticamente ao salvar orçamentos, OS e pedidos.</div>';return;}
+  // Conta documentos por cliente
+  var orcs=db('orc'), cors=db('cor'), taps=db('tap'), peds=db('ped');
+  el.innerHTML='<div class="card" style="padding:0;overflow:hidden">'
+    +clientes.map(function(c){
+      var nOrc=orcs.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
+      var nCor=cors.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
+      var nTap=taps.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
+      var nPed=peds.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
+      var totalGasto=peds.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));})
+        .reduce(function(s,p){return s+(p.total||0);},0);
+      var badges='';
+      if(nOrc) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nOrc+' Orc.</span>';
+      if(nCor) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nCor+' OS Cor.</span>';
+      if(nTap) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nTap+' OS Tap.</span>';
+      if(nPed) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nPed+' Ped.</span>';
+      return '<div class="hist-item" style="cursor:pointer;padding:10px 14px;border-bottom:1px solid var(--border)" onclick="cliFicha(\''+c.id+'\')">'
+        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-weight:700;font-size:14px">'+esc(c.nome)+'</div>'
+        +(c.fone?'<div style="font-size:12px;color:var(--text-muted)">'+esc(c.fone)+(c.email?' · '+esc(c.email):'')+'</div>':'')
+        +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">'+badges+'</div>'
+        +'</div>'
+        +(totalGasto?'<div style="font-weight:700;font-size:13px;color:var(--accent);white-space:nowrap">R$ '+totalGasto.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'
+        +'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+// ── Ficha do Cliente ─────────────────────────────────────
+function cliFicha(id){
+  var clientes=db('clientes');
+  var c=clientes.find(function(x){return x.id===id;});
+  if(!c) return;
+  var orcs=db('orc').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
+  var cors=db('cor').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
+  var taps=db('tap').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
+  var peds=db('ped').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
+  var totalGasto=peds.reduce(function(s,p){return s+(p.total||0);},0);
+
+  function secao(titulo, itens, fnRow){
+    if(!itens.length) return '';
+    return '<div style="margin-top:14px">'
+      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.06em;margin-bottom:6px">'+titulo+'</div>'
+      +itens.map(fnRow).join('')
+      +'</div>';
+  }
+
+  var svgArr='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+
+  var html='<div style="background:var(--bg);border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:22px 20px">'
+    // Cabeçalho + edição
+    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+    +'<div style="flex:1">'
+    +'<div style="font-size:18px;font-weight:800">'+esc(c.nome)+'</div>'
+    +(c.fone||c.email?'<div style="font-size:12px;color:var(--text-muted);margin-top:2px">'+(c.fone?esc(c.fone):'')+(c.fone&&c.email?' · ':''+(c.email?esc(c.email):''))+'</div>':'')
+    +(c.obs?'<div style="font-size:12px;color:var(--text-muted);margin-top:3px;font-style:italic">'+esc(c.obs)+'</div>':'')
+    +'</div>'
+    +(totalGasto?'<div style="text-align:right"><div style="font-size:11px;color:var(--text-muted)">Total gasto</div><div style="font-size:16px;font-weight:800;color:var(--accent)">R$ '+totalGasto.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>':'')
+    +'</div>'
+    // Botão editar
+    +'<div style="display:flex;gap:8px;margin-bottom:14px">'
+    +'<button class="btn btn-s" onclick="cliEditarModal(\''+id+'\')">Editar dados</button>'
+    +'<button class="btn" style="background:var(--bg2);border:1px solid var(--border);color:#ef4444" onclick="cliExcluir(\''+id+'\')">Excluir</button>'
+    +'</div>'
+    // Orçamentos
+    +secao('Orçamentos ('+orcs.length+')',orcs,function(o){
+      return '<div onclick="orcRestaurar(db(\'orc\').find(function(x){return x.id===\''+o.id+'\';}));ir(\'orcamento\',document.getElementById(\'nav-orcamento\'));cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
+        +(o.total?'<div style="font-size:12px;color:var(--text-muted)">R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
+        +'</div>'+svgArr+'</div>';
+    })
+    // OS Cortinas
+    +secao('OS Cortinas ('+cors.length+')',cors,function(o){
+      return '<div onclick="corRestaurar(db(\'cor\').find(function(x){return x.id===\''+o.id+'\';}));cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
+        +(o.produto?'<div style="font-size:12px;color:var(--text-muted)">'+esc(o.produto)+'</div>':'')
+        +'</div>'+svgArr+'</div>';
+    })
+    // OS Tapeçaria
+    +secao('OS Tapeçaria ('+taps.length+')',taps,function(o){
+      return '<div onclick="tapRestaurar(db(\'tap\').find(function(x){return x.id===\''+o.id+'\';}));cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
+        +(o.descricao?'<div style="font-size:12px;color:var(--text-muted)">'+esc(o.descricao.slice(0,60))+'</div>':'')
+        +'</div>'+svgArr+'</div>';
+    })
+    // Pedidos
+    +secao('Pedidos ('+peds.length+')',peds,function(o){
+      return '<div onclick="pedAbrirModal(o);cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
+        +(o.total?'<div style="font-size:12px;color:var(--text-muted)">R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
+        +'</div>'+svgArr+'</div>';
+    })
+    +((!orcs.length&&!cors.length&&!taps.length&&!peds.length)?'<div class="empty" style="margin-top:16px">Nenhum documento vinculado.</div>':'')
+    +'<div style="margin-top:18px"><button class="btn" style="background:var(--bg2);border:1px solid var(--border)" onclick="cliFecharModal()">Fechar</button></div>'
+    +'</div>';
+
+  var ov=document.getElementById('cli-overlay');
+  ov.innerHTML=html;
+  ov.style.display='flex';
+}
+
+function cliFecharModal(){
+  var ov=document.getElementById('cli-overlay');
+  if(ov){ ov.style.display='none'; ov.innerHTML=''; }
+}
+
+// ── Novo / Editar Cliente ─────────────────────────────────
+function cliNovoModal(){ cliEditarModal(null); }
+
+function cliEditarModal(id){
+  var clientes=db('clientes');
+  var c=id?clientes.find(function(x){return x.id===id;}):null;
+  var html='<div style="background:var(--bg);border-radius:12px;max-width:420px;width:100%;padding:22px 20px">'
+    +'<div style="font-size:16px;font-weight:800;margin-bottom:16px">'+(c?'Editar Cliente':'Novo Cliente')+'</div>'
+    +'<div class="f fw" style="margin-bottom:10px"><label>Nome</label><input type="text" id="_climod-nome" value="'+esc(c?c.nome:'')+'" placeholder="Nome completo"></div>'
+    +'<div class="row"><div class="f f2" style="margin-bottom:10px"><label>Telefone</label><input type="text" id="_climod-fone" value="'+esc(c?c.fone:'')+'"></div>'
+    +'<div class="f f2" style="margin-bottom:10px"><label>E-mail</label><input type="text" id="_climod-email" value="'+esc(c?c.email:'')+'"></div></div>'
+    +'<div class="f fw" style="margin-bottom:14px"><label>Observações</label><textarea id="_climod-obs" rows="2" style="resize:vertical">'+esc(c?c.obs:'')+'</textarea></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-p" onclick="_cliSalvarModal(\''+( id||'')+'\')">Salvar</button>'
+    +'<button class="btn" style="background:var(--bg2);border:1px solid var(--border)" onclick="cliFecharModal()">Cancelar</button>'
+    +'</div></div>';
+  var ov=document.getElementById('cli-overlay');
+  ov.innerHTML=html;
+  ov.style.display='flex';
+  setTimeout(function(){ var el=document.getElementById('_climod-nome'); if(el) el.focus(); },50);
+}
+
+function _cliSalvarModal(id){
+  var nome=document.getElementById('_climod-nome').value.trim();
+  if(!nome){toast('Informe o nome do cliente.','err');document.getElementById('_climod-nome').focus();return;}
+  var clientes=db('clientes');
+  if(id){
+    var idx=clientes.findIndex(function(c){return c.id===id;});
+    if(idx>=0){
+      clientes[idx].nome=nome;
+      clientes[idx].fone=document.getElementById('_climod-fone').value.trim();
+      clientes[idx].email=document.getElementById('_climod-email').value.trim();
+      clientes[idx].obs=document.getElementById('_climod-obs').value.trim();
+      dbSave('clientes',clientes);
+      toast('Cliente atualizado.','ok');
+      cliFecharModal();
+      renderClientes();
+      return;
+    }
+  }
+  var novo={id:uid(),_ts:Date.now(),
+    nome:nome,
+    fone:document.getElementById('_climod-fone').value.trim(),
+    email:document.getElementById('_climod-email').value.trim(),
+    obs:document.getElementById('_climod-obs').value.trim()
+  };
+  clientes.push(novo);
+  dbSave('clientes',clientes);
+  toast('Cliente criado.','ok');
+  cliFecharModal();
+  renderClientes();
+}
+
+function cliExcluir(id){
+  if(!confirm('Excluir este cliente? Os documentos vinculados não serão apagados.')) return;
+  dbSave('clientes',db('clientes').filter(function(c){return c.id!==id;}));
+  cliFecharModal();
+  renderClientes();
+  toast('Cliente removido.','ok');
+}
+
+// Registra página clientes no roteador
+if(typeof TITLES!=='undefined') TITLES['clientes']='Clientes';
 </script>
 </body>
 </html>
