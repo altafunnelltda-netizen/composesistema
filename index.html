@@ -1370,9 +1370,11 @@ function _flushQueue() {
 }
 
 // ── FILA OFFLINE ─────────────────────────────────────────
-// Payloads que falharam ficam aqui e são reenviados quando a conexão volta.
-var _offlineQueue = [];
-var _offlineOnline = true;
+// Persiste no localStorage para sobreviver a recarregamentos de página.
+var _OQ_KEY = 'cps_offline_queue';
+function _oqLoad(){ try{ return JSON.parse(localStorage.getItem(_OQ_KEY)||'[]'); }catch(e){ return []; } }
+function _oqSave(q){ try{ localStorage.setItem(_OQ_KEY, JSON.stringify(q)); }catch(e){} }
+var _offlineQueue = _oqLoad();
 
 function _syncOfflineBanner(mostrar) {
   var b = document.getElementById('_offline-banner');
@@ -1381,32 +1383,40 @@ function _syncOfflineBanner(mostrar) {
     b.id = '_offline-banner';
     b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#b91c1c;color:#fff;font-size:13px;font-weight:600;text-align:center;padding:8px 16px;z-index:99999;display:flex;align-items:center;justify-content:center;gap:10px';
     b.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>' +
-      '<span>Sem conexão — dados salvos localmente. Reenviando quando voltar a internet...</span>';
+      '<span id="_offline-banner-txt">Sem conexão — dados salvos localmente. Reenviando quando voltar a internet...</span>';
     document.body.appendChild(b);
   } else if(!mostrar && b) {
     b.remove();
   }
 }
 
+// Envia todos os itens da fila e retorna Promise que resolve quando terminar.
 function _flushOfflineQueue() {
-  if(!_offlineQueue.length) return;
-  var q = _offlineQueue.slice(); _offlineQueue = [];
-  q.forEach(function(p) {
-    fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) })
+  var q = _oqLoad();
+  if(!q.length) return Promise.resolve();
+  _offlineQueue = [];
+  _oqSave([]);
+  var promises = q.map(function(p){
+    return fetch('/dados', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) })
       .then(function(r){ return r.json(); })
       .then(function(d){ if(d.lastModified) _syncLM = d.lastModified; })
-      .catch(function(){ _offlineQueue.push(p); }); // volta para fila se falhar de novo
+      .catch(function(){
+        // Se falhou de novo, devolve para a fila
+        _offlineQueue.push(p);
+        _oqSave(_offlineQueue);
+      });
   });
+  return Promise.all(promises);
 }
 
 window.addEventListener('online', function() {
-  _offlineOnline = true;
   _syncOfflineBanner(false);
-  _flushOfflineQueue();
-  if(typeof toast==='function') toast('Conexão restaurada — dados sincronizados.','ok');
+  _flushOfflineQueue().then(function(){
+    if(!_oqLoad().length && typeof toast==='function')
+      toast('Conexão restaurada — dados sincronizados.','ok');
+  });
 });
 window.addEventListener('offline', function() {
-  _offlineOnline = false;
   _syncOfflineBanner(true);
 });
 
@@ -1432,8 +1442,9 @@ function dbSave(key, arr) {
       if(tentativa < 4) {
         setTimeout(function(){ doSave(tentativa + 1); }, 2000 * tentativa);
       } else {
-        // Guarda na fila offline para reenviar quando a conexão voltar
+        // Guarda na fila offline (persistida no localStorage) para reenviar após reload ou reconexão
         _offlineQueue.push(payload);
+        _oqSave(_offlineQueue);
         _syncOfflineBanner(true);
         if(typeof toast==='function') toast('Sem conexão — dado salvo localmente e será sincronizado ao voltar.','err');
       }
@@ -1624,20 +1635,17 @@ function _mostrarAvisoAtualizacao(){
 }
 
 // ── INIT: carrega dados do servidor no localStorage ───────
-// O servidor é a fonte de verdade. Aplica TODAS as chaves presentes,
-// inclusive arrays vazios (deleção intencional em outro dispositivo).
+// Se houver fila offline pendente (de um reload com WiFi caído), envia PRIMEIRO.
+// Só depois aplica os dados do servidor — garantindo que nada se perde.
 (function(){
-  fetch('/dados').then(function(r){ return r.json(); }).then(function(d){
+  function _aplicarServidor(d){
     _syncLM = d._lastModified || Date.now();
-    // Chaves de array simples — aplica sempre que existir no servidor
     ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort',
      'cps_notas','cps_agenda','cps_colab','cps_conf','cps_fornecedores'].forEach(function(k){
       if(d[k] !== undefined) _lsSet(k, d[k]);
     });
-    // Chaves de objeto — aplica se existir
     if(d.cps_kb !== undefined)      _lsSet('cps_kb', d.cps_kb);
     if(d.cps_lixeira !== undefined) _lsSet('cps_lixeira', d.cps_lixeira);
-    // Tabelas de preço — só existe no init (não entra no polling por tamanho)
     if(d.cps_tabelas !== undefined) _lsSet('cps_tabelas', d.cps_tabelas);
     _initDone = true;
     _flushQueue();
@@ -1645,7 +1653,26 @@ function _mostrarAvisoAtualizacao(){
     if(typeof atualizarTrashBadge === 'function') atualizarTrashBadge();
     var _hid = window.location.hash.replace('#','') || 'dashboard';
     if (_hid !== 'dashboard' && document.getElementById('pg-'+_hid)) ir(_hid, null);
-  }).catch(function(){ _initDone = true; _flushQueue(); });
+  }
+
+  var _pendentes = _oqLoad();
+  if(_pendentes.length) {
+    // Há dados locais não enviados — envia primeiro, depois puxa servidor
+    _flushOfflineQueue()
+      .then(function(){ return fetch('/dados'); })
+      .then(function(r){ return r.json(); })
+      .then(_aplicarServidor)
+      .catch(function(){
+        // Offline no init: usa dados locais sem sobrescrever
+        _initDone = true; _flushQueue();
+        _syncOfflineBanner(true);
+      });
+  } else {
+    fetch('/dados')
+      .then(function(r){ return r.json(); })
+      .then(_aplicarServidor)
+      .catch(function(){ _initDone = true; _flushQueue(); });
+  }
 })();
 
 // ── MENU MOBILE ───────────────────────────────────────────
