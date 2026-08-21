@@ -606,7 +606,8 @@
     <div class="card no-print">
       <div class="card-title" style="display:flex;align-items:center;gap:10px">
         Funil de Vendas
-        <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text-muted)">todos os períodos</span>
+        <span id="funil-mes-label" style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text-muted)"></span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 12px;margin-left:8px" onclick="leadNovoModal()">+ Lead</button>
       </div>
       <div id="dash-funil"></div>
       <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
@@ -1175,12 +1176,21 @@
   <!-- QUADRO KANBAN -->
   <div id="pg-quadro" class="pg">
     <div class="kb-toolbar">
-      <div class="kb-search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="kb-search" placeholder="Buscar título, cliente ou observação..." oninput="renderQuadro()">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button class="btn btn-s btn-xs" onclick="kbMesNav(-1)" style="padding:4px 8px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span id="kb-mes-label" style="font-size:13px;font-weight:700;white-space:nowrap;min-width:120px;text-align:center"></span>
+        <button class="btn btn-s btn-xs" onclick="kbMesNav(1)" style="padding:4px 8px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn btn-s btn-xs" onclick="kbMesHoje()" style="font-size:11px">Hoje</button>
       </div>
-      <select id="kb-filter-col" onchange="renderQuadro()" style="max-width:180px;flex-shrink:0;min-width:0"></select>
-      <button class="btn btn-s btn-xs" onclick="kbNewCol()" style="flex-shrink:0;white-space:nowrap">＋ Coluna</button>
+      <div class="kb-search-wrap" style="flex:1;min-width:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="kb-search" placeholder="Buscar..." oninput="renderQuadro()">
+      </div>
+      <button class="btn btn-p btn-xs" onclick="kbNewCard()" style="flex-shrink:0;white-space:nowrap">＋ Tarefa</button>
     </div>
     <div class="kb-board" id="kb-board"></div>
     <div class="kb-overlay" id="kb-overlay" style="display:none" onclick="if(event.target===this)kbCloseModal()"></div>
@@ -1308,6 +1318,39 @@
 
 <!-- CLIENTE OVERLAY (ficha + edição) -->
 <div id="cli-overlay" onclick="if(event.target===this)cliFecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;align-items:center;justify-content:center;padding:10px"></div>
+
+<!-- LEAD MODAL -->
+<div id="lead-overlay" onclick="if(event.target===this)leadFecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg);border-radius:12px;padding:24px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div style="font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Novo Lead
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted)">Nome <span style="color:#ef4444">*</span>
+        <input type="text" id="lead-nome" placeholder="Nome do lead" style="display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);font-size:14px">
+      </label>
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted)">Telefone
+        <input type="text" id="lead-fone" placeholder="(00) 00000-0000" style="display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);font-size:14px">
+      </label>
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted)">Origem <span style="color:#ef4444">*</span>
+        <select id="lead-origem" style="display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);font-size:14px">
+          <option value="whatsapp">WhatsApp</option>
+          <option value="instagram">Instagram</option>
+          <option value="facebook">Facebook</option>
+          <option value="google">Google</option>
+          <option value="indicacao">Indicação</option>
+          <option value="walkin">Visita Direta</option>
+          <option value="outros">Outros</option>
+        </select>
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-s" onclick="leadFecharModal()">Cancelar</button>
+      <button class="btn btn-p" onclick="leadSalvar()">Salvar Lead</button>
+    </div>
+  </div>
+</div>
 
 <!-- AUTOCOMPLETE DROPDOWN (único, compartilhado) -->
 <div id="_cli-drop" style="display:none;position:fixed;z-index:99999;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.18);max-height:220px;overflow-y:auto;min-width:220px"></div>
@@ -2196,7 +2239,21 @@ function atualizarDash(){
 
 function renderFunil(){
   var el=document.getElementById('dash-funil'); if(!el) return;
-  var orcs=db('orc');
+  var allOrcs=db('orc');
+  // Filtrar pelo mês atual (ano-mês)
+  var now=new Date();
+  var mesFiltro=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var lbl=document.getElementById('funil-mes-label');
+  if(lbl){var mn=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];lbl.textContent=mn[now.getMonth()]+' '+now.getFullYear();}
+  var orcs=allOrcs.filter(function(o){
+    var d=o.data||o._dataLead||'';
+    if(d) return d.substring(0,7)===mesFiltro;
+    // sem data: usa timestamp de criação
+    var ts=o._ts||0;
+    if(!ts) return true; // inclui se não tem data nenhuma
+    var dt=new Date(ts);
+    return dt.getFullYear()===now.getFullYear() && dt.getMonth()===now.getMonth();
+  });
   var stages=PIPE_COLS.filter(function(c){return c.s!=='perdido';});
   // Conta por estágio (normaliza status legado)
   var counts={};
@@ -2246,6 +2303,46 @@ function renderFunil(){
   }
   html+='</div>';
   el.innerHTML=html;
+}
+
+function leadNovoModal(){
+  var ov=document.getElementById('lead-overlay'); if(!ov) return;
+  document.getElementById('lead-nome').value='';
+  document.getElementById('lead-fone').value='';
+  document.getElementById('lead-origem').value='whatsapp';
+  ov.style.display='flex';
+  setTimeout(function(){ document.getElementById('lead-nome').focus(); },100);
+}
+function leadFecharModal(){
+  var ov=document.getElementById('lead-overlay'); if(ov) ov.style.display='none';
+}
+function leadSalvar(){
+  var nome=(document.getElementById('lead-nome').value||'').trim();
+  var fone=(document.getElementById('lead-fone').value||'').trim();
+  var origem=document.getElementById('lead-origem').value||'outros';
+  if(!nome){ toast('Informe o nome do lead.','err'); document.getElementById('lead-nome').focus(); return; }
+  var now=new Date();
+  var dataHoje=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var orc={
+    id: 'orc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    cliente: nome,
+    fone: fone,
+    status: 'lead',
+    origem: origem,
+    data: dataHoje,
+    _ts: Date.now(),
+    _dataLead: dataHoje,
+    descricao: '',
+    valor: '',
+    obs: ''
+  };
+  var orcs=db('orc');
+  orcs.unshift(orc);
+  dbSave('orc', orcs);
+  leadFecharModal();
+  renderFunil();
+  if(typeof atualizarDash==='function') atualizarDash();
+  toast('Lead "'+nome+'" cadastrado!','ok');
 }
 
 function renderCobranças(){
@@ -4911,6 +5008,38 @@ var KB_PRIS = {
 };
 var _kbDrag=null, _kbDragCol=null, _kbScrollTimer=null, _kbScrollDir=0;
 
+// Mês exibido no Dia a Dia (YYYY-MM)
+var _kbMesAtual=(function(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})();
+
+function kbMesNav(dir){
+  var p=_kbMesAtual.split('-'); var y=parseInt(p[0]),m=parseInt(p[1])-1;
+  var d=new Date(y,m+dir,1);
+  _kbMesAtual=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderQuadro();
+}
+function kbMesHoje(){
+  var n=new Date(); _kbMesAtual=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); renderQuadro();
+}
+function kbMesCols(){
+  var p=_kbMesAtual.split('-'); var y=parseInt(p[0]),m=parseInt(p[1])-1;
+  var nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var cores=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+  var cols=[], sem=1;
+  var dia=1, ultimo=new Date(y,m+1,0).getDate();
+  while(dia<=ultimo){
+    var fim=Math.min(dia+6, ultimo);
+    cols.push({
+      id:'sem'+sem+'_'+_kbMesAtual,
+      label:'Sem '+sem+' · '+dia+'-'+fim+' '+nomesMes[m].slice(0,3),
+      color: cores[(sem-1)%cores.length],
+      semana: sem, mes: _kbMesAtual, diaIni: dia, diaFim: fim
+    });
+    dia=fim+1; sem++;
+  }
+  return cols;
+}
+function kbNewCard(){ kbOpenModal(null,null); }
+
 document.addEventListener('dragover',function(e){
   if(!_kbDrag && !_kbDragCol) return;
   var board=document.getElementById('kb-board'); if(!board) return;
@@ -4944,32 +5073,36 @@ function dbKbSave(data){
 function renderQuadro(){
   var d = dbKb();
   var q = (document.getElementById('kb-search')||{}).value||'';
-  var filterCol = (document.getElementById('kb-filter-col')||{}).value||'';
-  // popula filtro de coluna
-  var sel = document.getElementById('kb-filter-col');
-  if(sel){
-    var prev = sel.value;
-    sel.innerHTML = '<option value="">Todas as colunas</option>';
-    d.cols.forEach(function(c){ sel.innerHTML += '<option value="'+c.id+'">'+esc(c.label)+'</option>'; });
-    sel.value = prev;
-    filterCol = sel.value;
+  // Atualiza label do mês
+  var lblEl=document.getElementById('kb-mes-label');
+  if(lblEl){
+    var nomesMesKb=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    var parMes=_kbMesAtual.split('-');
+    lblEl.textContent=nomesMesKb[parseInt(parMes[1])-1]+' '+parMes[0];
   }
+  // Usa colunas semanais do mês selecionado
+  var cols = kbMesCols();
   var board = document.getElementById('kb-board');
   board.innerHTML = '';
-  var cols = filterCol ? d.cols.filter(function(c){return c.id===filterCol;}) : d.cols;
-
-  // Calcula posição right para cada coluna fixada (direita)
-  var pinnedRightPos = {};
-  var _rp = 0;
-  cols.filter(function(c){return !!c.pinned;}).slice().reverse().forEach(function(c){
-    pinnedRightPos[c.id] = _rp;
-    _rp += 300 + 14;
-  });
   var normalEls = [], pinnedEls = [];
 
   cols.forEach(function(col){
     var colCards = d.cards.filter(function(c){
-      if(c.col!==col.id) return false;
+      // card pertence a esta semana se: col salvo é o id da semana OU (col antigo + mes do card bate)
+      if(c.col!==col.id){
+        // compatibilidade: cards antigos sem mes atribuído ficam na sem1 do mês atual
+        if(!c.mes && col.semana===1 && _kbMesAtual===(function(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})()) {
+          // não: não queremos exibir cards sem mes em colunas novas automaticamente
+        }
+        return false;
+      }
+      // Filtrar pelo mês do card
+      if(c.mes && c.mes!==_kbMesAtual) return false;
+      if(!c.mes){
+        // card sem mes: só mostra no mês atual
+        var nmAtual=(function(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})();
+        if(_kbMesAtual!==nmAtual) return false;
+      }
       if(q){
         var s = q.toLowerCase();
         return (c.titulo||'').toLowerCase().includes(s)||(c.cliente||'').toLowerCase().includes(s)||(c.obs||'').toLowerCase().includes(s);
@@ -4987,7 +5120,7 @@ function renderQuadro(){
     }
     colEl.innerHTML =
       '<div class="kb-col-strip" style="background:'+col.color+'"></div>'+
-      (isPinned?'<div class="kb-pinned-label">📌 fixada</div>':'')+
+      (isPinned?'<div class="kb-pinned-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg> fixada</div>':'')+
       '<div class="kb-col-hd">'+
         '<div class="kb-drag-handle" title="Arrastar coluna">'+
           '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">'+
@@ -5064,7 +5197,7 @@ function renderQuadro(){
       var pinned=!!(dbKb().cols.find(function(c){return c.id===col.id;})||{}).pinned;
       ctxShow(e,[
         {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',label:'Renomear / Editar',fn:function(){kbEditCol(col.id,{stopPropagation:function(){}});}},
-        {icon:'📌',label:pinned?'Desafixar coluna':'Fixar coluna na tela',fn:function(){kbTogglePin(col.id,{stopPropagation:function(){}});}},
+        {icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg>',label:pinned?'Desafixar coluna':'Fixar coluna na tela',fn:function(){kbTogglePin(col.id,{stopPropagation:function(){}});}},
         'sep',
         {icon:'🗑️',label:'Excluir coluna'+(n?' ('+n+' card'+(n>1?'s':'')+')':''),danger:true,fn:function(){
           if(n>0&&!confirm('Esta coluna tem '+n+' cartão(ões). Excluir tudo?'))return;
@@ -5176,9 +5309,11 @@ function kbOpenModal(cardId, defaultColId){
   var d = dbKb();
   var card = cardId ? d.cards.find(function(c){return c.id===cardId;}) : null;
   var isNew = !card;
-  if(isNew) card = {id:'', col:defaultColId, titulo:'', cliente:'', valor:'', obs:'', prioridade:'normal', status:'', data:new Date().toLocaleDateString('pt-BR'), colaboradores:[]};
+  var mesCols = kbMesCols();
+  var defaultCol = defaultColId || (mesCols[0]||{}).id || '';
+  if(isNew) card = {id:'', col:defaultCol, mes:_kbMesAtual, titulo:'', cliente:'', valor:'', obs:'', prioridade:'normal', status:'', data:new Date().toLocaleDateString('pt-BR'), colaboradores:[]};
   _kbStatus = card.status||'';
-  var colOpts = d.cols.map(function(c){ return '<option value="'+c.id+'"'+(c.id===card.col?' selected':'')+'>'+esc(c.label)+'</option>'; }).join('');
+  var colOpts = mesCols.map(function(c){ return '<option value="'+c.id+'"'+(c.id===card.col?' selected':'')+'>'+esc(c.label)+'</option>'; }).join('');
   var priHtml = ['baixa','normal','alta','urgente'].map(function(p){
     return '<button class="kb-pri-btn'+(card.prioridade===p?' on':'')+'" data-p="'+p+'" type="button" onclick="kbSetPri(this)">'+KB_PRIS[p].label+'</button>';
   }).join('');
@@ -5263,15 +5398,17 @@ function kbSaveModal(cardId, isNew){
   var statusIcon = document.getElementById('kbm-status-icon');
   var status = statusIcon && statusIcon.classList.contains('ok') ? 'ok' : '';
   var prevStatus = isNew ? '' : ((d.cards.find(function(c){return c.id===cardId;})||{}).status||'');
+  var existingCard = isNew ? null : d.cards.find(function(c){return c.id===cardId;});
   var card = {
     id: isNew ? uid() : cardId,
     col: document.getElementById('kbm-col').value,
+    mes: isNew ? _kbMesAtual : ((existingCard&&existingCard.mes)||_kbMesAtual),
     titulo: titulo,
     cliente: document.getElementById('kbm-cliente').value.trim(),
     valor: document.getElementById('kbm-valor').value.trim(),
     obs: document.getElementById('kbm-obs').value.trim(),
     prioridade: pri, status: status,
-    data: isNew ? new Date().toLocaleDateString('pt-BR') : (d.cards.find(function(c){return c.id===cardId;})||{}).data,
+    data: isNew ? new Date().toLocaleDateString('pt-BR') : (existingCard||{}).data,
     colaboradores: Array.from(document.querySelectorAll('#kbm-colabs input[type=checkbox]:checked')).map(function(i){return i.value;})
   };
   if(isNew){ d.cards.push(card); }
