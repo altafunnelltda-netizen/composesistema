@@ -12,6 +12,52 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 .wrap-nopad { padding:0 !important; }
+
+/* ─── CLIENTES / CRM ──────────────────────────────────── */
+.cli-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+.cli-stat { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; padding:14px 16px; }
+.cli-stat-v { font-size:22px; font-weight:800; color:var(--txt); line-height:1; }
+.cli-stat-l { font-size:11px; font-weight:600; color:var(--txt2); margin-top:4px; text-transform:uppercase; letter-spacing:.05em; }
+.cli-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.cli-card { background:var(--bg); border:1.5px solid var(--brd); border-radius:14px; padding:16px; cursor:pointer; transition:.15s; display:flex; flex-direction:column; gap:10px; }
+.cli-card:hover { border-color:var(--acc); box-shadow:0 2px 12px rgba(0,0,0,.08); transform:translateY(-1px); }
+.cli-card-top { display:flex; align-items:center; gap:12px; }
+.cli-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff; flex-shrink:0; }
+.cli-card-info { flex:1; min-width:0; }
+.cli-card-nome { font-size:15px; font-weight:700; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cli-card-sub { font-size:12px; color:var(--txt2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cli-card-tags { display:flex; gap:5px; flex-wrap:wrap; }
+.cli-tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; border:1.5px solid var(--brd); background:var(--bg2); color:var(--txt2); white-space:nowrap; }
+.cli-tag-proj { border-color:var(--acc); background:rgba(245,158,11,.08); color:var(--acc); }
+.cli-card-total { font-size:13px; font-weight:700; color:var(--acc); text-align:right; align-self:flex-end; }
+
+/* Ficha / Modal de cliente */
+.cli-ficha { background:var(--bg); border-radius:16px; max-width:640px; width:100%; max-height:92vh; overflow-y:auto; display:flex; flex-direction:column; }
+.cli-ficha-header { padding:20px 20px 0; }
+.cli-ficha-avatar { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0; }
+.cli-ficha-body { padding:0 20px 20px; flex:1; }
+.cli-section-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--txt2); margin:18px 0 8px; display:flex; align-items:center; gap:8px; }
+.cli-section-lbl::after { content:''; flex:1; height:1px; background:var(--brd); }
+.proj-card { border:1.5px solid var(--brd); border-radius:10px; overflow:hidden; margin-bottom:8px; }
+.proj-card-head { display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer; background:var(--bg2); user-select:none; }
+.proj-card-head:hover { background:var(--bg); }
+.proj-nome { font-weight:700; font-size:13px; flex:1; }
+.proj-status { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; }
+.proj-status-and { background:rgba(34,197,94,.12); color:#16a34a; }
+.proj-status-conc { background:rgba(59,130,246,.12); color:#2563eb; }
+.proj-status-canc { background:rgba(239,68,68,.1); color:#dc2626; }
+.proj-body { padding:10px 12px; border-top:1px solid var(--brd); display:none; }
+.proj-body.open { display:block; }
+.proj-doc-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--brd); cursor:pointer; }
+.proj-doc-row:last-child { border-bottom:none; }
+.proj-doc-row:hover .proj-doc-nome { color:var(--acc); }
+.proj-doc-tipo { font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:var(--bg2); color:var(--txt2); white-space:nowrap; }
+.proj-doc-nome { font-size:12px; font-weight:600; flex:1; }
+.proj-doc-meta { font-size:11px; color:var(--txt2); white-space:nowrap; }
+.proj-add-btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.proj-add-btn { font-size:11px; padding:4px 10px; border-radius:20px; border:1.5px solid var(--brd); background:var(--bg); color:var(--txt2); cursor:pointer; display:flex; align-items:center; gap:4px; font-family:inherit; transition:.12s; }
+.proj-add-btn:hover { border-color:var(--acc); color:var(--acc); background:rgba(245,158,11,.06); }
+@media(max-width:500px){ .cli-stats{grid-template-columns:1fr 1fr;} .cli-grid{grid-template-columns:1fr;} }
 /* sync badge */
 .sync-badge { display:none; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--acc); background:var(--acc)18; padding:3px 9px; border-radius:20px; white-space:nowrap; }
 .sync-badge.on { display:flex; animation:syncFade 3s ease forwards; }
@@ -609,7 +655,7 @@
         <div class="f f2"><label>Consultor</label><input type="text" id="orc-consultor" value="Maicom Polieri"></div>
       </div>
       <div class="row">
-        <div class="f f3"><label>Cliente</label><input type="hidden" id="orc-clienteId"><input type="text" id="orc-cliente" autocomplete="off" oninput="_cliAc(this,'orc-clienteId','orc-fone')" onblur="_cliHideDelay()"></div>
+        <div class="f f3"><label>Cliente</label><input type="hidden" id="orc-clienteId"><input type="hidden" id="orc-projetoId"><input type="text" id="orc-cliente" autocomplete="off" oninput="_cliAc(this,'orc-clienteId','orc-fone')" onblur="_cliHideDelay()"></div>
         <div class="f f2"><label>Telefone</label><input type="text" id="orc-fone"></div>
       </div>
       <div class="row"><div class="f fw"><label>Endereço</label><input type="text" id="orc-end"></div></div>
@@ -698,7 +744,7 @@
         <div class="f f2"><label>Consultor</label><input type="text" id="cor-consultor" value="Maicom Polieri"></div>
       </div>
       <div class="row">
-        <div class="f f3"><label>Cliente</label><input type="hidden" id="cor-clienteId"><input type="text" id="cor-cliente" autocomplete="off" oninput="_cliAc(this,'cor-clienteId',null)" onblur="_cliHideDelay()"></div>
+        <div class="f f3"><label>Cliente</label><input type="hidden" id="cor-clienteId"><input type="hidden" id="cor-projetoId"><input type="text" id="cor-cliente" autocomplete="off" oninput="_cliAc(this,'cor-clienteId',null)" onblur="_cliHideDelay()"></div>
         <div class="f f2"><label>Ambiente</label><input type="text" id="cor-ambiente"></div>
       </div>
       <div class="row"><div class="f fw"><label>Endereço</label><input type="text" id="cor-end"></div></div>
@@ -801,7 +847,7 @@
         <div class="f f2"><label>Consultor</label><input type="text" id="tap-consultor" value="Maicom Polieri"></div>
       </div>
       <div class="row">
-        <div class="f f3"><label>Cliente</label><input type="hidden" id="tap-clienteId"><input type="text" id="tap-cliente" autocomplete="off" oninput="_cliAc(this,'tap-clienteId','tap-fone')" onblur="_cliHideDelay()"></div>
+        <div class="f f3"><label>Cliente</label><input type="hidden" id="tap-clienteId"><input type="hidden" id="tap-projetoId"><input type="text" id="tap-cliente" autocomplete="off" oninput="_cliAc(this,'tap-clienteId','tap-fone')" onblur="_cliHideDelay()"></div>
         <div class="f f2"><label>Telefone</label><input type="text" id="tap-fone"></div>
       </div>
       <div class="row"><div class="f fw"><label>Endereço de Retirada</label><input type="text" id="tap-end"></div></div>
@@ -1231,13 +1277,14 @@
 
 <!-- CLIENTES -->
 <div id="pg-clientes" class="pg">
-  <div class="card" style="margin-bottom:10px">
+  <div id="cli-stats-row" class="cli-stats"></div>
+  <div class="card" style="margin-bottom:12px;padding:10px 14px">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <input type="text" id="cli-busca" placeholder="Buscar por nome, telefone..." oninput="renderClientes()" style="flex:1;min-width:200px">
+      <input type="text" id="cli-busca" placeholder="Buscar por nome, telefone, e-mail..." oninput="renderClientes()" style="flex:1;min-width:200px">
       <button class="btn btn-p" onclick="cliNovoModal()">+ Novo Cliente</button>
     </div>
   </div>
-  <div id="cli-lista"></div>
+  <div id="cli-lista" class="cli-grid"></div>
 </div>
 
 <!-- CLIENTE OVERLAY (ficha + edição) -->
@@ -1366,7 +1413,7 @@
 
 <script>
 // ── STORAGE ──────────────────────────────────────────────
-var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas', fornecedores:'cps_fornecedores', catalogo:'cps_catalogo', ped:'cps_ped', clientes:'cps_clientes' };
+var K = { orc:'cps_orc', cor:'cps_cor', tap:'cps_tap', piso:'cps_piso', cort:'cps_cort', kb:'cps_kb', notas:'cps_notas', lixeira:'cps_lixeira', agenda:'cps_agenda', colab:'cps_colab', conf:'cps_conf', tabelas:'cps_tabelas', fornecedores:'cps_fornecedores', catalogo:'cps_catalogo', ped:'cps_ped', clientes:'cps_clientes', projetos:'cps_projetos' };
 var _initDone = false;
 var _saveQueue = [];
 
@@ -1486,7 +1533,7 @@ function uid() {
 // ── SYNC AUTOMÁTICO ──────────────────────────────────────
 var _syncLM = 0;
 // cps_tabelas excluído do polling (arquivos base64 grandes) — sincronizado só no init
-var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_catalogo','cps_ped','cps_clientes'];
+var _syncKeys = ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort','cps_kb','cps_notas','cps_lixeira','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_catalogo','cps_ped','cps_clientes','cps_projetos'];
 
 function _syncAplicar(d) {
   var changed = false;
@@ -1662,7 +1709,7 @@ function _mostrarAvisoAtualizacao(){
   function _aplicarServidor(d){
     _syncLM = d._lastModified || Date.now();
     ['cps_orc','cps_cor','cps_tap','cps_piso','cps_cort',
-     'cps_notas','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_clientes'].forEach(function(k){
+     'cps_notas','cps_agenda','cps_colab','cps_conf','cps_fornecedores','cps_clientes','cps_projetos'].forEach(function(k){
       if(d[k] !== undefined) _lsSet(k, d[k]);
     });
     if(d.cps_kb !== undefined)      _lsSet('cps_kb', d.cps_kb);
@@ -2311,7 +2358,7 @@ function orcSerializar(){
     });
   });
   return {id:orcId||uid(),_ts:Date.now(),num:v('orc-num'),data:v('orc-data'),consultor:v('orc-consultor'),
-    clienteId:v('orc-clienteId'),cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
+    clienteId:v('orc-clienteId'),projetoId:v('orc-projetoId')||'',cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
     prazo:v('orc-prazo'),pagamento:v('orc-pagamento'),validade:v('orc-validade'),obs:v('orc-obs'),
     status:v('orc-status')||'pendente',
     itens:itens,total:orcCalc()};
@@ -2465,7 +2512,7 @@ function orcRestaurar(o){
   document.getElementById('orc-titulo').textContent='Orçamento #'+(o.num||o.id.slice(0,6));
   document.getElementById('orc-ph-title').textContent='ORÇAMENTO Nº '+(o.num||'');
   sv('orc-num',o.num);sv('orc-data',o.data);sv('orc-consultor',o.consultor);
-  sv('orc-clienteId',o.clienteId||'');sv('orc-cliente',o.cliente);sv('orc-fone',o.fone);sv('orc-end',o.end);
+  sv('orc-clienteId',o.clienteId||'');sv('orc-projetoId',o.projetoId||'');sv('orc-cliente',o.cliente);sv('orc-fone',o.fone);sv('orc-end',o.end);
   sv('orc-intro',o.intro);sv('orc-prazo',o.prazo);sv('orc-pagamento',o.pagamento);
   sv('orc-validade',o.validade);sv('orc-obs',o.obs);
   setOrcStatus(o.status||'pendente');
@@ -2982,7 +3029,7 @@ function toggleCor2(){
 function corSerializar(){
   return {id:corId||uid(),_ts:Date.now(),
     num:v('cor-num'),data:v('cor-data'),consultor:v('cor-consultor'),
-    clienteId:v('cor-clienteId'),cliente:v('cor-cliente'),ambiente:v('cor-ambiente'),end:v('cor-end'),
+    clienteId:v('cor-clienteId'),projetoId:v('cor-projetoId')||'',cliente:v('cor-cliente'),ambiente:v('cor-ambiente'),end:v('cor-end'),
     produto:v('cor-produto'),largura:v('cor-largura'),altura:v('cor-altura'),altura2:v('cor-altura2'),
     tec1:{ref:v('cor-tec1-ref'),qtd:v('cor-tec1-qtd'),prega:v('cor-tec1-prega'),obs:v('cor-tec1-obs')},
     tipo2:document.querySelector('input[name="cor-tipo2"]:checked').value,
@@ -3008,7 +3055,7 @@ function salvarOsCortinas(){
 function corRestaurar(o){
   corId=o.id;
   sv('cor-num',o.num);sv('cor-data',o.data);sv('cor-consultor',o.consultor);
-  sv('cor-clienteId',o.clienteId||'');sv('cor-cliente',o.cliente);sv('cor-ambiente',o.ambiente);sv('cor-end',o.end);
+  sv('cor-clienteId',o.clienteId||'');sv('cor-projetoId',o.projetoId||'');sv('cor-cliente',o.cliente);sv('cor-ambiente',o.ambiente);sv('cor-end',o.end);
   sv('cor-produto',o.produto);sv('cor-largura',o.largura);sv('cor-altura',o.altura);sv('cor-altura2',o.altura2);
   var t1=o.tec1||{};
   sv('cor-tec1-ref',t1.ref);sv('cor-tec1-qtd',t1.qtd);sv('cor-tec1-prega',t1.prega);sv('cor-tec1-obs',t1.obs);
@@ -3226,7 +3273,7 @@ function limparOsTapecaria(){
 function tapSerializar(){
   return {id:tapId||uid(),_ts:Date.now(),
     num:v('tap-num'),data:v('tap-data'),consultor:v('tap-consultor'),
-    clienteId:v('tap-clienteId'),cliente:v('tap-cliente'),fone:v('tap-fone'),end:v('tap-end'),
+    clienteId:v('tap-clienteId'),projetoId:v('tap-projetoId')||'',cliente:v('tap-cliente'),fone:v('tap-fone'),end:v('tap-end'),
     tipo:v('tap-tipo'),prazo:v('tap-prazo'),descricao:v('tap-descricao'),
     tec:{ref:v('tap-tec-ref'),cor:v('tap-tec-cor'),qtd:v('tap-tec-qtd')},
     obs:v('tap-obs')};
@@ -3248,7 +3295,7 @@ function salvarOsTapecaria(){
 function tapRestaurar(o){
   tapId=o.id;
   sv('tap-num',o.num);sv('tap-data',o.data);sv('tap-consultor',o.consultor);
-  sv('tap-clienteId',o.clienteId||'');sv('tap-cliente',o.cliente);sv('tap-fone',o.fone);sv('tap-end',o.end);
+  sv('tap-clienteId',o.clienteId||'');sv('tap-projetoId',o.projetoId||'');sv('tap-cliente',o.cliente);sv('tap-fone',o.fone);sv('tap-end',o.end);
   sv('tap-tipo',o.tipo);sv('tap-prazo',o.prazo);sv('tap-descricao',o.descricao);
   var t=o.tec||{};sv('tap-tec-ref',t.ref);sv('tap-tec-cor',t.cor);sv('tap-tec-qtd',t.qtd);
   sv('tap-obs',o.obs);
@@ -5509,6 +5556,15 @@ function nbOpenNotebook(cli, mainEl){
     ed.addEventListener('blur',nbSaveRange);
     ed.addEventListener('keyup',nbSaveRange);
     ed.addEventListener('mouseup',nbSaveRange);
+    // Cola como texto puro — preserva quebras de linha mas remove fonte/cor externos
+    ed.addEventListener('paste',function(e){
+      e.preventDefault();
+      var text=(e.clipboardData||window.clipboardData).getData('text/plain');
+      // Converte quebras de linha em <br> para preservar parágrafos
+      var linhas=text.split(/\r?\n/);
+      var html2=linhas.map(function(l){return l?('<span>'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span>'):'<br>';}).join('');
+      document.execCommand('insertHTML',false,html2);
+    });
     ed.addEventListener('input',function(){
       nbAutoSave(cli.id,ed.innerHTML,null);
       var cc=document.getElementById('nb-char-count');
@@ -7912,12 +7968,22 @@ function quantShowReview(prefixo, ambientes){
 // ── Helpers ──────────────────────────────────────────────
 function _cliNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
 
+// Paleta de cores para avatares
+var _CLI_COLORS=['#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
+function _cliColor(nome){ var s=0;for(var i=0;i<(nome||'').length;i++)s+=nome.charCodeAt(i);return _CLI_COLORS[s%_CLI_COLORS.length]; }
+function _cliInitials(nome){ if(!nome)return '?'; var p=(nome||'').trim().split(/\s+/);return (p[0][0]+(p.length>1?p[p.length-1][0]:'')).toUpperCase(); }
+
+// Retorna docs vinculados a um cliente (por ID ou nome)
+function _cliDocs(clienteId, nomeCliente){
+  var n=_cliNorm(nomeCliente);
+  function match(o){ return o.clienteId===clienteId||((!o.clienteId)&&_cliNorm(o.cliente)===n); }
+  return { orcs:db('orc').filter(match), cors:db('cor').filter(match), taps:db('tap').filter(match), peds:db('ped').filter(match) };
+}
+
 // Retorna ou cria cliente pelo nome. Salva em cps_clientes.
-// Usado automaticamente no save de cada documento.
 function _cliAutoReg(existingId, nome, fone){
   if(!nome) return '';
   var clientes=db('clientes');
-  // Se já temos ID válido, atualiza fone se veio vazio
   if(existingId){
     var found=clientes.find(function(c){return c.id===existingId;});
     if(found){
@@ -7925,50 +7991,45 @@ function _cliAutoReg(existingId, nome, fone){
       return existingId;
     }
   }
-  // Tenta encontrar pelo nome normalizado
   var norm=_cliNorm(nome);
   var existing=clientes.find(function(c){return _cliNorm(c.nome)===norm;});
   if(existing){
     if(fone && !existing.fone){ existing.fone=fone; dbSave('clientes',clientes); }
     return existing.id;
   }
-  // Cria novo
-  var novo={id:uid(),_ts:Date.now(),nome:nome,fone:fone||'',email:'',obs:''};
+  var novo={id:uid(),_ts:Date.now(),nome:nome,fone:fone||'',email:'',end:'',cpf:'',obs:''};
   clientes.push(novo);
   dbSave('clientes',clientes);
   return novo.id;
 }
 
 // ── Autocomplete ──────────────────────────────────────────
-var _cliAcTarget=null; // {inputEl, hiddenId, foneId}
-var _cliHideTimer=null;
+var _cliAcTarget=null;
 
 function _cliAc(inputEl, hiddenId, foneId){
   _cliAcTarget={inputEl:inputEl,hiddenId:hiddenId,foneId:foneId};
-  var q=_cliNorm(inputEl.value);
-  // Limpa o ID se o usuário editou o texto manualmente
   var hid=document.getElementById(hiddenId);
   if(hid) hid.value='';
+  var q=_cliNorm(inputEl.value);
   var drop=document.getElementById('_cli-drop');
-  if(!q||q.length<1){ drop.style.display='none'; return; }
+  if(!q){ drop.style.display='none'; return; }
   var clientes=db('clientes');
-  var matches=clientes.filter(function(c){return _cliNorm(c.nome).indexOf(q)>=0;}).slice(0,8);
+  var matches=clientes.filter(function(c){return _cliNorm(c.nome).indexOf(q)>=0||_cliNorm(c.fone||'').indexOf(q)>=0;}).slice(0,8);
   var rect=inputEl.getBoundingClientRect();
-  drop.style.top=(rect.bottom+window.scrollY+2)+'px';
-  drop.style.left=(rect.left+window.scrollX)+'px';
-  drop.style.width=rect.width+'px';
+  drop.style.top=(rect.bottom+2)+'px';
+  drop.style.left=rect.left+'px';
+  drop.style.width=Math.max(rect.width,220)+'px';
   var html='';
   matches.forEach(function(c){
-    html+='<div class="_cli-opt" onmousedown="_cliSelect(\''+c.id+'\')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)">'
-      +'<div style="font-weight:600">'+esc(c.nome)+'</div>'
-      +(c.fone?'<div style="font-size:11px;color:var(--text-muted)">'+esc(c.fone)+'</div>':'')
+    html+='<div onmousedown="_cliSelect(\''+c.id+'\')" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--brd)">'
+      +'<div style="width:28px;height:28px;border-radius:50%;background:'+_cliColor(c.nome)+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">'+_cliInitials(c.nome)+'</div>'
+      +'<div><div style="font-weight:600;font-size:13px">'+esc(c.nome)+'</div>'+(c.fone?'<div style="font-size:11px;color:var(--txt2)">'+esc(c.fone)+'</div>':'')+'</div>'
       +'</div>';
   });
-  // Opção de criar novo se não houver correspondência exata
   var exactMatch=clientes.some(function(c){return _cliNorm(c.nome)===q;});
   if(!exactMatch&&inputEl.value.trim()){
-    html+='<div class="_cli-opt" onmousedown="_cliCriarNovo(\''+esc(inputEl.value.trim())+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--accent);border-top:1px solid var(--border)">'
-      +'+ Criar cliente: <strong>'+esc(inputEl.value.trim())+'</strong></div>';
+    html+='<div onmousedown="_cliCriarNovo(\''+inputEl.value.trim().replace(/'/g,"\\'")+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--acc);font-weight:600">'
+      +'+ Criar cliente: '+esc(inputEl.value.trim())+'</div>';
   }
   if(!html){ drop.style.display='none'; return; }
   drop.innerHTML=html;
@@ -7976,29 +8037,24 @@ function _cliAc(inputEl, hiddenId, foneId){
 }
 
 function _cliSelect(id){
-  var drop=document.getElementById('_cli-drop');
-  drop.style.display='none';
+  document.getElementById('_cli-drop').style.display='none';
   if(!_cliAcTarget) return;
-  var clientes=db('clientes');
-  var c=clientes.find(function(x){return x.id===id;});
+  var c=db('clientes').find(function(x){return x.id===id;});
   if(!c) return;
   _cliAcTarget.inputEl.value=c.nome;
   var hid=document.getElementById(_cliAcTarget.hiddenId);
   if(hid) hid.value=c.id;
-  if(_cliAcTarget.foneId && c.fone){
+  if(_cliAcTarget.foneId&&c.fone){
     var foneEl=document.getElementById(_cliAcTarget.foneId);
-    if(foneEl && !foneEl.value) foneEl.value=c.fone;
+    if(foneEl&&!foneEl.value) foneEl.value=c.fone;
   }
 }
 
 function _cliCriarNovo(nome){
-  var drop=document.getElementById('_cli-drop');
-  drop.style.display='none';
+  document.getElementById('_cli-drop').style.display='none';
   if(!nome) return;
-  var novo={id:uid(),_ts:Date.now(),nome:nome,fone:'',email:'',obs:''};
-  var clientes=db('clientes');
-  clientes.push(novo);
-  dbSave('clientes',clientes);
+  var novo={id:uid(),_ts:Date.now(),nome:nome,fone:'',email:'',end:'',cpf:'',obs:''};
+  var clientes=db('clientes'); clientes.push(novo); dbSave('clientes',clientes);
   if(_cliAcTarget){
     _cliAcTarget.inputEl.value=nome;
     var hid=document.getElementById(_cliAcTarget.hiddenId);
@@ -8008,119 +8064,171 @@ function _cliCriarNovo(nome){
 }
 
 function _cliHideDelay(){
-  _cliHideTimer=setTimeout(function(){
-    var drop=document.getElementById('_cli-drop');
-    if(drop) drop.style.display='none';
-  },200);
+  setTimeout(function(){ var d=document.getElementById('_cli-drop'); if(d) d.style.display='none'; },200);
 }
 
 // ── Página Clientes ──────────────────────────────────────
 function renderClientes(){
   var el=document.getElementById('cli-lista'); if(!el) return;
   var q=_cliNorm((document.getElementById('cli-busca')||{}).value||'');
-  var clientes=db('clientes').slice().sort(function(a,b){return (a.nome||'').localeCompare(b.nome||'','pt-BR');});
-  if(q) clientes=clientes.filter(function(c){return _cliNorm(c.nome).indexOf(q)>=0||_cliNorm(c.fone||'').indexOf(q)>=0;});
-  if(!clientes.length){el.innerHTML='<div class="empty">Nenhum cliente cadastrado ainda. Clientes são criados automaticamente ao salvar orçamentos, OS e pedidos.</div>';return;}
-  // Conta documentos por cliente
-  var orcs=db('orc'), cors=db('cor'), taps=db('tap'), peds=db('ped');
-  el.innerHTML='<div class="card" style="padding:0;overflow:hidden">'
-    +clientes.map(function(c){
-      var nOrc=orcs.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
-      var nCor=cors.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
-      var nTap=taps.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
-      var nPed=peds.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));}).length;
-      var totalGasto=peds.filter(function(o){return o.clienteId===c.id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));})
-        .reduce(function(s,p){return s+(p.total||0);},0);
-      var badges='';
-      if(nOrc) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nOrc+' Orc.</span>';
-      if(nCor) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nCor+' OS Cor.</span>';
-      if(nTap) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nTap+' OS Tap.</span>';
-      if(nPed) badges+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:11px">'+nPed+' Ped.</span>';
-      return '<div class="hist-item" style="cursor:pointer;padding:10px 14px;border-bottom:1px solid var(--border)" onclick="cliFicha(\''+c.id+'\')">'
-        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-weight:700;font-size:14px">'+esc(c.nome)+'</div>'
-        +(c.fone?'<div style="font-size:12px;color:var(--text-muted)">'+esc(c.fone)+(c.email?' · '+esc(c.email):'')+'</div>':'')
-        +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">'+badges+'</div>'
-        +'</div>'
-        +(totalGasto?'<div style="font-weight:700;font-size:13px;color:var(--accent);white-space:nowrap">R$ '+totalGasto.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
-        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'
-        +'</div>'
-        +'</div>';
-    }).join('')
-    +'</div>';
+  var todos=db('clientes').slice().sort(function(a,b){return (a.nome||'').localeCompare(b.nome||'','pt-BR');});
+  var projetos=db('projetos');
+  var clientes=q?todos.filter(function(c){return _cliNorm(c.nome).indexOf(q)>=0||_cliNorm(c.fone||'').indexOf(q)>=0||_cliNorm(c.email||'').indexOf(q)>=0;}):todos;
+
+  // Stats
+  var statEl=document.getElementById('cli-stats-row');
+  if(statEl){
+    var totalGastoGeral=db('ped').reduce(function(s,p){return s+(p.total||0);},0);
+    var projAtivos=projetos.filter(function(p){return p.status==='em-andamento';}).length;
+    statEl.innerHTML='<div class="cli-stat"><div class="cli-stat-v">'+todos.length+'</div><div class="cli-stat-l">Clientes</div></div>'
+      +'<div class="cli-stat"><div class="cli-stat-v">'+projAtivos+'</div><div class="cli-stat-l">Projetos Ativos</div></div>'
+      +'<div class="cli-stat"><div class="cli-stat-v" style="font-size:16px">R$ '+totalGastoGeral.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div><div class="cli-stat-l">Total em Pedidos</div></div>';
+  }
+
+  if(!clientes.length){
+    el.innerHTML='<div class="empty" style="grid-column:1/-1">'+(q?'Nenhum cliente encontrado.':'Nenhum cliente cadastrado. Clientes são criados automaticamente ao salvar documentos.')+'</div>';
+    return;
+  }
+
+  el.innerHTML=clientes.map(function(c){
+    var docs=_cliDocs(c.id,c.nome);
+    var nProj=projetos.filter(function(p){return p.clienteId===c.id;}).length;
+    var nProjAtivo=projetos.filter(function(p){return p.clienteId===c.id&&p.status==='em-andamento';}).length;
+    var total=docs.peds.reduce(function(s,p){return s+(p.total||0);},0);
+    var cor=_cliColor(c.nome);
+    var tags='';
+    if(nProj) tags+='<span class="cli-tag cli-tag-proj">'+nProjAtivo+'/'+nProj+' Projetos</span>';
+    if(docs.orcs.length) tags+='<span class="cli-tag">'+docs.orcs.length+' Orc.</span>';
+    if(docs.cors.length+docs.taps.length) tags+='<span class="cli-tag">'+(docs.cors.length+docs.taps.length)+' OS</span>';
+    if(docs.peds.length) tags+='<span class="cli-tag">'+docs.peds.length+' Ped.</span>';
+    return '<div class="cli-card" onclick="cliFicha(\''+c.id+'\')">'
+      +'<div class="cli-card-top">'
+      +'<div class="cli-avatar" style="background:'+cor+'">'+_cliInitials(c.nome)+'</div>'
+      +'<div class="cli-card-info">'
+      +'<div class="cli-card-nome">'+esc(c.nome)+'</div>'
+      +'<div class="cli-card-sub">'+(c.fone||c.email?esc(c.fone||'')+(c.fone&&c.email?' · ':'')+esc(c.email||''):'Sem contato')+'</div>'
+      +'</div>'
+      +(total?'<div class="cli-card-total">R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
+      +'</div>'
+      +(tags?'<div class="cli-card-tags">'+tags+'</div>':'')
+      +'</div>';
+  }).join('');
 }
 
 // ── Ficha do Cliente ─────────────────────────────────────
-function cliFicha(id){
-  var clientes=db('clientes');
-  var c=clientes.find(function(x){return x.id===id;});
+function cliFicha(clienteId){
+  var c=db('clientes').find(function(x){return x.id===clienteId;});
   if(!c) return;
-  var orcs=db('orc').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
-  var cors=db('cor').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
-  var taps=db('tap').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
-  var peds=db('ped').filter(function(o){return o.clienteId===id||((!o.clienteId)&&_cliNorm(o.cliente)===_cliNorm(c.nome));});
-  var totalGasto=peds.reduce(function(s,p){return s+(p.total||0);},0);
+  _cliRenderFicha(clienteId);
+}
 
-  function secao(titulo, itens, fnRow){
-    if(!itens.length) return '';
-    return '<div style="margin-top:14px">'
-      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.06em;margin-bottom:6px">'+titulo+'</div>'
-      +itens.map(fnRow).join('')
-      +'</div>';
-  }
+function _cliRenderFicha(clienteId){
+  var c=db('clientes').find(function(x){return x.id===clienteId;});
+  if(!c) return;
+  var docs=_cliDocs(clienteId,c.nome);
+  var projetos=db('projetos').filter(function(p){return p.clienteId===clienteId;});
+  var totalGasto=docs.peds.reduce(function(s,p){return s+(p.total||0);},0);
+  var cor=_cliColor(c.nome);
 
   var svgArr='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+  var svgPlus='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-  var html='<div style="background:var(--bg);border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:22px 20px">'
-    // Cabeçalho + edição
-    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-    +'<div style="flex:1">'
-    +'<div style="font-size:18px;font-weight:800">'+esc(c.nome)+'</div>'
-    +(c.fone||c.email?'<div style="font-size:12px;color:var(--text-muted);margin-top:2px">'+(c.fone?esc(c.fone):'')+(c.fone&&c.email?' · ':''+(c.email?esc(c.email):''))+'</div>':'')
-    +(c.obs?'<div style="font-size:12px;color:var(--text-muted);margin-top:3px;font-style:italic">'+esc(c.obs)+'</div>':'')
+  // Monta documentos sem projeto
+  var docsComProj={};
+  projetos.forEach(function(p){
+    (p.docIds||[]).forEach(function(dId){ docsComProj[dId]=true; });
+  });
+
+  function docRow(tipo, o, openFn){
+    var nome='#'+esc(o.num||'—')+' — '+fmt(o.data||'');
+    var meta='';
+    if(tipo==='Orçamento') meta=o.total?'R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'';
+    if(tipo==='OS Cortinas') meta=o.produto?esc(o.produto.slice(0,30)):'';
+    if(tipo==='OS Tapeçaria') meta=o.descricao?esc(o.descricao.slice(0,30)):'';
+    if(tipo==='Pedido') meta=o.total?'R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'';
+    return '<div class="proj-doc-row" onclick="'+openFn+';cliFecharModal()">'
+      +'<span class="proj-doc-tipo">'+tipo+'</span>'
+      +'<span class="proj-doc-nome">'+nome+'</span>'
+      +(meta?'<span class="proj-doc-meta">'+meta+'</span>':'')
+      +svgArr+'</div>';
+  }
+
+  // Seção de projetos
+  var projHtml='';
+  projetos.sort(function(a,b){return (b._ts||0)-(a._ts||0);}).forEach(function(proj){
+    var statusLabel={em_andamento:'Em andamento','em-andamento':'Em andamento',concluido:'Concluído',cancelado:'Cancelado'}[proj.status]||'Em andamento';
+    var statusClass={'em-andamento':'proj-status-and','em_andamento':'proj-status-and',concluido:'proj-status-conc',cancelado:'proj-status-canc'}[proj.status]||'proj-status-and';
+    // Docs vinculados ao projeto por projetoId OU por docIds
+    var pOrcs=docs.orcs.filter(function(o){return o.projetoId===proj.id||((proj.docIds||[]).indexOf(o.id)>=0);});
+    var pCors=docs.cors.filter(function(o){return o.projetoId===proj.id||((proj.docIds||[]).indexOf(o.id)>=0);});
+    var pTaps=docs.taps.filter(function(o){return o.projetoId===proj.id||((proj.docIds||[]).indexOf(o.id)>=0);});
+    var pPeds=docs.peds.filter(function(o){return o.projetoId===proj.id||((proj.docIds||[]).indexOf(o.id)>=0);});
+    var nDocs=pOrcs.length+pCors.length+pTaps.length+pPeds.length;
+    var projTotal=pPeds.reduce(function(s,p){return s+(p.total||0);},0);
+    projHtml+='<div class="proj-card">'
+      +'<div class="proj-card-head" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M3 7a2 2 0 0 1 2-2h3l2 3h9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+      +'<div class="proj-nome">'+esc(proj.nome)+'</div>'
+      +(projTotal?'<span style="font-size:12px;font-weight:700;color:var(--acc)">R$ '+projTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>':'')
+      +'<span class="proj-status '+statusClass+'">'+statusLabel+'</span>'
+      +'<span style="font-size:11px;color:var(--txt2)">'+nDocs+' docs</span>'
+      +'<div style="display:flex;gap:5px;margin-left:auto">'
+      +'<button class="proj-add-btn" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();projEditar(\''+proj.id+'\')" title="Editar projeto"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>'
+      +'</div>'
+      +'</div>'
+      +'<div class="proj-body">'
+      +(proj.descricao?'<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-style:italic">'+esc(proj.descricao)+'</div>':'')
+      +pOrcs.map(function(o){return docRow('Orçamento',o,"orcRestaurar(db('orc').find(function(x){return x.id==='"+o.id+"';}));ir('orcamento',document.getElementById('nav-orcamento'))");}).join('')
+      +pCors.map(function(o){return docRow('OS Cortinas',o,"corRestaurar(db('cor').find(function(x){return x.id==='"+o.id+"';}))");}).join('')
+      +pTaps.map(function(o){return docRow('OS Tapeçaria',o,"tapRestaurar(db('tap').find(function(x){return x.id==='"+o.id+"';}))");}).join('')
+      +pPeds.map(function(o){return docRow('Pedido',o,"pedAbrirModal(db('ped').find(function(x){return x.id==='"+o.id+"';}))");}).join('')
+      +(!nDocs?'<div style="font-size:12px;color:var(--txt2);padding:4px 0">Nenhum documento ainda.</div>':'')
+      +'<div class="proj-add-btns">'
+      +'<button class="proj-add-btn" onclick="cliFecharModal();limparOsCortinas();setTimeout(function(){sv(\'cor-cliente\',\''+c.nome.replace(/'/g,"\\'")+'\')+\';sv(\'cor-clienteId\',\''+clienteId+'\');sv(\'cor-projetoId\',\''+proj.id+'\');ir(\'os-cortinas\',document.getElementById(\'nav-os-cortinas\'))},100)">'+svgPlus+' OS Cortinas</button>'
+      +'<button class="proj-add-btn" onclick="cliFecharModal();limparOsTapecaria();setTimeout(function(){sv(\'tap-cliente\',\''+c.nome.replace(/'/g,"\\'")+'\')+\';sv(\'tap-clienteId\',\''+clienteId+'\');sv(\'tap-projetoId\',\''+proj.id+'\');ir(\'os-tapecaria\',document.getElementById(\'nav-os-tapecaria\'))},100)">'+svgPlus+' OS Tapeçaria</button>'
+      +'<button class="proj-add-btn" onclick="cliFecharModal();novoOrcamento();setTimeout(function(){sv(\'orc-cliente\',\''+c.nome.replace(/'/g,"\\'")+'\')+\';sv(\'orc-clienteId\',\''+clienteId+'\');sv(\'orc-projetoId\',\''+proj.id+'\');ir(\'orcamento\',document.getElementById(\'nav-orcamento\'))},100)">'+svgPlus+' Orçamento</button>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  });
+
+  // Documentos sem projeto
+  var semProj={
+    orcs:docs.orcs.filter(function(o){return !o.projetoId&&!projetos.some(function(p){return (p.docIds||[]).indexOf(o.id)>=0;});}),
+    cors:docs.cors.filter(function(o){return !o.projetoId&&!projetos.some(function(p){return (p.docIds||[]).indexOf(o.id)>=0;});}),
+    taps:docs.taps.filter(function(o){return !o.projetoId&&!projetos.some(function(p){return (p.docIds||[]).indexOf(o.id)>=0;});}),
+    peds:docs.peds.filter(function(o){return !o.projetoId&&!projetos.some(function(p){return (p.docIds||[]).indexOf(o.id)>=0;});})
+  };
+  var nSem=semProj.orcs.length+semProj.cors.length+semProj.taps.length+semProj.peds.length;
+
+  var html='<div class="cli-ficha">'
+    +'<div class="cli-ficha-header">'
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">'
+    +'<div class="cli-ficha-avatar" style="background:'+cor+'">'+_cliInitials(c.nome)+'</div>'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:19px;font-weight:800;line-height:1.1">'+esc(c.nome)+'</div>'
+    +(c.fone?'<div style="font-size:13px;color:var(--txt2);margin-top:3px">'+esc(c.fone)+(c.email?' · '+esc(c.email):'')+'</div>':'')
+    +(c.end?'<div style="font-size:12px;color:var(--txt2)">'+esc(c.end)+'</div>':'')
+    +(c.cpf?'<div style="font-size:12px;color:var(--txt2)">CPF/CNPJ: '+esc(c.cpf)+'</div>':'')
+    +(c.obs?'<div style="font-size:12px;color:var(--txt2);font-style:italic;margin-top:3px">'+esc(c.obs)+'</div>':'')
     +'</div>'
-    +(totalGasto?'<div style="text-align:right"><div style="font-size:11px;color:var(--text-muted)">Total gasto</div><div style="font-size:16px;font-weight:800;color:var(--accent)">R$ '+totalGasto.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>':'')
+    +(totalGasto?'<div style="text-align:right;flex-shrink:0"><div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em">Total gasto</div><div style="font-size:16px;font-weight:800;color:var(--acc)">R$ '+totalGasto.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>':'')
     +'</div>'
-    // Botão editar
-    +'<div style="display:flex;gap:8px;margin-bottom:14px">'
-    +'<button class="btn btn-s" onclick="cliEditarModal(\''+id+'\')">Editar dados</button>'
-    +'<button class="btn" style="background:var(--bg2);border:1px solid var(--border);color:#ef4444" onclick="cliExcluir(\''+id+'\')">Excluir</button>'
+    +'<div style="display:flex;gap:7px;padding-bottom:16px;border-bottom:1px solid var(--brd)">'
+    +'<button class="btn btn-s" onclick="cliEditarModal(\''+clienteId+'\')">Editar</button>'
+    +'<button class="btn btn-p" onclick="projNovo(\''+clienteId+'\')">+ Novo Projeto/Obra</button>'
+    +'<button class="btn" style="margin-left:auto;background:var(--bg2);border:1px solid var(--brd)" onclick="cliFecharModal()">Fechar</button>'
     +'</div>'
-    // Orçamentos
-    +secao('Orçamentos ('+orcs.length+')',orcs,function(o){
-      return '<div onclick="orcRestaurar(db(\'orc\').find(function(x){return x.id===\''+o.id+'\';}));ir(\'orcamento\',document.getElementById(\'nav-orcamento\'));cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
-        +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
-        +(o.total?'<div style="font-size:12px;color:var(--text-muted)">R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
-        +'</div>'+svgArr+'</div>';
-    })
-    // OS Cortinas
-    +secao('OS Cortinas ('+cors.length+')',cors,function(o){
-      return '<div onclick="corRestaurar(db(\'cor\').find(function(x){return x.id===\''+o.id+'\';}));cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
-        +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
-        +(o.produto?'<div style="font-size:12px;color:var(--text-muted)">'+esc(o.produto)+'</div>':'')
-        +'</div>'+svgArr+'</div>';
-    })
-    // OS Tapeçaria
-    +secao('OS Tapeçaria ('+taps.length+')',taps,function(o){
-      return '<div onclick="tapRestaurar(db(\'tap\').find(function(x){return x.id===\''+o.id+'\';}));cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
-        +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
-        +(o.descricao?'<div style="font-size:12px;color:var(--text-muted)">'+esc(o.descricao.slice(0,60))+'</div>':'')
-        +'</div>'+svgArr+'</div>';
-    })
-    // Pedidos
-    +secao('Pedidos ('+peds.length+')',peds,function(o){
-      return '<div onclick="pedAbrirModal(o);cliFecharModal()" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
-        +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:600">#'+esc(o.num||'—')+' <span style="font-weight:400;color:var(--text-muted)">'+fmt(o.data||'')+'</span></div>'
-        +(o.total?'<div style="font-size:12px;color:var(--text-muted)">R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>':'')
-        +'</div>'+svgArr+'</div>';
-    })
-    +((!orcs.length&&!cors.length&&!taps.length&&!peds.length)?'<div class="empty" style="margin-top:16px">Nenhum documento vinculado.</div>':'')
-    +'<div style="margin-top:18px"><button class="btn" style="background:var(--bg2);border:1px solid var(--border)" onclick="cliFecharModal()">Fechar</button></div>'
+    +'</div>'
+    +'<div class="cli-ficha-body">'
+    +(projetos.length?'<div class="cli-section-lbl">Projetos / Obras</div>'+projHtml:'<div class="empty" style="margin-top:12px;margin-bottom:8px">Nenhum projeto criado.<br><button class="btn btn-p" style="margin-top:8px;font-size:12px" onclick="projNovo(\''+clienteId+'\')">+ Criar primeiro projeto</button></div>')
+    +(nSem?'<div class="cli-section-lbl">Documentos sem projeto</div>'
+      +semProj.orcs.map(function(o){return docRow('Orçamento',o,"orcRestaurar(db('orc').find(function(x){return x.id==='"+o.id+"';}));ir('orcamento',document.getElementById('nav-orcamento'))");}).join('')
+      +semProj.cors.map(function(o){return docRow('OS Cortinas',o,"corRestaurar(db('cor').find(function(x){return x.id==='"+o.id+"';}))");}).join('')
+      +semProj.taps.map(function(o){return docRow('OS Tapeçaria',o,"tapRestaurar(db('tap').find(function(x){return x.id==='"+o.id+"';}))");}).join('')
+      +semProj.peds.map(function(o){return docRow('Pedido',o,"pedAbrirModal(db('ped').find(function(x){return x.id==='"+o.id+"';}))");}).join('')
+      :'')
+    +'</div>'
     +'</div>';
 
   var ov=document.getElementById('cli-overlay');
@@ -8133,21 +8241,90 @@ function cliFecharModal(){
   if(ov){ ov.style.display='none'; ov.innerHTML=''; }
 }
 
+// ── Projetos / Obras ─────────────────────────────────────
+function projNovo(clienteId){ projEditar(null, clienteId); }
+
+function projEditar(projId, clienteId){
+  var proj=projId?db('projetos').find(function(p){return p.id===projId;}):null;
+  var cId=projId?(proj?proj.clienteId:''):clienteId;
+  var html='<div style="background:var(--bg);border-radius:14px;max-width:420px;width:100%;padding:22px 20px">'
+    +'<div style="font-size:16px;font-weight:800;margin-bottom:16px">'+(proj?'Editar Projeto':'Novo Projeto / Obra')+'</div>'
+    +'<div class="f fw" style="margin-bottom:10px"><label>Nome do Projeto / Obra <span style="color:#ef4444">*</span></label><input type="text" id="_projmod-nome" value="'+esc(proj?proj.nome:'')+'" placeholder="Ex: Reforma Sala Principal"></div>'
+    +'<div class="f fw" style="margin-bottom:10px"><label>Descrição</label><textarea id="_projmod-desc" rows="2" style="resize:vertical">'+esc(proj?proj.descricao||'':'')+'</textarea></div>'
+    +'<div class="f fw" style="margin-bottom:16px"><label>Status</label><select id="_projmod-status">'
+    +'<option value="em-andamento"'+((!proj||proj.status==='em-andamento')?' selected':'')+'">Em andamento</option>'
+    +'<option value="concluido"'+(proj&&proj.status==='concluido'?' selected':'')+'">Concluído</option>'
+    +'<option value="cancelado"'+(proj&&proj.status==='cancelado'?' selected':'')+'">Cancelado</option>'
+    +'</select></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-p" onclick="_projSalvar(\''+( projId||'')+'\',\''+cId+'\')">Salvar</button>'
+    +(projId?'<button class="btn" style="background:var(--bg2);border:1px solid var(--brd);color:#ef4444" onclick="_projExcluir(\''+projId+'\',\''+cId+'\')">Excluir</button>':'')
+    +'<button class="btn" style="background:var(--bg2);border:1px solid var(--brd)" onclick="cliFecharModal();cliFicha(\''+cId+'\')">Cancelar</button>'
+    +'</div></div>';
+  var ov=document.getElementById('cli-overlay');
+  ov.innerHTML=html;
+  ov.style.display='flex';
+  setTimeout(function(){ var el=document.getElementById('_projmod-nome'); if(el) el.focus(); },50);
+}
+
+function _projSalvar(projId, clienteId){
+  var nome=document.getElementById('_projmod-nome').value.trim();
+  if(!nome){toast('Informe o nome do projeto.','err');document.getElementById('_projmod-nome').focus();return;}
+  var projetos=db('projetos');
+  if(projId){
+    var idx=projetos.findIndex(function(p){return p.id===projId;});
+    if(idx>=0){
+      projetos[idx].nome=nome;
+      projetos[idx].descricao=document.getElementById('_projmod-desc').value.trim();
+      projetos[idx].status=document.getElementById('_projmod-status').value;
+      dbSave('projetos',projetos);
+      toast('Projeto atualizado.','ok');
+    }
+  } else {
+    var novo={id:uid(),_ts:Date.now(),clienteId:clienteId,nome:nome,
+      descricao:document.getElementById('_projmod-desc').value.trim(),
+      status:document.getElementById('_projmod-status').value,docIds:[]};
+    projetos.push(novo);
+    dbSave('projetos',projetos);
+    toast('Projeto criado!','ok');
+  }
+  cliFecharModal();
+  cliFicha(clienteId);
+  renderClientes();
+}
+
+function _projExcluir(projId, clienteId){
+  if(!confirm('Excluir este projeto? Os documentos vinculados não serão apagados.')) return;
+  dbSave('projetos',db('projetos').filter(function(p){return p.id!==projId;}));
+  toast('Projeto removido.','ok');
+  cliFecharModal();
+  cliFicha(clienteId);
+  renderClientes();
+}
+
 // ── Novo / Editar Cliente ─────────────────────────────────
 function cliNovoModal(){ cliEditarModal(null); }
 
 function cliEditarModal(id){
-  var clientes=db('clientes');
-  var c=id?clientes.find(function(x){return x.id===id;}):null;
-  var html='<div style="background:var(--bg);border-radius:12px;max-width:420px;width:100%;padding:22px 20px">'
+  var c=id?db('clientes').find(function(x){return x.id===id;}):null;
+  var html='<div style="background:var(--bg);border-radius:14px;max-width:460px;width:100%;padding:22px 20px">'
     +'<div style="font-size:16px;font-weight:800;margin-bottom:16px">'+(c?'Editar Cliente':'Novo Cliente')+'</div>'
-    +'<div class="f fw" style="margin-bottom:10px"><label>Nome</label><input type="text" id="_climod-nome" value="'+esc(c?c.nome:'')+'" placeholder="Nome completo"></div>'
-    +'<div class="row"><div class="f f2" style="margin-bottom:10px"><label>Telefone</label><input type="text" id="_climod-fone" value="'+esc(c?c.fone:'')+'"></div>'
-    +'<div class="f f2" style="margin-bottom:10px"><label>E-mail</label><input type="text" id="_climod-email" value="'+esc(c?c.email:'')+'"></div></div>'
-    +'<div class="f fw" style="margin-bottom:14px"><label>Observações</label><textarea id="_climod-obs" rows="2" style="resize:vertical">'+esc(c?c.obs:'')+'</textarea></div>'
+    +'<div class="row">'
+    +'<div class="f fw" style="margin-bottom:10px"><label>Nome Completo <span style="color:#ef4444">*</span></label><input type="text" id="_climod-nome" value="'+esc(c?c.nome:'')+'" placeholder="Nome do cliente"></div>'
+    +'</div>'
+    +'<div class="row">'
+    +'<div class="f f2" style="margin-bottom:10px"><label>Telefone / WhatsApp <span style="color:#ef4444">*</span></label><input type="tel" id="_climod-fone" value="'+esc(c?c.fone||'':'')+'" placeholder="(00) 00000-0000"></div>'
+    +'<div class="f f2" style="margin-bottom:10px"><label>E-mail</label><input type="email" id="_climod-email" value="'+esc(c?c.email||'':'')+'"></div>'
+    +'</div>'
+    +'<div class="row">'
+    +'<div class="f f2" style="margin-bottom:10px"><label>CPF / CNPJ</label><input type="text" id="_climod-cpf" value="'+esc(c?c.cpf||'':'')+'"></div>'
+    +'<div class="f f2" style="margin-bottom:10px"><label>Endereço</label><input type="text" id="_climod-end" value="'+esc(c?c.end||'':'')+'"></div>'
+    +'</div>'
+    +'<div class="f fw" style="margin-bottom:16px"><label>Observações</label><textarea id="_climod-obs" rows="2" style="resize:vertical">'+esc(c?c.obs||'':'')+'</textarea></div>'
     +'<div style="display:flex;gap:8px">'
     +'<button class="btn btn-p" onclick="_cliSalvarModal(\''+( id||'')+'\')">Salvar</button>'
-    +'<button class="btn" style="background:var(--bg2);border:1px solid var(--border)" onclick="cliFecharModal()">Cancelar</button>'
+    +(id?'<button class="btn" style="background:var(--bg2);border:1px solid var(--brd);color:#ef4444" onclick="cliExcluir(\''+id+'\')">Excluir</button>':'')
+    +'<button class="btn" style="background:var(--bg2);border:1px solid var(--brd)" onclick="cliFecharModal()'+(id?';cliFicha(\''+id+'\')':'')+'"">Cancelar</button>'
     +'</div></div>';
   var ov=document.getElementById('cli-overlay');
   ov.innerHTML=html;
@@ -8157,44 +8334,29 @@ function cliEditarModal(id){
 
 function _cliSalvarModal(id){
   var nome=document.getElementById('_climod-nome').value.trim();
+  var fone=document.getElementById('_climod-fone').value.trim();
   if(!nome){toast('Informe o nome do cliente.','err');document.getElementById('_climod-nome').focus();return;}
+  if(!fone){toast('Informe o telefone do cliente.','err');document.getElementById('_climod-fone').focus();return;}
   var clientes=db('clientes');
+  var dados={nome:nome,fone:fone,email:document.getElementById('_climod-email').value.trim(),
+    cpf:document.getElementById('_climod-cpf').value.trim(),
+    end:document.getElementById('_climod-end').value.trim(),
+    obs:document.getElementById('_climod-obs').value.trim()};
   if(id){
     var idx=clientes.findIndex(function(c){return c.id===id;});
-    if(idx>=0){
-      clientes[idx].nome=nome;
-      clientes[idx].fone=document.getElementById('_climod-fone').value.trim();
-      clientes[idx].email=document.getElementById('_climod-email').value.trim();
-      clientes[idx].obs=document.getElementById('_climod-obs').value.trim();
-      dbSave('clientes',clientes);
-      toast('Cliente atualizado.','ok');
-      cliFecharModal();
-      renderClientes();
-      return;
-    }
+    if(idx>=0){ Object.assign(clientes[idx],dados); dbSave('clientes',clientes); toast('Cliente atualizado.','ok'); cliFecharModal(); cliFicha(id); renderClientes(); return; }
   }
-  var novo={id:uid(),_ts:Date.now(),
-    nome:nome,
-    fone:document.getElementById('_climod-fone').value.trim(),
-    email:document.getElementById('_climod-email').value.trim(),
-    obs:document.getElementById('_climod-obs').value.trim()
-  };
-  clientes.push(novo);
-  dbSave('clientes',clientes);
-  toast('Cliente criado.','ok');
-  cliFecharModal();
-  renderClientes();
+  var novo=Object.assign({id:uid(),_ts:Date.now()},dados);
+  clientes.push(novo); dbSave('clientes',clientes);
+  toast('Cliente criado!','ok'); cliFecharModal(); renderClientes();
 }
 
 function cliExcluir(id){
-  if(!confirm('Excluir este cliente? Os documentos vinculados não serão apagados.')) return;
+  if(!confirm('Excluir este cliente? Os documentos e projetos vinculados não serão apagados.')) return;
   dbSave('clientes',db('clientes').filter(function(c){return c.id!==id;}));
-  cliFecharModal();
-  renderClientes();
-  toast('Cliente removido.','ok');
+  cliFecharModal(); renderClientes(); toast('Cliente removido.','ok');
 }
 
-// Registra página clientes no roteador
 if(typeof TITLES!=='undefined') TITLES['clientes']='Clientes';
 </script>
 </body>
