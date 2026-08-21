@@ -1416,6 +1416,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);width:15px;heigh
 .orc-status-btn[data-s=aprovado].on{color:#15803d;border-color:#16a34a;background:rgba(22,163,74,.1)}
 .orc-status-btn[data-s=em-negociacao].on{color:#2563eb;border-color:#3b82f6;background:rgba(59,130,246,.1)}
 .orc-status-btn[data-s=perdido].on{color:#dc2626;border-color:#ef4444;background:rgba(239,68,68,.1)}
+.orc-status-btn[data-s=lead].on{color:#64748b;border-color:#94a3b8;background:rgba(100,116,139,.1)}
+.orc-status-btn[data-s=orcamento].on{color:#2563eb;border-color:#3b82f6;background:rgba(59,130,246,.1)}
+.orc-status-btn[data-s=entregue].on{color:#d97706;border-color:#f59e0b;background:rgba(245,158,11,.1)}
+.orc-status-btn[data-s=fechado].on{color:#15803d;border-color:#10b981;background:rgba(16,185,129,.1)}
+.kb-periodo-btn{transition:.15s;}
+.kb-periodo-btn.on{background:var(--charcoal)!important;color:#fff!important;border-color:var(--charcoal)!important;}
+[data-theme=dark] .kb-periodo-btn.on{background:var(--acc)!important;border-color:var(--acc)!important;}
 .orc-status-badge{
   display:inline-flex;align-items:center;
   font-size:9px;font-weight:700;letter-spacing:.3px;

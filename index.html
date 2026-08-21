@@ -1176,19 +1176,14 @@
   <!-- QUADRO KANBAN -->
   <div id="pg-quadro" class="pg">
     <div class="kb-toolbar">
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <button class="btn btn-s btn-xs" onclick="kbMesNav(-1)" style="padding:4px 8px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span id="kb-mes-label" style="font-size:13px;font-weight:700;white-space:nowrap;min-width:120px;text-align:center"></span>
-        <button class="btn btn-s btn-xs" onclick="kbMesNav(1)" style="padding:4px 8px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-        <button class="btn btn-s btn-xs" onclick="kbMesHoje()" style="font-size:11px">Hoje</button>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <button class="btn btn-s btn-xs kb-periodo-btn on" data-p="semana" onclick="kbSetPeriodo('semana')">Semana</button>
+        <button class="btn btn-s btn-xs kb-periodo-btn" data-p="mes" onclick="kbSetPeriodo('mes')">Mês</button>
+        <button class="btn btn-s btn-xs kb-periodo-btn" data-p="todos" onclick="kbSetPeriodo('todos')">Todo período</button>
       </div>
       <div class="kb-search-wrap" style="flex:1;min-width:0">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="kb-search" placeholder="Buscar..." oninput="renderQuadro()">
+        <input type="text" id="kb-search" placeholder="Buscar título, cliente ou observação..." oninput="renderQuadro()">
       </div>
       <button class="btn btn-p btn-xs" onclick="kbNewCard()" style="flex-shrink:0;white-space:nowrap">＋ Tarefa</button>
     </div>
@@ -2240,20 +2235,29 @@ function atualizarDash(){
 function renderFunil(){
   var el=document.getElementById('dash-funil'); if(!el) return;
   var allOrcs=db('orc');
-  // Filtrar pelo mês atual (ano-mês)
-  var now=new Date();
-  var mesFiltro=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  // Filtrar pelo período do dashboard
+  var periodo=(document.getElementById('d-periodo')||{value:'mes'}).value||'mes';
+  var range=_dashPeriodoRange(periodo);
   var lbl=document.getElementById('funil-mes-label');
-  if(lbl){var mn=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];lbl.textContent=mn[now.getMonth()]+' '+now.getFullYear();}
-  var orcs=allOrcs.filter(function(o){
-    var d=o.data||o._dataLead||'';
-    if(d) return d.substring(0,7)===mesFiltro;
-    // sem data: usa timestamp de criação
-    var ts=o._ts||0;
-    if(!ts) return true; // inclui se não tem data nenhuma
-    var dt=new Date(ts);
-    return dt.getFullYear()===now.getFullYear() && dt.getMonth()===now.getMonth();
-  });
+  var orcs;
+  if(periodo==='todos'){
+    orcs=allOrcs;
+    if(lbl) lbl.textContent='todo período';
+  } else {
+    orcs=allOrcs.filter(function(o){
+      var ts=o._ts||0;
+      if(!ts && o.data){var p=o.data.split('-');if(p.length===3)ts=new Date(p[0],p[1]-1,p[2]).getTime();}
+      if(!ts) return true; // sem data: sempre inclui
+      return ts>=range.ini && ts<=range.fim;
+    });
+    if(lbl){
+      var mn=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      var now=new Date();
+      if(periodo==='mes') lbl.textContent=mn[now.getMonth()]+' '+now.getFullYear();
+      else if(periodo==='semana') lbl.textContent='esta semana';
+      else lbl.textContent='';
+    }
+  }
   var stages=PIPE_COLS.filter(function(c){return c.s!=='perdido';});
   // Conta por estágio (normaliza status legado)
   var counts={};
@@ -4994,12 +4998,17 @@ function fornExcluir(id, fromModal){
 
 // ── QUADRO KANBAN ─────────────────────────────────────────
 var KB_DEF_COLS = [
-  {id:'hoje',        label:'Para Hoje',         color:'#ef4444'},
-  {id:'semana',      label:'Esta Semana',       color:'#f59e0b'},
-  {id:'andamento',   label:'Em Andamento',      color:'#3b82f6'},
-  {id:'aguardando',  label:'Aguardando',        color:'#8b5cf6'},
-  {id:'concluido',   label:'Concluído',         color:'#10b981'}
+  {id:'seg', label:'Segunda',  color:'#3b82f6'},
+  {id:'ter', label:'Terça',    color:'#8b5cf6'},
+  {id:'qua', label:'Quarta',   color:'#10b981'},
+  {id:'qui', label:'Quinta',   color:'#f59e0b'},
+  {id:'sex', label:'Sexta',    color:'#ef4444'},
+  {id:'sab', label:'Sábado',   color:'#ec4899'}
 ];
+// Mapa de migração: colunas antigas -> nova coluna
+var _KB_MIGRA = {
+  hoje:'seg', semana:'seg', andamento:'qua', aguardando:'qui', concluido:'sex'
+};
 var KB_PRIS = {
   baixa:  {label:'Baixa',   color:'#94a3b8'},
   normal: {label:'Normal',  color:'#3b82f6'},
@@ -5007,38 +5016,17 @@ var KB_PRIS = {
   urgente:{label:'Urgente', color:'#ef4444'}
 };
 var _kbDrag=null, _kbDragCol=null, _kbScrollTimer=null, _kbScrollDir=0;
+var _kbPeriodo='semana'; // 'semana' | 'mes' | 'todos'
 
-// Mês exibido no Dia a Dia (YYYY-MM)
-var _kbMesAtual=(function(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})();
-
-function kbMesNav(dir){
-  var p=_kbMesAtual.split('-'); var y=parseInt(p[0]),m=parseInt(p[1])-1;
-  var d=new Date(y,m+dir,1);
-  _kbMesAtual=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+function kbSetPeriodo(p){
+  _kbPeriodo=p;
+  document.querySelectorAll('.kb-periodo-btn').forEach(function(b){ b.classList.toggle('on', b.dataset.p===p); });
   renderQuadro();
 }
-function kbMesHoje(){
-  var n=new Date(); _kbMesAtual=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); renderQuadro();
-}
-function kbMesCols(){
-  var p=_kbMesAtual.split('-'); var y=parseInt(p[0]),m=parseInt(p[1])-1;
-  var nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var cores=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
-  var cols=[], sem=1;
-  var dia=1, ultimo=new Date(y,m+1,0).getDate();
-  while(dia<=ultimo){
-    var fim=Math.min(dia+6, ultimo);
-    cols.push({
-      id:'sem'+sem+'_'+_kbMesAtual,
-      label:'Sem '+sem+' · '+dia+'-'+fim+' '+nomesMes[m].slice(0,3),
-      color: cores[(sem-1)%cores.length],
-      semana: sem, mes: _kbMesAtual, diaIni: dia, diaFim: fim
-    });
-    dia=fim+1; sem++;
-  }
-  return cols;
-}
 function kbNewCard(){ kbOpenModal(null,null); }
+// Mantidas por compatibilidade caso chamadas de algum lugar
+function kbMesNav(){}
+function kbMesHoje(){}
 
 document.addEventListener('dragover',function(e){
   if(!_kbDrag && !_kbDragCol) return;
@@ -5058,13 +5046,26 @@ function _kbScrollStop(){ _kbScrollDir=0; if(_kbScrollTimer){ cancelAnimationFra
 
 function dbKb(){
   var raw = localStorage.getItem('cps_kb');
-  if(!raw) return {cols: KB_DEF_COLS.map(function(c){return Object.assign({},c);}), cards:[]};
+  var defCols = KB_DEF_COLS.map(function(c){return Object.assign({},c);});
+  if(!raw) return {cols: defCols, cards:[]};
   try{
     var d = JSON.parse(raw);
-    // migração: formato antigo era array de cards
-    if(Array.isArray(d)) return {cols: KB_DEF_COLS.map(function(c){return Object.assign({},c);}), cards:d};
-    return {cols: d.cols||KB_DEF_COLS.map(function(c){return Object.assign({},c);}), cards: d.cards||[]};
-  }catch(e){ return {cols: KB_DEF_COLS.map(function(c){return Object.assign({},c);}), cards:[]}; }
+    if(Array.isArray(d)) return {cols: defCols, cards: _kbMigrarCards(d)};
+    var cards = _kbMigrarCards(d.cards||[]);
+    // Sempre usa as colunas fixas Seg-Sab (ignora colunas customizadas antigas)
+    return {cols: defCols, cards: cards};
+  }catch(e){ return {cols: defCols, cards:[]}; }
+}
+function _kbMigrarCards(cards){
+  var validIds = KB_DEF_COLS.map(function(c){return c.id;});
+  return cards.map(function(c){
+    var col = c.col||'seg';
+    // migra ID antigo (hoje/semana/andamento/aguardando/concluido) ou ID de semana (sem1_2025-08)
+    if(validIds.indexOf(col)===-1){
+      col = _KB_MIGRA[col] || 'seg';
+    }
+    return Object.assign({},c,{col:col});
+  });
 }
 function dbKbSave(data){
   dbSave('kb', data);
@@ -5073,35 +5074,40 @@ function dbKbSave(data){
 function renderQuadro(){
   var d = dbKb();
   var q = (document.getElementById('kb-search')||{}).value||'';
-  // Atualiza label do mês
-  var lblEl=document.getElementById('kb-mes-label');
-  if(lblEl){
-    var nomesMesKb=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    var parMes=_kbMesAtual.split('-');
-    lblEl.textContent=nomesMesKb[parseInt(parMes[1])-1]+' '+parMes[0];
+  // Calcular intervalo do período selecionado
+  var now = new Date();
+  var periodoInicio = null, periodoFim = null;
+  if(_kbPeriodo==='semana'){
+    // Segunda desta semana até Sábado
+    var dow = now.getDay(); // 0=dom
+    var diffSeg = dow===0 ? -6 : 1-dow;
+    periodoInicio = new Date(now.getFullYear(), now.getMonth(), now.getDate()+diffSeg);
+    periodoFim    = new Date(periodoInicio.getFullYear(), periodoInicio.getMonth(), periodoInicio.getDate()+5, 23,59,59);
+  } else if(_kbPeriodo==='mes'){
+    periodoInicio = new Date(now.getFullYear(), now.getMonth(), 1);
+    periodoFim    = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59);
   }
-  // Usa colunas semanais do mês selecionado
-  var cols = kbMesCols();
+
+  var cols = d.cols;
   var board = document.getElementById('kb-board');
   board.innerHTML = '';
   var normalEls = [], pinnedEls = [];
+  var pinnedRightPos = {};
+  var _rp = 0;
+  cols.filter(function(c){return !!c.pinned;}).slice().reverse().forEach(function(c){
+    pinnedRightPos[c.id] = _rp; _rp += 300 + 14;
+  });
 
   cols.forEach(function(col){
     var colCards = d.cards.filter(function(c){
-      // card pertence a esta semana se: col salvo é o id da semana OU (col antigo + mes do card bate)
-      if(c.col!==col.id){
-        // compatibilidade: cards antigos sem mes atribuído ficam na sem1 do mês atual
-        if(!c.mes && col.semana===1 && _kbMesAtual===(function(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})()) {
-          // não: não queremos exibir cards sem mes em colunas novas automaticamente
+      if(c.col!==col.id) return false;
+      // Filtro de período
+      if(_kbPeriodo!=='todos'){
+        var ts = c._ts || 0;
+        if(!ts && c.dataCriacao) ts = new Date(c.dataCriacao).getTime();
+        if(ts && periodoInicio && periodoFim){
+          if(ts < periodoInicio.getTime() || ts > periodoFim.getTime()) return false;
         }
-        return false;
-      }
-      // Filtrar pelo mês do card
-      if(c.mes && c.mes!==_kbMesAtual) return false;
-      if(!c.mes){
-        // card sem mes: só mostra no mês atual
-        var nmAtual=(function(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})();
-        if(_kbMesAtual!==nmAtual) return false;
       }
       if(q){
         var s = q.toLowerCase();
@@ -5309,11 +5315,10 @@ function kbOpenModal(cardId, defaultColId){
   var d = dbKb();
   var card = cardId ? d.cards.find(function(c){return c.id===cardId;}) : null;
   var isNew = !card;
-  var mesCols = kbMesCols();
-  var defaultCol = defaultColId || (mesCols[0]||{}).id || '';
-  if(isNew) card = {id:'', col:defaultCol, mes:_kbMesAtual, titulo:'', cliente:'', valor:'', obs:'', prioridade:'normal', status:'', data:new Date().toLocaleDateString('pt-BR'), colaboradores:[]};
+  var defaultCol = defaultColId || d.cols[0].id || 'seg';
+  if(isNew) card = {id:'', col:defaultCol, titulo:'', cliente:'', valor:'', obs:'', prioridade:'normal', status:'', data:new Date().toLocaleDateString('pt-BR'), colaboradores:[]};
   _kbStatus = card.status||'';
-  var colOpts = mesCols.map(function(c){ return '<option value="'+c.id+'"'+(c.id===card.col?' selected':'')+'>'+esc(c.label)+'</option>'; }).join('');
+  var colOpts = d.cols.map(function(c){ return '<option value="'+c.id+'"'+(c.id===card.col?' selected':'')+'>'+esc(c.label)+'</option>'; }).join('');
   var priHtml = ['baixa','normal','alta','urgente'].map(function(p){
     return '<button class="kb-pri-btn'+(card.prioridade===p?' on':'')+'" data-p="'+p+'" type="button" onclick="kbSetPri(this)">'+KB_PRIS[p].label+'</button>';
   }).join('');
@@ -5402,7 +5407,7 @@ function kbSaveModal(cardId, isNew){
   var card = {
     id: isNew ? uid() : cardId,
     col: document.getElementById('kbm-col').value,
-    mes: isNew ? _kbMesAtual : ((existingCard&&existingCard.mes)||_kbMesAtual),
+    _ts: isNew ? Date.now() : ((existingCard&&existingCard._ts)||Date.now()),
     titulo: titulo,
     cliente: document.getElementById('kbm-cliente').value.trim(),
     valor: document.getElementById('kbm-valor').value.trim(),
