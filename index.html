@@ -14,15 +14,40 @@
 .wrap-nopad { padding:0 !important; }
 
 /* ─── FUNIL DE VENDAS ────────────────────────────────── */
-.funil-wrap { display:flex; flex-direction:column; gap:6px; }
-.funil-stage { display:flex; align-items:center; gap:12px; }
-.funil-bar-wrap { flex:1; height:32px; border-radius:6px; background:var(--bg2); overflow:hidden; position:relative; }
-.funil-bar { height:100%; border-radius:6px; transition:width .4s ease; display:flex; align-items:center; padding-left:10px; min-width:32px; }
-.funil-count { font-size:13px; font-weight:800; color:#fff; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.3); }
-.funil-label { width:140px; font-size:12px; font-weight:600; color:var(--txt); text-align:right; flex-shrink:0; }
-.funil-pct { width:52px; font-size:11px; font-weight:700; color:var(--txt2); text-align:left; flex-shrink:0; white-space:nowrap; }
-.funil-arrow { font-size:10px; color:var(--txt2); padding-left:2px; }
-@media(max-width:500px){ .funil-label{width:80px;font-size:11px;} }
+.funil-tabs { display:flex; gap:2px; background:var(--bg2); border-radius:8px; padding:3px; }
+.funil-tab { padding:5px 14px; border-radius:6px; border:none; background:transparent; color:var(--txt2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:.15s; }
+.funil-tab.on { background:var(--bg); color:var(--txt); box-shadow:0 1px 4px rgba(0,0,0,.1); }
+/* Funil visual v2 */
+.funil-v2 { padding:8px 0 4px; }
+.funil-v2-row { display:flex; flex-direction:column; align-items:center; }
+.funil-v2-bar { height:46px; border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; margin:0 auto; transition:width .6s cubic-bezier(.2,.8,.2,1); cursor:default; position:relative; overflow:hidden; }
+.funil-v2-bar::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,rgba(255,255,255,0) 60%); }
+.funil-v2-n { font-size:22px; font-weight:900; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.25); line-height:1; }
+.funil-v2-lbl { font-size:11px; font-weight:700; color:rgba(255,255,255,.85); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
+.funil-v2-conn { display:flex; align-items:center; justify-content:center; gap:6px; height:24px; color:var(--txt2); font-size:11px; font-weight:700; }
+.funil-v2-conn-line { width:1px; height:100%; background:var(--brd); }
+.funil-perdido { display:flex; align-items:center; gap:6px; margin-top:10px; padding:8px 12px; background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.2); border-radius:8px; font-size:12px; font-weight:700; color:#dc2626; }
+/* Analytics panel */
+.funil-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+.funil-kpi { background:var(--bg2); border:1.5px solid var(--brd); border-radius:10px; padding:12px 14px; }
+.funil-kpi-v { font-size:24px; font-weight:900; color:var(--txt); line-height:1; }
+.funil-kpi-l { font-size:10px; font-weight:700; color:var(--txt2); margin-top:4px; text-transform:uppercase; letter-spacing:.05em; }
+.funil-kpi-sub { font-size:11px; font-weight:600; color:var(--acc); margin-top:2px; }
+.funil-sec-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--txt2); margin:14px 0 8px; display:flex; align-items:center; gap:8px; }
+.funil-sec-title::after { content:''; flex:1; height:1px; background:var(--brd); }
+.funil-origem-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.funil-origem-icon { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.funil-origem-lbl { font-size:12px; font-weight:600; color:var(--txt); width:100px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.funil-origem-bar-wrap { flex:1; height:8px; border-radius:4px; background:var(--bg2); overflow:hidden; }
+.funil-origem-bar { height:100%; border-radius:4px; transition:width .5s ease; }
+.funil-origem-n { font-size:12px; font-weight:800; color:var(--txt); width:28px; text-align:right; flex-shrink:0; }
+.funil-origem-pct { font-size:11px; font-weight:600; color:var(--txt2); width:34px; text-align:right; flex-shrink:0; }
+.funil-cons-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--brd); }
+.funil-cons-row:last-child { border-bottom:none; }
+.funil-cons-nome { font-size:12px; font-weight:700; color:var(--txt); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.funil-cons-n { font-size:11px; color:var(--txt2); white-space:nowrap; }
+.funil-cons-tx { font-size:12px; font-weight:800; min-width:42px; text-align:right; }
+@media(max-width:520px){ .funil-kpis{grid-template-columns:1fr 1fr;} .funil-kpi-v{font-size:20px;} }
 
 /* ─── CLIENTES / CRM ──────────────────────────────────── */
 .cli-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
@@ -604,15 +629,24 @@
       </div>
     </div>
     <div class="card no-print">
-      <div class="card-title" style="display:flex;align-items:center;gap:10px">
-        Funil de Vendas
+      <div class="card-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>Funil de Vendas</span>
+        <div class="funil-tabs" style="margin-left:4px">
+          <button class="funil-tab on" data-t="funil" onclick="funilSetTab('funil')">Funil</button>
+          <button class="funil-tab" data-t="analise" onclick="funilSetTab('analise')">Análise</button>
+        </div>
         <span id="funil-mes-label" style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text-muted)"></span>
-        <button class="btn btn-p" style="font-size:12px;padding:4px 12px;margin-left:8px" onclick="leadNovoModal()">+ Lead</button>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 12px" onclick="leadNovoModal()">+ Lead</button>
       </div>
-      <div id="dash-funil"></div>
-      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px">Movimentação por estágio</div>
-        <div class="pipeline" id="dash-pipeline"></div>
+      <div id="funil-tab-funil">
+        <div id="dash-funil"></div>
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px">Movimentação por estágio</div>
+          <div class="pipeline" id="dash-pipeline"></div>
+        </div>
+      </div>
+      <div id="funil-tab-analise" style="display:none">
+        <div id="dash-funil-analise"></div>
       </div>
     </div>
     <div class="card no-print" id="card-cobrancas">
@@ -2232,22 +2266,20 @@ function atualizarDash(){
   renderCobranças();
 }
 
-function renderFunil(){
-  var el=document.getElementById('dash-funil'); if(!el) return;
+function _funilFiltrarOrcs(){
   var allOrcs=db('orc');
-  // Filtrar pelo período do dashboard
   var periodo=(document.getElementById('d-periodo')||{value:'mes'}).value||'mes';
   var range=_dashPeriodoRange(periodo);
   var lbl=document.getElementById('funil-mes-label');
   var orcs;
-  if(periodo==='todos'){
+  if(periodo==='tudo'){
     orcs=allOrcs;
     if(lbl) lbl.textContent='todo período';
   } else {
     orcs=allOrcs.filter(function(o){
       var ts=o._ts||0;
-      if(!ts && o.data){var p=o.data.split('-');if(p.length===3)ts=new Date(p[0],p[1]-1,p[2]).getTime();}
-      if(!ts) return true; // sem data: sempre inclui
+      if(!ts&&o.data){var p=o.data.split('-');if(p.length===3)ts=new Date(p[0],p[1]-1,p[2]).getTime();}
+      if(!ts) return true;
       return ts>=range.ini && ts<=range.fim;
     });
     if(lbl){
@@ -2255,57 +2287,158 @@ function renderFunil(){
       var now=new Date();
       if(periodo==='mes') lbl.textContent=mn[now.getMonth()]+' '+now.getFullYear();
       else if(periodo==='semana') lbl.textContent='esta semana';
+      else if(periodo==='hoje') lbl.textContent='hoje';
+      else if(periodo==='mes-passado') lbl.textContent='mês passado';
       else lbl.textContent='';
     }
   }
+  return orcs;
+}
+
+function funilSetTab(t){
+  document.querySelectorAll('.funil-tab').forEach(function(b){b.classList.toggle('on',b.dataset.t===t);});
+  document.getElementById('funil-tab-funil').style.display=t==='funil'?'':'none';
+  document.getElementById('funil-tab-analise').style.display=t==='analise'?'':'none';
+  if(t==='analise') renderFunilAnalise();
+}
+
+function renderFunil(){
+  var el=document.getElementById('dash-funil'); if(!el) return;
+  var orcs=_funilFiltrarOrcs();
   var stages=PIPE_COLS.filter(function(c){return c.s!=='perdido';});
-  // Conta por estágio (normaliza status legado)
-  var counts={};
-  stages.forEach(function(c){ counts[c.s]=0; });
-  counts['perdido']=0;
-  orcs.forEach(function(o){ var s=_pipeNormStatus(o.status||'orcamento'); if(counts[s]!==undefined) counts[s]++; else counts['lead']++; });
-  var maxN=stages.reduce(function(m,c){ return Math.max(m,counts[c.s]||0); },1);
-  var svgDown='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
-  var html='<div class="funil-wrap">';
+  var counts={}; stages.forEach(function(c){counts[c.s]=0;}); counts['perdido']=0;
+  orcs.forEach(function(o){var s=_pipeNormStatus(o.status||'orcamento');if(counts[s]!==undefined)counts[s]++;else counts['lead']++;});
+  var maxN=Math.max(1, stages.reduce(function(m,c){return Math.max(m,counts[c.s]||0);},0));
+  var nPerdido=counts['perdido']||0;
+
+  var html='<div class="funil-v2">';
   stages.forEach(function(col,i){
     var n=counts[col.s]||0;
-    var pct=maxN>0?Math.max((n/maxN)*100,n>0?6:0):0;
-    // taxa de conversão em relação ao estágio anterior
-    var convHtml='';
+    // largura proporcional ao count: máx 100%, mín 18% se houver ao menos 1
+    var widthPct=n>0 ? Math.max(Math.round(n/maxN*100),18) : 8;
+    // conector com taxa de conversão entre estágios
     if(i>0){
       var prev=counts[stages[i-1].s]||0;
-      if(prev>0){
-        var taxa=Math.round((n/prev)*100);
-        convHtml='<span class="funil-pct">'+taxa+'% conv.</span>';
-      } else {
-        convHtml='<span class="funil-pct">—</span>';
-      }
-    } else {
-      convHtml='<span class="funil-pct" style="color:var(--acc);font-weight:800">'+n+' total</span>';
+      var taxa=prev>0?Math.round(n/prev*100):0;
+      var txColor=taxa>=60?'#10b981':taxa>=30?'#f59e0b':'#ef4444';
+      html+='<div class="funil-v2-conn">'
+        +'<svg width="1" height="18" viewBox="0 0 1 18"><line x1="0" y1="0" x2="0" y2="18" stroke="var(--brd)" stroke-width="1" stroke-dasharray="3 2"/></svg>'
+        +'<span style="color:'+txColor+';font-size:10px;font-weight:800;background:'+txColor+'18;padding:1px 7px;border-radius:20px;border:1px solid '+txColor+'38">'
+        +taxa+'% conv.'
+        +'</span>'
+        +'<svg width="1" height="18" viewBox="0 0 1 18"><line x1="0" y1="0" x2="0" y2="18" stroke="var(--brd)" stroke-width="1" stroke-dasharray="3 2"/></svg>'
+        +'</div>';
     }
-    html+='<div class="funil-stage">'
-      +'<span class="funil-label">'+col.label+'</span>'
-      +'<div class="funil-bar-wrap"><div class="funil-bar" style="width:'+pct+'%;background:'+col.color+'">'
-      +(n>0?'<span class="funil-count">'+n+'</span>':'')
-      +'</div></div>'
-      +convHtml
+    html+='<div class="funil-v2-row">'
+      +'<div class="funil-v2-bar" style="width:'+widthPct+'%;background:'+col.color+'">'
+      +'<span class="funil-v2-n">'+n+'</span>'
+      +'<span class="funil-v2-lbl">'+col.label+'</span>'
+      +'</div>'
       +'</div>';
-    // seta de transição
-    if(i<stages.length-1){
-      html+='<div style="display:flex;align-items:center;gap:12px;padding:0 0 0 152px;color:var(--txt2)">'+svgDown+'</div>';
-    }
   });
-  // Perdidos à parte
-  var nPerdido=counts['perdido']||0;
+
   if(nPerdido){
-    var total=orcs.length;
-    var txPerda=total>0?Math.round((nPerdido/total)*100):0;
-    html+='<div style="margin-top:8px;font-size:11px;color:#ef4444;font-weight:600;padding-left:152px">'
-      +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> '
-      +nPerdido+' perdido'+(nPerdido>1?'s':'')+'  ('+txPerda+'% do total)'
+    var txPerda=orcs.length>0?Math.round(nPerdido/orcs.length*100):0;
+    html+='<div class="funil-perdido">'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      +nPerdido+' perdido'+(nPerdido>1?'s':'')+' · '+txPerda+'% do total'
       +'</div>';
   }
   html+='</div>';
+  el.innerHTML=html;
+}
+
+function renderFunilAnalise(){
+  var el=document.getElementById('dash-funil-analise'); if(!el) return;
+  var orcs=_funilFiltrarOrcs();
+  var stages=PIPE_COLS.filter(function(c){return c.s!=='perdido';});
+  var counts={}; stages.forEach(function(c){counts[c.s]=0;}); counts['perdido']=0;
+  orcs.forEach(function(o){var s=_pipeNormStatus(o.status||'orcamento');if(counts[s]!==undefined)counts[s]++;else counts['lead']++;});
+
+  var total=orcs.length||1;
+  var nFechado=counts['fechado']||0;
+  var nLead=counts['lead']||0;
+  var nPerdido=counts['perdido']||0;
+  var txGlobal=total>0?Math.round(nFechado/total*100):0;
+
+  // Tempo médio: orcs com timestamp de criação
+  var tsOrcs=orcs.filter(function(o){return !!(o._ts);});
+  var agora=Date.now();
+  var temposMedio=tsOrcs.map(function(o){return (agora-o._ts)/(1000*60*60*24);});
+  var tempoMed=temposMedio.length>0?Math.round(temposMedio.reduce(function(a,b){return a+b;},0)/temposMedio.length):null;
+
+  // KPIs
+  var html='<div class="funil-kpis">'
+    +'<div class="funil-kpi">'
+      +'<div class="funil-kpi-v">'+total+'</div>'
+      +'<div class="funil-kpi-l">Total de Leads</div>'
+      +(nPerdido>0?'<div class="funil-kpi-sub">'+nPerdido+' perdido'+(nPerdido>1?'s':'')+'</div>':'')
+    +'</div>'
+    +'<div class="funil-kpi">'
+      +'<div class="funil-kpi-v" style="color:'+(txGlobal>=50?'#10b981':txGlobal>=25?'#f59e0b':'#ef4444')+'">'+txGlobal+'%</div>'
+      +'<div class="funil-kpi-l">Conversão Total</div>'
+      +'<div class="funil-kpi-sub">'+nFechado+' fechado'+(nFechado!==1?'s':'')+'</div>'
+    +'</div>'
+    +'<div class="funil-kpi">'
+      +'<div class="funil-kpi-v">'+(tempoMed!==null?tempoMed+'d':'—')+'</div>'
+      +'<div class="funil-kpi-l">Tempo Médio</div>'
+      +'<div class="funil-kpi-sub">dias em aberto</div>'
+    +'</div>'
+  +'</div>';
+
+  // Origem
+  var origens={};
+  var origemLabels={whatsapp:'WhatsApp',instagram:'Instagram',facebook:'Facebook',google:'Google',indicacao:'Indicação',walkin:'Visita Direta',outros:'Outros'};
+  var origemColors={whatsapp:'#25d366',instagram:'#e1306c',facebook:'#1877f2',google:'#ea4335',indicacao:'#8b5cf6',walkin:'#f59e0b',outros:'#64748b'};
+  orcs.forEach(function(o){var k=o.origem||'outros'; origens[k]=(origens[k]||0)+1;});
+  var origemArr=Object.keys(origens).map(function(k){return{k:k,n:origens[k]};}).sort(function(a,b){return b.n-a.n;});
+  var maxOrig=origemArr.length>0?origemArr[0].n:1;
+
+  if(origemArr.length>0){
+    html+='<div class="funil-sec-title">Origem dos Leads</div>';
+    origemArr.forEach(function(o){
+      var pct=Math.round(o.n/total*100);
+      var barW=Math.round(o.n/maxOrig*100);
+      var cor=origemColors[o.k]||'#64748b';
+      var lbl=origemLabels[o.k]||o.k;
+      html+='<div class="funil-origem-row">'
+        +'<div class="funil-origem-lbl">'+esc(lbl)+'</div>'
+        +'<div class="funil-origem-bar-wrap"><div class="funil-origem-bar" style="width:'+barW+'%;background:'+cor+'"></div></div>'
+        +'<div class="funil-origem-n">'+o.n+'</div>'
+        +'<div class="funil-origem-pct">'+pct+'%</div>'
+      +'</div>';
+    });
+  } else {
+    html+='<div style="font-size:12px;color:var(--txt2);margin:12px 0">Nenhuma origem registrada. Cadastre leads com o botão <b>+ Lead</b>.</div>';
+  }
+
+  // Por consultor
+  var cons={};
+  orcs.forEach(function(o){
+    var c=o.consultor||'(sem consultor)';
+    if(!cons[c]) cons[c]={total:0,fechado:0};
+    cons[c].total++;
+    if(_pipeNormStatus(o.status||'')=='fechado') cons[c].fechado++;
+  });
+  var consArr=Object.keys(cons).map(function(k){
+    var tx=cons[k].total>0?Math.round(cons[k].fechado/cons[k].total*100):0;
+    return{nome:k,total:cons[k].total,fechado:cons[k].fechado,tx:tx};
+  }).sort(function(a,b){return b.tx-a.tx||b.total-a.total;});
+
+  if(consArr.length>0){
+    html+='<div class="funil-sec-title">Por Consultor</div>'
+      +'<div>';
+    consArr.forEach(function(c){
+      var txColor=c.tx>=60?'#10b981':c.tx>=30?'#f59e0b':'#ef4444';
+      html+='<div class="funil-cons-row">'
+        +'<div class="funil-cons-nome">'+esc(c.nome)+'</div>'
+        +'<div class="funil-cons-n">'+c.total+' lead'+(c.total!==1?'s':'')+' · '+c.fechado+' fech.</div>'
+        +'<div class="funil-cons-tx" style="color:'+txColor+'">'+c.tx+'%</div>'
+      +'</div>';
+    });
+    html+='</div>';
+  }
+
   el.innerHTML=html;
 }
 

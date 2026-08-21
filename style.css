@@ -1850,3 +1850,31 @@ button:focus-visible,a:focus-visible{
 .tab-pick-item-txt{flex:1;}
 .tab-pick-item-nome{font-size:13px;font-weight:600;color:#1e293b;}
 .tab-pick-item-sub{font-size:11px;color:#94a3b8;}
+
+/* ── FUNIL V2 DARK MODE ── */
+[data-theme=dark] .funil-tabs{background:var(--cream-dark)}
+[data-theme=dark] .funil-tab{color:var(--mid)}
+[data-theme=dark] .funil-tab.on{background:var(--white);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+[data-theme=dark] .funil-v2-bar::after{background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,0) 60%)}
+[data-theme=dark] .funil-perdido{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18)}
+[data-theme=dark] .funil-kpi{background:var(--cream-dark);border-color:var(--border)}
+[data-theme=dark] .funil-kpi-v{color:var(--gold)}
+[data-theme=dark] .funil-origem-bar-wrap{background:var(--cream-dark)}
+[data-theme=dark] .funil-cons-row{border-color:var(--border)}
+
+/* ── DASHBOARD — melhorias visuais ── */
+.stat{
+  position:relative;overflow:hidden;
+}
+.stat::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),#e8d080,var(--gold-dark));
+  opacity:.7;
+}
+/* Pipeline cards melhorados */
+.pipe-col{border-radius:10px}
+.pipe-col-hd{font-size:11px;letter-spacing:.3px;}
+[data-theme=dark] .funil-kpi-sub{color:var(--gold)}
+[data-theme=dark] .funil-sec-title{color:var(--mid)}
+[data-theme=dark] .funil-origem-lbl,[data-theme=dark] .funil-cons-nome{color:var(--charcoal)}
+[data-theme=dark] .funil-origem-n,[data-theme=dark] .funil-origem-pct,[data-theme=dark] .funil-cons-n{color:var(--mid)}
