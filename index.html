@@ -13,6 +13,17 @@
 <style>
 .wrap-nopad { padding:0 !important; }
 
+/* ─── FUNIL DE VENDAS ────────────────────────────────── */
+.funil-wrap { display:flex; flex-direction:column; gap:6px; }
+.funil-stage { display:flex; align-items:center; gap:12px; }
+.funil-bar-wrap { flex:1; height:32px; border-radius:6px; background:var(--bg2); overflow:hidden; position:relative; }
+.funil-bar { height:100%; border-radius:6px; transition:width .4s ease; display:flex; align-items:center; padding-left:10px; min-width:32px; }
+.funil-count { font-size:13px; font-weight:800; color:#fff; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.3); }
+.funil-label { width:140px; font-size:12px; font-weight:600; color:var(--txt); text-align:right; flex-shrink:0; }
+.funil-pct { width:52px; font-size:11px; font-weight:700; color:var(--txt2); text-align:left; flex-shrink:0; white-space:nowrap; }
+.funil-arrow { font-size:10px; color:var(--txt2); padding-left:2px; }
+@media(max-width:500px){ .funil-label{width:80px;font-size:11px;} }
+
 /* ─── CLIENTES / CRM ──────────────────────────────────── */
 .cli-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
 .cli-stat { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; padding:14px 16px; }
@@ -479,8 +490,8 @@
     <div class="sb-group">
       <div class="sb-lbl">Gestão</div>
       <a class="sb-item" id="nav-quadro" href="#quadro" onclick="ir('quadro',this);renderQuadro();return false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-        Quadro
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+        Dia a Dia
       </a>
       <a class="sb-item" id="nav-notas" href="#notas" onclick="ir('notas',this);renderNotas();return false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -593,12 +604,19 @@
       </div>
     </div>
     <div class="card no-print">
-      <div class="card-title">Pipeline de Leads</div>
-      <div class="pipeline" id="dash-pipeline"></div>
+      <div class="card-title" style="display:flex;align-items:center;gap:10px">
+        Funil de Vendas
+        <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text-muted)">todos os períodos</span>
+      </div>
+      <div id="dash-funil"></div>
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px">Movimentação por estágio</div>
+        <div class="pipeline" id="dash-pipeline"></div>
+      </div>
     </div>
     <div class="card no-print" id="card-cobrancas">
       <div class="card-title" style="display:flex;align-items:center;gap:10px;">
-        Cobranças — Aprovados e Em Negociação
+        Cobranças — Orçamentos Entregues e Em Aberto
         <span id="cobrancas-badge" style="display:none;background:#ef4444;color:#fff;border-radius:9px;padding:1px 8px;font-size:11px;font-weight:700"></span>
         <label style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-muted);display:flex;align-items:center;gap:5px;">
           Alertar após
@@ -682,9 +700,10 @@
       <div class="f" style="margin-top:12px">
         <label>Status do Orçamento</label>
         <div class="orc-status-btns">
-          <button type="button" class="orc-status-btn on" data-s="pendente" onclick="setOrcStatus('pendente')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pendente</button>
-          <button type="button" class="orc-status-btn" data-s="aprovado" onclick="setOrcStatus('aprovado')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Aprovado</button>
-          <button type="button" class="orc-status-btn" data-s="em-negociacao" onclick="setOrcStatus('em-negociacao')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Em Negociação</button>
+          <button type="button" class="orc-status-btn" data-s="lead" onclick="setOrcStatus('lead')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Lead</button>
+          <button type="button" class="orc-status-btn on" data-s="orcamento" onclick="setOrcStatus('orcamento')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Orçamento</button>
+          <button type="button" class="orc-status-btn" data-s="entregue" onclick="setOrcStatus('entregue')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Orç. Entregue</button>
+          <button type="button" class="orc-status-btn" data-s="fechado" onclick="setOrcStatus('fechado')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Fechado</button>
           <button type="button" class="orc-status-btn" data-s="perdido" onclick="setOrcStatus('perdido')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Perdido</button>
         </div>
         <input type="hidden" id="orc-status" value="pendente">
@@ -1954,16 +1973,24 @@ function num2(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximu
 
 // ── DASHBOARD ─────────────────────────────────────────────
 var PIPE_COLS=[
-  {s:'lead',      label:'Leads',      color:'#f59e0b', border:'rgba(245,158,11,.35)'},
-  {s:'andamento', label:'Andamento',  color:'#3b82f6', border:'rgba(59,130,246,.35)'},
-  {s:'fechamento',label:'Fechamento', color:'#10b981', border:'rgba(16,185,129,.35)'},
-  {s:'perdido',   label:'Perdidos',   color:'#ef4444', border:'rgba(239,68,68,.35)'}
+  {s:'lead',     label:'Lead',                color:'#64748b', border:'rgba(100,116,139,.35)'},
+  {s:'orcamento',label:'Orçamento',           color:'#3b82f6', border:'rgba(59,130,246,.35)'},
+  {s:'entregue', label:'Orçamento Entregue',  color:'#f59e0b', border:'rgba(245,158,11,.35)'},
+  {s:'fechado',  label:'Fechado',             color:'#10b981', border:'rgba(16,185,129,.35)'},
+  {s:'perdido',  label:'Perdido',             color:'#ef4444', border:'rgba(239,68,68,.35)'}
 ];
 
 var _pipeDragCliente=null, _pipeDragColStatus=null;
 
+// Compatibilidade com status antigos ('pendente','aprovado','em-negociacao','andamento','fechamento')
 function _pipeNormStatus(s){
-  return ['lead','andamento','fechamento','perdido'].indexOf(s)!==-1?s:'lead';
+  var map={
+    lead:'lead', orcamento:'orcamento', entregue:'entregue', fechado:'fechado', perdido:'perdido',
+    // legado
+    pendente:'orcamento', 'em-negociacao':'entregue', aprovado:'fechado',
+    andamento:'orcamento', fechamento:'fechado', reprovado:'perdido'
+  };
+  return map[s]||'lead';
 }
 
 function renderPipeline(){
@@ -2162,8 +2189,63 @@ function atualizarDash(){
       '<div class="hi-meta">'+fmt(o.data||'')+(o.total?' · R$ '+o.total.toLocaleString('pt-BR',{minimumFractionDigits:2}):'')+
       '</div></div></div>';
   }).join('');}
+  renderFunil();
   renderPipeline();
   renderCobranças();
+}
+
+function renderFunil(){
+  var el=document.getElementById('dash-funil'); if(!el) return;
+  var orcs=db('orc');
+  var stages=PIPE_COLS.filter(function(c){return c.s!=='perdido';});
+  // Conta por estágio (normaliza status legado)
+  var counts={};
+  stages.forEach(function(c){ counts[c.s]=0; });
+  counts['perdido']=0;
+  orcs.forEach(function(o){ var s=_pipeNormStatus(o.status||'orcamento'); if(counts[s]!==undefined) counts[s]++; else counts['lead']++; });
+  var maxN=stages.reduce(function(m,c){ return Math.max(m,counts[c.s]||0); },1);
+  var svgDown='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+  var html='<div class="funil-wrap">';
+  stages.forEach(function(col,i){
+    var n=counts[col.s]||0;
+    var pct=maxN>0?Math.max((n/maxN)*100,n>0?6:0):0;
+    // taxa de conversão em relação ao estágio anterior
+    var convHtml='';
+    if(i>0){
+      var prev=counts[stages[i-1].s]||0;
+      if(prev>0){
+        var taxa=Math.round((n/prev)*100);
+        convHtml='<span class="funil-pct">'+taxa+'% conv.</span>';
+      } else {
+        convHtml='<span class="funil-pct">—</span>';
+      }
+    } else {
+      convHtml='<span class="funil-pct" style="color:var(--acc);font-weight:800">'+n+' total</span>';
+    }
+    html+='<div class="funil-stage">'
+      +'<span class="funil-label">'+col.label+'</span>'
+      +'<div class="funil-bar-wrap"><div class="funil-bar" style="width:'+pct+'%;background:'+col.color+'">'
+      +(n>0?'<span class="funil-count">'+n+'</span>':'')
+      +'</div></div>'
+      +convHtml
+      +'</div>';
+    // seta de transição
+    if(i<stages.length-1){
+      html+='<div style="display:flex;align-items:center;gap:12px;padding:0 0 0 152px;color:var(--txt2)">'+svgDown+'</div>';
+    }
+  });
+  // Perdidos à parte
+  var nPerdido=counts['perdido']||0;
+  if(nPerdido){
+    var total=orcs.length;
+    var txPerda=total>0?Math.round((nPerdido/total)*100):0;
+    html+='<div style="margin-top:8px;font-size:11px;color:#ef4444;font-weight:600;padding-left:152px">'
+      +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> '
+      +nPerdido+' perdido'+(nPerdido>1?'s':'')+'  ('+txPerda+'% do total)'
+      +'</div>';
+  }
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 function renderCobranças(){
@@ -2174,10 +2256,10 @@ function renderCobranças(){
   var agora=Date.now();
   var limite=dias*24*60*60*1000;
   var orcs=db('orc');
-  // cobranças = aprovados e em negociação que não receberam retorno
+  // cobranças = orçamentos entregues e fechados sem retorno registrado
   var abertos=orcs.filter(function(o){
-    var s=o.status||'lead';
-    if(['aprovado','em-negociacao'].indexOf(s)===-1) return false;
+    var s=_pipeNormStatus(o.status||'lead');
+    if(['entregue','fechado'].indexOf(s)===-1) return false;
     var ts=o._ts||0;
     if(!ts && o.data){
       var p=o.data.split('-'); if(p.length===3) ts=new Date(p[0],p[1]-1,p[2]).getTime();
@@ -2258,7 +2340,9 @@ function dashCtx(e,key,id){
 // ── ORÇAMENTO ─────────────────────────────────────────────
 var orcN=0, orcId=null;
 
-var ORC_STATUS_LABELS = {pendente:'Pendente', aprovado:'Aprovado', 'em-negociacao':'Em Negociação', perdido:'Perdido'};
+var ORC_STATUS_LABELS = {lead:'Lead', orcamento:'Orçamento', entregue:'Orç. Entregue', fechado:'Fechado', perdido:'Perdido',
+  // legado
+  pendente:'Orçamento', aprovado:'Fechado', 'em-negociacao':'Orç. Entregue', andamento:'Orçamento', fechamento:'Fechado'};
 
 function setOrcStatus(s) {
   sv('orc-status', s);
@@ -2275,7 +2359,7 @@ function novoOrcamento(){
   sv('orc-cliente',''); sv('orc-fone',''); sv('orc-end',''); sv('orc-obs','');
   sv('orc-prazo','30 dias úteis'); sv('orc-pagamento','50% entrada + 50% na entrega'); sv('orc-validade','15 dias');
   sv('orc-intro','Segue abaixo o orçamento solicitado, conforme medidas enviadas. Todos os produtos serão instalados por nossas equipes especializadas.');
-  setOrcStatus('pendente');
+  setOrcStatus('orcamento');
   document.getElementById('orc-itens').innerHTML='';
   orcAddItem();
   sincronizarPrintOrc();
@@ -2360,7 +2444,7 @@ function orcSerializar(){
   return {id:orcId||uid(),_ts:Date.now(),num:v('orc-num'),data:v('orc-data'),consultor:v('orc-consultor'),
     clienteId:v('orc-clienteId'),projetoId:v('orc-projetoId')||'',cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
     prazo:v('orc-prazo'),pagamento:v('orc-pagamento'),validade:v('orc-validade'),obs:v('orc-obs'),
-    status:v('orc-status')||'pendente',
+    status:_pipeNormStatus(v('orc-status')||'orcamento'),
     itens:itens,total:orcCalc()};
 }
 
@@ -2515,7 +2599,7 @@ function orcRestaurar(o){
   sv('orc-clienteId',o.clienteId||'');sv('orc-projetoId',o.projetoId||'');sv('orc-cliente',o.cliente);sv('orc-fone',o.fone);sv('orc-end',o.end);
   sv('orc-intro',o.intro);sv('orc-prazo',o.prazo);sv('orc-pagamento',o.pagamento);
   sv('orc-validade',o.validade);sv('orc-obs',o.obs);
-  setOrcStatus(o.status||'pendente');
+  setOrcStatus(_pipeNormStatus(o.status||'orcamento'));
   document.getElementById('orc-itens').innerHTML='';
   (o.itens||[]).forEach(function(item){
     orcN++; var n=orcN;
@@ -3469,7 +3553,7 @@ function histCtx(e,key,id){
     items.push({icon:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',label:'Duplicar orçamento',fn:function(){duplicarOrcHist(id);}});
     items.push('sep');
     items.push({isLbl:true,label:'Alterar Status'});
-    ['pendente','aprovado','em-negociacao','perdido'].forEach(function(s){
+    ['lead','orcamento','entregue','fechado','perdido'].forEach(function(s){
       items.push({label:ORC_STATUS_LABELS[s],fn:function(){
         var arr=db('orc');
         var idx=arr.findIndex(function(o){return o.id===id;});
@@ -4813,12 +4897,11 @@ function fornExcluir(id, fromModal){
 
 // ── QUADRO KANBAN ─────────────────────────────────────────
 var KB_DEF_COLS = [
-  {id:'novo',       label:'Novo Orçamento',    color:'#3b82f6'},
-  {id:'andamento',  label:'Em Andamento',      color:'#f59e0b'},
-  {id:'aguardando', label:'Aguardando Cliente',color:'#8b5cf6'},
-  {id:'aprovado',   label:'Aprovado',          color:'#10b981'},
-  {id:'concluido',  label:'Concluído',         color:'#6b7280'},
-  {id:'cancelado',  label:'Cancelado',         color:'#ef4444'}
+  {id:'hoje',        label:'Para Hoje',         color:'#ef4444'},
+  {id:'semana',      label:'Esta Semana',       color:'#f59e0b'},
+  {id:'andamento',   label:'Em Andamento',      color:'#3b82f6'},
+  {id:'aguardando',  label:'Aguardando',        color:'#8b5cf6'},
+  {id:'concluido',   label:'Concluído',         color:'#10b981'}
 ];
 var KB_PRIS = {
   baixa:  {label:'Baixa',   color:'#94a3b8'},
