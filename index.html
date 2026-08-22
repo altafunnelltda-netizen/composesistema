@@ -5343,15 +5343,17 @@ function renderQuadro(){
   cols.forEach(function(col){
     var colCards = d.cards.filter(function(c){
       if(c.col!==col.id) return false;
-      // Filtro de período
-      if(_kbPeriodo==='semana'){
-        var cardSeg = c.semana || (c._ts ? _kbTsToSegStr(c._ts) : _kbSegStr(0));
-        if(cardSeg !== periodoSemanaStr) return false;
-      } else if(_kbPeriodo==='mes'){
-        var cardTs = c._ts || 0;
-        if(c.semana) cardTs = new Date(c.semana).getTime();
-        if(cardTs && periodoInicio && periodoFim){
-          if(cardTs < periodoInicio.getTime() || cardTs > periodoFim.getTime()) return false;
+      // Filtro de período (ignorado quando há busca ativa)
+      if(!q){
+        if(_kbPeriodo==='semana'){
+          var cardSeg = c.semana || (c._ts ? _kbTsToSegStr(c._ts) : _kbSegStr(0));
+          if(cardSeg !== periodoSemanaStr) return false;
+        } else if(_kbPeriodo==='mes'){
+          var cardTs = c._ts || 0;
+          if(c.semana) cardTs = new Date(c.semana).getTime();
+          if(cardTs && periodoInicio && periodoFim){
+            if(cardTs < periodoInicio.getTime() || cardTs > periodoFim.getTime()) return false;
+          }
         }
       }
       if(q){
