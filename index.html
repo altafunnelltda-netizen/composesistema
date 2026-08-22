@@ -5254,6 +5254,20 @@ function kbNewCard(){ kbOpenModal(null,null); }
 // Mantidas por compatibilidade caso chamadas de algum lugar
 function kbMesNav(){}
 function kbMesHoje(){}
+function _kbGetSegunda(offset){
+  var now=new Date(); var dow=now.getDay();
+  var diff=dow===0?-6:1-dow;
+  return new Date(now.getFullYear(),now.getMonth(),now.getDate()+diff+(offset||0)*7);
+}
+function _kbSegStr(offset){
+  var s=_kbGetSegunda(offset||0);
+  return s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');
+}
+function _kbTsToSegStr(ts){
+  var d=new Date(ts); var dow=d.getDay(); var diff=dow===0?-6:1-dow;
+  var s=new Date(d.getFullYear(),d.getMonth(),d.getDate()+diff);
+  return s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');
+}
 
 document.addEventListener('dragover',function(e){
   if(!_kbDrag && !_kbDragCol) return;
@@ -5287,11 +5301,10 @@ function _kbMigrarCards(cards){
   var validIds = KB_DEF_COLS.map(function(c){return c.id;});
   return cards.map(function(c){
     var col = c.col||'seg';
-    // migra ID antigo (hoje/semana/andamento/aguardando/concluido) ou ID de semana (sem1_2025-08)
-    if(validIds.indexOf(col)===-1){
-      col = _KB_MIGRA[col] || 'seg';
-    }
-    return Object.assign({},c,{col:col});
+    if(validIds.indexOf(col)===-1){ col = _KB_MIGRA[col] || 'seg'; }
+    // Adiciona semana em cards antigos sem ela
+    var semana = c.semana || (c._ts ? _kbTsToSegStr(c._ts) : _kbSegStr(0));
+    return Object.assign({},c,{col:col, semana:semana});
   });
 }
 function dbKbSave(data){
@@ -5304,12 +5317,14 @@ function renderQuadro(){
   // Calcular intervalo do período selecionado
   var now = new Date();
   var periodoInicio = null, periodoFim = null;
+  var periodoSemanaStr = null;
   if(_kbPeriodo==='semana'){
     // Segunda da semana com offset até Sábado
     var dow = now.getDay(); // 0=dom
     var diffSeg = dow===0 ? -6 : 1-dow;
     periodoInicio = new Date(now.getFullYear(), now.getMonth(), now.getDate()+diffSeg+_kbOffset*7);
     periodoFim    = new Date(periodoInicio.getFullYear(), periodoInicio.getMonth(), periodoInicio.getDate()+5, 23,59,59);
+    periodoSemanaStr = periodoInicio.getFullYear()+'-'+String(periodoInicio.getMonth()+1).padStart(2,'0')+'-'+String(periodoInicio.getDate()).padStart(2,'0');
   } else if(_kbPeriodo==='mes'){
     periodoInicio = new Date(now.getFullYear(), now.getMonth()+_kbOffset, 1);
     periodoFim    = new Date(now.getFullYear(), now.getMonth()+_kbOffset+1, 0, 23,59,59);
@@ -5329,11 +5344,14 @@ function renderQuadro(){
     var colCards = d.cards.filter(function(c){
       if(c.col!==col.id) return false;
       // Filtro de período
-      if(_kbPeriodo!=='todos'){
-        var ts = c._ts || 0;
-        if(!ts && c.dataCriacao) ts = new Date(c.dataCriacao).getTime();
-        if(ts && periodoInicio && periodoFim){
-          if(ts < periodoInicio.getTime() || ts > periodoFim.getTime()) return false;
+      if(_kbPeriodo==='semana'){
+        var cardSeg = c.semana || (c._ts ? _kbTsToSegStr(c._ts) : _kbSegStr(0));
+        if(cardSeg !== periodoSemanaStr) return false;
+      } else if(_kbPeriodo==='mes'){
+        var cardTs = c._ts || 0;
+        if(c.semana) cardTs = new Date(c.semana).getTime();
+        if(cardTs && periodoInicio && periodoFim){
+          if(cardTs < periodoInicio.getTime() || cardTs > periodoFim.getTime()) return false;
         }
       }
       if(q){
@@ -5363,7 +5381,13 @@ function renderQuadro(){
           '</svg>'+
         '</div>'+
         '<div class="kb-col-dot" style="background:'+col.color+'"></div>'+
-        '<span class="kb-col-title">'+esc(col.label)+'</span>'+
+        '<span class="kb-col-title">'+esc(col.label)+(function(){
+          if(_kbPeriodo!=='semana'||!periodoInicio) return '';
+          var dayMap={seg:0,ter:1,qua:2,qui:3,sex:4,sab:5};
+          var off=dayMap[col.id]; if(off===undefined) return '';
+          var dt=new Date(periodoInicio.getFullYear(),periodoInicio.getMonth(),periodoInicio.getDate()+off);
+          return '<span style="font-size:10px;font-weight:500;color:var(--txt3);margin-left:4px">'+dt.getDate()+'</span>';
+        })()+'</span>'+
         '<span class="kb-count">'+colCards.length+'</span>'+
         '<button class="kb-pin-btn" title="'+(isPinned?'Desafixar':'Fixar')+' coluna" onclick="kbTogglePin(\''+col.id+'\',event)">'+
           '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2z"/></svg>'+
@@ -5641,6 +5665,7 @@ function kbSaveModal(cardId, isNew){
     obs: document.getElementById('kbm-obs').value.trim(),
     prioridade: pri, status: status,
     data: isNew ? new Date().toLocaleDateString('pt-BR') : (existingCard||{}).data,
+    semana: isNew ? _kbSegStr(_kbOffset) : ((existingCard&&existingCard.semana)||_kbSegStr(_kbOffset)),
     colaboradores: Array.from(document.querySelectorAll('#kbm-colabs input[type=checkbox]:checked')).map(function(i){return i.value;})
   };
   if(isNew){ d.cards.push(card); }
