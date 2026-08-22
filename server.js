@@ -53,6 +53,16 @@ if (DATABASE_URL) {
 
 const DADOS_PATH = path.join(process.env.DADOS_DIR || __dirname, 'dados.json');
 
+// ── USUÁRIOS ──────────────────────────────────────────────────────────────────
+const USERS_FILE = path.join(__dirname, 'users.json');
+function hashSenha(s){ return crypto.createHash('sha256').update(s+':cps2024').digest('hex'); }
+function readUsers(){ try{ return JSON.parse(fs.readFileSync(USERS_FILE,'utf8')); }catch{ return []; } }
+function writeUsers(u){ fs.writeFileSync(USERS_FILE, JSON.stringify(u,null,2)); }
+if(!fs.existsSync(USERS_FILE)){
+  writeUsers([{id:'1',nome:'Administrador',login:'admin',senha:hashSenha(SENHA),perfil:'admin',ativo:true,permissoes:{},criadoEm:Date.now()}]);
+  console.log('users.json criado. Login: admin / Senha: '+SENHA);
+}
+
 // Cache in-memory do lastModified para evitar carregar o payload inteiro no polling
 let _lastModifiedCache = null;
 
@@ -120,6 +130,10 @@ function auth(req, res, next) {
   if (req.session && req.session.logado) return next();
   res.redirect('/login');
 }
+function authAdmin(req, res, next) {
+  if (req.session && req.session.logado && (req.session.perfil === 'admin' || !req.session.perfil)) return next();
+  res.status(403).json({ erro: 'Acesso negado.' });
+}
 
 // ── RATE LIMITING DO LOGIN ────────────────────────────────────────────────────
 const _loginAttempts = new Map();
@@ -156,12 +170,18 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const ip = req.ip || req.connection.remoteAddress || 'unknown';
-  if (_loginBloqueado(ip)) {
-    return res.redirect('/login?erro=2'); // erro=2 → bloqueado
-  }
-  if (req.body.senha === SENHA) {
+  if (_loginBloqueado(ip)) return res.redirect('/login?erro=2');
+  const { login: loginInput, senha } = req.body;
+  const users = readUsers();
+  const user = users.find(u => u.ativo && u.login === (loginInput||'').trim() && u.senha === hashSenha(senha||''));
+  if (user) {
     _loginReset(ip);
     req.session.logado = true;
+    req.session.userId = user.id;
+    req.session.perfil = user.perfil;
+    req.session.nome = user.nome;
+    req.session.login = user.login;
+    req.session.permissoes = user.permissoes || {};
     res.redirect('/');
   } else {
     res.redirect('/login?erro=1');
@@ -189,6 +209,59 @@ app.get('/update-audio.mp3', (req, res) => {
 });
 
 app.get('/versao', (req, res) => res.json({ v: VERSAO }));
+
+app.get('/me', auth, (req, res) => {
+  res.json({
+    id: req.session.userId || null,
+    nome: req.session.nome || 'Administrador',
+    login: req.session.login || 'admin',
+    perfil: req.session.perfil || 'admin',
+    permissoes: req.session.permissoes || {}
+  });
+});
+
+// ── CRUD USUÁRIOS (admin) ─────────────────────────────────────────────────────
+app.get('/usuarios', authAdmin, (req, res) => {
+  res.json(readUsers().map(u => ({ id:u.id, nome:u.nome, login:u.login, perfil:u.perfil, ativo:u.ativo, permissoes:u.permissoes||{}, criadoEm:u.criadoEm })));
+});
+
+app.post('/usuarios', authAdmin, (req, res) => {
+  const users = readUsers();
+  const { nome, login, senha, perfil, permissoes } = req.body;
+  if (!nome || !login || !senha || !perfil) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  if (users.some(u => u.login === login.trim())) return res.status(400).json({ erro: 'Login já existe.' });
+  const user = { id: crypto.randomBytes(8).toString('hex'), nome: nome.trim(), login: login.trim(), senha: hashSenha(senha), perfil, ativo: true, permissoes: permissoes||{}, criadoEm: Date.now() };
+  users.push(user);
+  writeUsers(users);
+  res.json({ ok: true, user: { ...user, senha: undefined } });
+});
+
+app.put('/usuarios/:id', authAdmin, (req, res) => {
+  const users = readUsers();
+  const idx = users.findIndex(u => u.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ erro: 'Não encontrado.' });
+  const { nome, login, senha, perfil, ativo, permissoes } = req.body;
+  if (login && login.trim() !== users[idx].login && users.some(u => u.login === login.trim())) return res.status(400).json({ erro: 'Login já existe.' });
+  users[idx] = { ...users[idx],
+    nome: nome ? nome.trim() : users[idx].nome,
+    login: login ? login.trim() : users[idx].login,
+    perfil: perfil || users[idx].perfil,
+    ativo: ativo !== undefined ? ativo : users[idx].ativo,
+    permissoes: permissoes !== undefined ? permissoes : users[idx].permissoes,
+    ...(senha ? { senha: hashSenha(senha) } : {})
+  };
+  writeUsers(users);
+  res.json({ ok: true, user: { ...users[idx], senha: undefined } });
+});
+
+app.delete('/usuarios/:id', authAdmin, (req, res) => {
+  const users = readUsers();
+  const user = users.find(u => u.id === req.params.id);
+  if (!user) return res.status(404).json({ erro: 'Não encontrado.' });
+  if (user.perfil === 'admin' && users.filter(u => u.perfil === 'admin' && u.ativo).length <= 1) return res.status(400).json({ erro: 'Não pode excluir o único administrador.' });
+  writeUsers(users.filter(u => u.id !== req.params.id));
+  res.json({ ok: true });
+});
 
 app.get('/dados', auth, async (req, res) => {
   try { res.json(await lerDados()); }

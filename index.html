@@ -55,6 +55,17 @@
 @media(max-width:700px){ .funil-kpis{grid-template-columns:1fr 1fr;} .funil-kpi-v{font-size:18px;} }
 @media(max-width:400px){ .funil-kpis{grid-template-columns:1fr;} }
 
+/* ─── INSTALAÇÃO ─────────────────────────────────────── */
+.inst-card { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; padding:14px 16px; margin-bottom:10px; transition:.15s; }
+.inst-card:hover { border-color:var(--acc); }
+.inst-card-ok { opacity:.65; }
+/* ─── USUÁRIOS ───────────────────────────────────────── */
+.usr-table-wrap { overflow-x:auto; }
+.usr-table { width:100%; border-collapse:collapse; font-size:13px; }
+.usr-table th { text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--txt3); padding:8px 12px; border-bottom:1.5px solid var(--brd); }
+.usr-table td { padding:12px 12px; border-bottom:1px solid var(--brd); vertical-align:middle; }
+.usr-table tr:last-child td { border-bottom:none; }
+.usr-table tr:hover td { background:var(--bg2); }
 /* ─── CLIENTES / CRM ──────────────────────────────────── */
 .cli-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
 .cli-stat { background:var(--bg2); border:1.5px solid var(--brd); border-radius:12px; padding:14px 16px; }
@@ -536,6 +547,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Colaboradores
       </a>
+      <a class="sb-item" id="nav-usuarios" href="#usuarios" onclick="ir('usuarios',this);renderUsuarios();return false" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><circle cx="19" cy="7" r="2.5" fill="currentColor" stroke="none"/><path d="M19 5v4M17 7h4" stroke="var(--acc)" stroke-width="2"/></svg>
+        Usuários
+      </a>
       <a class="sb-item" id="nav-auge" href="#auge" onclick="ir('auge',this);renderAuge();return false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Importar Auge
@@ -567,6 +582,15 @@
     </div>
   </nav>
   <div class="sb-foot">
+    <div id="sb-user-chip" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:9px;border:1px solid var(--border);margin-bottom:10px;min-width:0">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div style="min-width:0;flex:1">
+        <div id="sb-user-nome" style="font-size:12px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        <div id="sb-user-perfil" style="font-size:10px;color:var(--txt3);text-transform:capitalize">—</div>
+      </div>
+    </div>
     <a href="/backup" class="sb-backup-btn" title="Baixar backup de todos os dados em JSON">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Backup
@@ -1282,6 +1306,11 @@
     <div id="ag-wrap"></div>
   </div>
 
+  <!-- USUÁRIOS -->
+  <div id="pg-usuarios" class="pg">
+    <div id="usr-wrap"></div>
+  </div>
+
   <!-- COLABORADORES -->
   <div id="pg-colaboradores" class="pg">
     <div id="colab-wrap"></div>
@@ -1872,7 +1901,14 @@ function fecharMenuMobile() {
 }
 
 // ── NAV ───────────────────────────────────────────────────
-var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', tabelas:'Tabelas de Preço', auge:'Importar Auge', catalogo:'Catálogo de Produtos', pedidos:'Pedidos de Venda' };
+var TITLES = { dashboard:'Dashboard', orcamento:'Orçamento', 'os-cortinas':'OS Cortinas', 'os-tapecaria':'OS Tapeçaria', calculadoras:'Calculadoras', historico:'Histórico', quadro:'Quadro de Pedidos', notas:'Agenda de Clientes', agenda:'Agenda', colaboradores:'Colaboradores', tabelas:'Tabelas de Preço', auge:'Importar Auge', catalogo:'Catálogo de Produtos', pedidos:'Pedidos de Venda', usuarios:'Usuários' };
+var _currentUser = null;
+var _PERMS_DEFAULT = {
+  admin: null,
+  administrativo: ['dashboard','orcamento','os-cortinas','os-tapecaria','pedidos','clientes','quadro','notas','agenda','colaboradores','auge','tabelas','catalogo','calculadoras','historico','lixeira'],
+  vendas: ['dashboard','orcamento','pedidos','clientes','notas','agenda','catalogo','calculadoras'],
+  instalacao: ['agenda']
+};
 var _navHistory=[];
 function voltarPagina(){
   if(_navHistory.length>=2){
@@ -6389,6 +6425,44 @@ function updateThemeIcon(t){
   moon.style.display = t==='light' ? '' : 'none';
 }
 
+// ── CONTROLE DE ACESSO ────────────────────────────────────
+function _initRoleUI(){
+  var u=_currentUser; if(!u) return;
+  // Chip de usuário
+  var n=document.getElementById('sb-user-nome'), p=document.getElementById('sb-user-perfil');
+  if(n) n.textContent=u.nome;
+  if(p){
+    var labels={admin:'Administrador',administrativo:'Administrativo',vendas:'Vendas',instalacao:'Instalação'};
+    p.textContent=labels[u.perfil]||u.perfil;
+  }
+  // Mostrar/ocultar itens do menu
+  var allowed=_PERMS_DEFAULT[u.perfil]; // null = tudo
+  // Aplicar permissões customizadas do usuário
+  var perms=u.permissoes||{};
+  document.querySelectorAll('.sb-item[id^="nav-"]').forEach(function(el){
+    var key=el.id.replace('nav-','');
+    if(key==='usuarios'){ el.style.display=(u.perfil==='admin')?'':'none'; return; }
+    if(key==='lixeira'){ if(allowed&&allowed.indexOf('lixeira')===-1) el.style.display='none'; return; }
+    if(allowed===null){ el.style.display=''; return; } // admin: tudo visível
+    var ok=allowed.indexOf(key)!==-1;
+    if(perms[key]===true) ok=true;
+    if(perms[key]===false) ok=false;
+    el.style.display=ok?'':'none';
+  });
+  // Ocultar grupos sem itens visíveis
+  document.querySelectorAll('.sb-group').forEach(function(g){
+    var items=g.querySelectorAll('.sb-item[id^="nav-"]');
+    var anyVis=Array.from(items).some(function(i){return i.style.display!=='none';});
+    var lbl=g.querySelector('.sb-lbl');
+    if(lbl) lbl.style.display=anyVis?'':'none';
+  });
+  // Instalação: vai direto para agenda com aba instalação
+  if(u.perfil==='instalacao'){
+    ir('agenda',document.getElementById('nav-agenda'));
+    _agView='instalacao'; renderAgenda();
+  }
+}
+
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('load',function(){
   var d=new Date();
@@ -6400,6 +6474,11 @@ window.addEventListener('load',function(){
   novoOrcamento();
   gerarDesenho();
   if(typeof chatIaAtualizarBadge==='function') chatIaAtualizarBadge();
+  // Carregar usuário logado
+  fetch('/me').then(function(r){return r.json();}).then(function(u){
+    _currentUser=u;
+    _initRoleUI();
+  }).catch(function(){});
 });
 
 // ── AGENDA ────────────────────────────────────────────────
@@ -6526,7 +6605,11 @@ function renderAgenda() {
   html += '</div>';
   html += '<div class="ag-tb-c"><div class="ag-search">'+_SVG.search+'<input id="ag-search-inp" type="text" placeholder="Pesquisar eventos, cliente ou endereço..." oninput="agSearch(this.value)" value="'+esc(_agSearch)+'"></div></div>';
   html += '<div class="ag-tb-r"><div class="ag-views">';
-  [{v:'dia',l:'Dia'},{v:'semana',l:'Semana'},{v:'mes',l:'Mês'},{v:'ano',l:'Ano'}].forEach(function(x){
+  var _agViewList=[{v:'dia',l:'Dia'},{v:'semana',l:'Semana'},{v:'mes',l:'Mês'},{v:'ano',l:'Ano'}];
+  if(_currentUser&&(_currentUser.perfil==='instalacao'||_currentUser.perfil==='admin'||_currentUser.perfil==='administrativo')){
+    _agViewList.push({v:'instalacao',l:'Instalação'});
+  }
+  _agViewList.forEach(function(x){
     html += '<button class="ag-vb'+(_agView===x.v?' ag-vb-on':'')+'" onclick="agSetView(\''+x.v+'\')">'+x.l+'</button>';
   });
   html += '</div>';
@@ -6549,11 +6632,245 @@ function _agRefreshContent() {
   renderAgenda();
 }
 function _agViewHtml() {
-  if (_agView==='mes')    return _agMesHtml();
-  if (_agView==='semana') return _agSemanaHtml();
-  if (_agView==='dia')    return _agDiaHtml();
-  if (_agView==='ano')    return _agAnoHtml();
+  if (_agView==='mes')       return _agMesHtml();
+  if (_agView==='semana')    return _agSemanaHtml();
+  if (_agView==='dia')       return _agDiaHtml();
+  if (_agView==='ano')       return _agAnoHtml();
+  if (_agView==='instalacao') return _agInstalacaoHtml();
   return '';
+}
+
+function _agInstalacaoHtml(){
+  var hoje=new Date(); hoje.setHours(0,0,0,0);
+  var hojStr=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-'+String(hoje.getDate()).padStart(2,'0');
+  var evs=(db('agenda')||[]).filter(function(e){
+    if(e.data!==hojStr) return false;
+    if(e.status==='cancelado') return false;
+    // Se usuário é instalador, filtra apenas os de tipo instalação e que esteja nos colaboradores
+    if(_currentUser&&_currentUser.perfil==='instalacao'){
+      var meuNome=(_currentUser.nome||'').toLowerCase();
+      var cols=(e.colaboradores||[]).map(function(c){return (c||'').toLowerCase();});
+      if(cols.length>0&&cols.indexOf(meuNome)===-1) return false;
+      if(e.tipo&&e.tipo!=='instalacao'&&e.tipo!=='manutencao') return false;
+    }
+    return true;
+  });
+  var dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sab'];
+  var meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var h='<div style="padding:16px 0">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:12px">'+dias[hoje.getDay()]+', '+hoje.getDate()+' de '+meses[hoje.getMonth()]+' de '+hoje.getFullYear()+'</div>';
+  if(!evs.length){
+    h+='<div style="padding:48px 24px;text-align:center;color:var(--txt3);font-size:13px">Nenhuma tarefa para hoje.</div>';
+  } else {
+    evs.forEach(function(ev){
+      var cor=AG_TIPOS.find(function(t){return t.id===ev.tipo;})||{color:'#6b7280'};
+      var concluido=ev.status==='concluido';
+      h+='<div class="inst-card'+(concluido?' inst-card-ok':'')+'">'+
+        '<div style="display:flex;align-items:flex-start;gap:12px">'+
+          '<div style="width:4px;border-radius:2px;background:'+cor.color+';align-self:stretch;flex-shrink:0"></div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'+
+              '<span style="font-size:13px;font-weight:700;color:var(--txt)">'+esc(ev.cliente||ev.tipoLabel||'Evento')+'</span>'+
+              (ev.horaInicio?'<span style="font-size:11px;color:var(--txt3);background:var(--bg2);padding:2px 7px;border-radius:4px;font-weight:600">'+esc(ev.horaInicio)+(ev.horaFim?'–'+esc(ev.horaFim):'')+'</span>':'')+
+              '<span style="font-size:10px;font-weight:700;color:'+cor.color+';background:'+cor.color+'18;padding:2px 7px;border-radius:4px">'+esc(ev.tipoLabel||ev.tipo||'')+'</span>'+
+            '</div>'+
+            (ev.endereco?'<div style="font-size:12px;color:var(--txt2);margin-bottom:4px">'+esc(ev.endereco)+'</div>':'')+
+            (ev.obs?'<div style="font-size:12px;color:var(--txt3)">'+esc(ev.obs)+'</div>':'')+
+            // Fotos já anexadas
+            ((ev.fotosInstalacao&&ev.fotosInstalacao.length)?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+ev.fotosInstalacao.map(function(f){return'<img src="'+f.data+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">';}).join('')+'</div>':'')+
+          '</div>'+
+          '<div style="flex-shrink:0">'+
+            (concluido
+              ? '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:5px 10px;border-radius:7px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Concluído</div>'
+              : '<button class="btn btn-p btn-xs" onclick="instAbrirModal(\''+ev.id+'\')">Concluir</button>'
+            )+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+  }
+  h+='</div>';
+  return h;
+}
+
+var _instEvId=null;
+function instAbrirModal(evId){
+  _instEvId=evId;
+  var ev=(db('agenda')||[]).find(function(e){return e.id===evId;});
+  if(!ev) return;
+  var ov=document.getElementById('inst-overlay');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='inst-overlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.onclick=function(e){if(e.target===ov)instFecharModal();};
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML='<div style="background:var(--bg);border-radius:14px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">'+
+    '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:4px">Confirmar Instalação</div>'+
+    '<div style="font-size:13px;color:var(--txt2);margin-bottom:20px">'+esc(ev.cliente||ev.tipoLabel||'Evento')+'</div>'+
+    '<div style="margin-bottom:16px">'+
+      '<label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:8px">Foto da instalação <span style="color:#ef4444">*</span></label>'+
+      '<input type="file" id="inst-foto-input" accept="image/*" capture="environment" style="display:block;width:100%;font-size:13px;color:var(--txt)">'+
+      '<div id="inst-foto-preview" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"></div>'+
+    '</div>'+
+    '<div style="margin-bottom:20px">'+
+      '<label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:8px">Observações</label>'+
+      '<textarea id="inst-obs" rows="3" style="width:100%;resize:vertical;font-family:inherit;font-size:13px;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--txt)" placeholder="Ex: Produto instalado sem problemas..."></textarea>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px">'+
+      '<button class="btn btn-s btn-xs" style="flex:1" onclick="instFecharModal()">Cancelar</button>'+
+      '<button class="btn btn-p btn-xs" style="flex:2" onclick="instConcluirSalvar()">Confirmar Conclusão</button>'+
+    '</div>'+
+  '</div>';
+  ov.style.display='flex';
+  document.getElementById('inst-foto-input').addEventListener('change',function(){
+    var pre=document.getElementById('inst-foto-preview');
+    pre.innerHTML='';
+    Array.from(this.files).forEach(function(f){
+      var rd=new FileReader();
+      rd.onload=function(e){
+        var img=document.createElement('img');
+        img.src=e.target.result;
+        img.style.cssText='width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border)';
+        pre.appendChild(img);
+      };
+      rd.readAsDataURL(f);
+    });
+  });
+}
+function instFecharModal(){
+  var ov=document.getElementById('inst-overlay');
+  if(ov){ov.style.display='none';ov.innerHTML='';}
+}
+function instConcluirSalvar(){
+  var inp=document.getElementById('inst-foto-input');
+  if(!inp||!inp.files||!inp.files.length){toast('Foto obrigatória — tire uma foto da instalação.','err');return;}
+  var obs=(document.getElementById('inst-obs')||{}).value||'';
+  var file=inp.files[0];
+  var rd=new FileReader();
+  rd.onload=function(e){
+    var arr=db('agenda'), idx=arr.findIndex(function(x){return x.id===_instEvId;});
+    if(idx===-1){toast('Evento não encontrado.','err');return;}
+    if(!arr[idx].fotosInstalacao) arr[idx].fotosInstalacao=[];
+    arr[idx].fotosInstalacao.push({data:e.target.result,ts:Date.now(),usuario:_currentUser?_currentUser.nome:'',obs:obs});
+    arr[idx].status='concluido';
+    arr[idx].obsInstalacao=obs||arr[idx].obsInstalacao||'';
+    dbSave('agenda',arr);
+    instFecharModal();
+    renderAgenda();
+    toast('Instalação concluída e foto salva!','ok');
+  };
+  rd.readAsDataURL(file);
+}
+
+// ── USUÁRIOS ─────────────────────────────────────────────────────────────────
+var _usrList=[];
+function renderUsuarios(){
+  var wrap=document.getElementById('usr-wrap'); if(!wrap) return;
+  wrap.innerHTML='<div style="padding:20px 0"><div style="font-size:11px;color:var(--txt3);text-align:center">Carregando...</div></div>';
+  fetch('/usuarios').then(function(r){return r.json();}).then(function(users){
+    _usrList=users;
+    var perfilLabel={admin:'Admin',administrativo:'Administrativo',vendas:'Vendas',instalacao:'Instalação'};
+    var perfilColor={admin:'#c9a961',administrativo:'#3b82f6',vendas:'#10b981',instalacao:'#f59e0b'};
+    var h='<div class="pg-hd"><div class="pg-hd-title">Usuários</div>';
+    h+='<button class="btn btn-p btn-xs" onclick="usrModal(null)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo Usuário</button></div>';
+    h+='<div class="usr-table-wrap"><table class="usr-table"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Status</th><th></th></tr></thead><tbody>';
+    if(!users.length){ h+='<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:32px">Nenhum usuário cadastrado.</td></tr>'; }
+    users.forEach(function(u){
+      var pc=perfilColor[u.perfil]||'#6b7280';
+      h+='<tr>'+
+        '<td><span style="font-weight:700;color:var(--txt)">'+esc(u.nome)+'</span></td>'+
+        '<td><span style="font-family:monospace;font-size:12px;color:var(--txt2)">'+esc(u.login)+'</span></td>'+
+        '<td><span style="background:'+pc+'20;color:'+pc+';padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">'+esc(perfilLabel[u.perfil]||u.perfil)+'</span></td>'+
+        '<td><span style="color:'+(u.ativo?'#16a34a':'#dc2626')+';font-size:11px;font-weight:700">'+(u.ativo?'Ativo':'Inativo')+'</span></td>'+
+        '<td style="text-align:right"><button class="btn btn-s btn-xs" onclick="usrModal(\''+u.id+'\')">Editar</button></td>'+
+      '</tr>';
+    });
+    h+='</tbody></table></div>';
+    wrap.innerHTML=h;
+  }).catch(function(){ wrap.innerHTML='<div style="padding:32px;text-align:center;color:#dc2626">Erro ao carregar usuários.</div>'; });
+}
+function usrModal(id){
+  var u=id?(_usrList.find(function(x){return x.id===id;})||null):null;
+  var perfs=[{v:'admin',l:'Administrador'},{v:'administrativo',l:'Administrativo'},{v:'vendas',l:'Vendas'},{v:'instalacao',l:'Instalação'}];
+  var navItems=['dashboard','orcamento','os-cortinas','os-tapecaria','pedidos','clientes','quadro','notas','agenda','colaboradores','auge','tabelas','catalogo','calculadoras','historico'];
+  var navLabels={dashboard:'Dashboard','orcamento':'Orçamentos','os-cortinas':'OS Cortinas','os-tapecaria':'OS Tapeçaria',pedidos:'Pedidos',clientes:'Clientes',quadro:'Dia a Dia',notas:'Anotações',agenda:'Agenda',colaboradores:'Colaboradores',auge:'Importar Auge',tabelas:'Tabelas de Preço',catalogo:'Catálogo',calculadoras:'Calculadoras',historico:'Histórico'};
+  var perms=u?(u.permissoes||{}):{};
+  var ov=document.getElementById('usr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='usr-modal-ov';ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px';ov.onclick=function(e){if(e.target===ov)usrFecharModal();};document.body.appendChild(ov);}
+  var perfsOpts=perfs.map(function(p){return'<option value="'+p.v+'"'+(u&&u.perfil===p.v?' selected':'')+'>'+p.l+'</option>';}).join('');
+  var permsHtml=navItems.map(function(k){
+    var checked=(perms[k]===true)?'checked':'';
+    var unchecked=(perms[k]===false)?'checked':'';
+    return '<tr><td style="padding:4px 0;font-size:12px;color:var(--txt)">'+navLabels[k]+'</td>'+
+      '<td style="text-align:center"><input type="radio" name="perm_'+k+'" value="1" '+checked+' style="accent-color:var(--acc)"></td>'+
+      '<td style="text-align:center"><input type="radio" name="perm_'+k+'" value="0" '+unchecked+' style="accent-color:#ef4444"></td>'+
+      '<td style="text-align:center"><input type="radio" name="perm_'+k+'" value="" '+(checked===''&&unchecked===''?'checked':'')+' style="accent-color:var(--txt3)"></td>'+
+    '</tr>';
+  }).join('');
+  ov.innerHTML='<div style="background:var(--bg);border-radius:14px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">'+
+    '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:20px">'+(u?'Editar Usuário':'Novo Usuário')+'</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
+      '<div><label class="lbl">Nome completo</label><input id="usr-nome" class="inp" value="'+esc(u?u.nome:'')+'"></div>'+
+      '<div><label class="lbl">Login</label><input id="usr-login" class="inp" value="'+esc(u?u.login:'')+'" placeholder="sem.espacos"></div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
+      '<div><label class="lbl">Senha'+(u?' (deixe em branco para manter)':'')+'</label><input id="usr-senha" class="inp" type="password" placeholder="•••••••" autocomplete="new-password"></div>'+
+      '<div><label class="lbl">Perfil</label><select id="usr-perfil" class="inp">'+perfsOpts+'</select></div>'+
+    '</div>'+
+    (u?'<div style="margin-bottom:12px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--txt)"><input type="checkbox" id="usr-ativo" '+(u.ativo?'checked':'')+' style="accent-color:var(--acc)"> Usuário ativo</label></div>':'')+
+    '<div style="margin-bottom:20px">'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:8px">Permissões customizadas (sobrepõe o perfil)</div>'+
+      '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr><th style="text-align:left;font-size:10px;color:var(--txt3);padding:2px 0">Seção</th><th style="font-size:10px;color:#16a34a;width:50px">Liberar</th><th style="font-size:10px;color:#dc2626;width:50px">Bloquear</th><th style="font-size:10px;color:var(--txt3);width:60px">Padrão</th></tr></thead>'+
+        '<tbody>'+permsHtml+'</tbody>'+
+      '</table>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;align-items:center">'+
+      (u&&u.id!=='1'?'<button class="btn btn-d btn-xs" onclick="usrDelete(\''+u.id+'\')">Excluir</button>':'')+
+      '<div style="flex:1"></div>'+
+      '<button class="btn btn-s btn-xs" onclick="usrFecharModal()">Cancelar</button>'+
+      '<button class="btn btn-p btn-xs" onclick="usrSalvar('+(u?'\''+u.id+'\'':'null')+')">Salvar</button>'+
+    '</div>'+
+  '</div>';
+  ov.style.display='flex';
+}
+function usrFecharModal(){var ov=document.getElementById('usr-modal-ov');if(ov){ov.style.display='none';ov.innerHTML='';}}
+function usrSalvar(id){
+  var nome=(document.getElementById('usr-nome')||{}).value||'';
+  var login=(document.getElementById('usr-login')||{}).value||'';
+  var senha=(document.getElementById('usr-senha')||{}).value||'';
+  var perfil=(document.getElementById('usr-perfil')||{}).value||'';
+  if(!nome||!login||!perfil){toast('Preencha nome, login e perfil.','err');return;}
+  if(!id&&!senha){toast('Informe uma senha.','err');return;}
+  // Coletar permissões
+  var navItems=['dashboard','orcamento','os-cortinas','os-tapecaria','pedidos','clientes','quadro','notas','agenda','colaboradores','auge','tabelas','catalogo','calculadoras','historico'];
+  var permissoes={};
+  navItems.forEach(function(k){
+    var checked=document.querySelector('input[name="perm_'+k+'"]:checked');
+    if(checked){
+      if(checked.value==='1') permissoes[k]=true;
+      else if(checked.value==='0') permissoes[k]=false;
+    }
+  });
+  var ativo=id?(document.getElementById('usr-ativo')||{}).checked!==false:true;
+  var body={nome:nome,login:login,perfil:perfil,permissoes:permissoes,ativo:ativo};
+  if(senha) body.senha=senha;
+  var url=id?'/usuarios/'+id:'/usuarios';
+  var method=id?'PUT':'POST';
+  fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.erro){toast(d.erro,'err');return;}
+      usrFecharModal(); renderUsuarios(); toast((id?'Usuário atualizado!':'Usuário criado!'),'ok');
+    }).catch(function(){toast('Erro ao salvar.','err');});
+}
+function usrDelete(id){
+  if(!confirm('Excluir este usuário permanentemente?')) return;
+  fetch('/usuarios/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+    if(d.erro){toast(d.erro,'err');return;}
+    usrFecharModal(); renderUsuarios(); toast('Usuário excluído.','ok');
+  }).catch(function(){toast('Erro ao excluir.','err');});
 }
 
 function _agMesHtml() {
