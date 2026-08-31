@@ -52,6 +52,7 @@ if (DATABASE_URL) {
 }
 
 const DADOS_PATH = path.join(process.env.DADOS_DIR || __dirname, 'dados.json');
+const HISTORICO_MAX = 30; // versões recentes mantidas em DADOS_DIR/historico/
 
 // ── USUÁRIOS ──────────────────────────────────────────────────────────────────
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -295,6 +296,24 @@ app.post('/dados', auth, async (req, res) => {
         if (!fs.existsSync(backupPath) && fs.existsSync(DADOS_PATH)) {
           try { await fsp.copyFile(DADOS_PATH, backupPath); } catch (_) {}
         }
+
+        // Histórico das últimas gravações — permite recuperar rapidamente caso
+        // um salvamento com dados desatualizados sobrescreva algo mais recente
+        // (ex: dispositivo com cache antigo). Guarda as últimas HISTORICO_MAX
+        // versões, uma por gravação, e descarta as mais antigas.
+        try {
+          const histDir = path.join(process.env.DADOS_DIR || __dirname, 'historico');
+          if (!fs.existsSync(histDir)) fs.mkdirSync(histDir);
+          if (fs.existsSync(DADOS_PATH)) {
+            const stamp = new Date(ts).toISOString().replace(/[:.]/g, '-');
+            await fsp.copyFile(DADOS_PATH, path.join(histDir, `dados_${stamp}.json`));
+            const arquivos = (await fsp.readdir(histDir)).filter(f => f.endsWith('.json')).sort();
+            const excedente = arquivos.length - HISTORICO_MAX;
+            if (excedente > 0) {
+              await Promise.all(arquivos.slice(0, excedente).map(f => fsp.unlink(path.join(histDir, f)).catch(() => {})));
+            }
+          }
+        } catch (_) {}
       }
 
       await salvarDados(merged);
