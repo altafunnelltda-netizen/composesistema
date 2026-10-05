@@ -2656,6 +2656,12 @@ function cobrarOrc(id){
 // o.pag = {entradaPagoEm, entregueEm, saldoPagoEm, cobradoEm}
 function _cobfFmtR(v){return 'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
+// só entra quem tem no campo Pagamento do orçamento algo como "50% entrada + 50% na entrega" ou "50/50"
+function _cobfEh5050(o){
+  var t=(o.pagamento||'').toLowerCase();
+  return (t.match(/50\s*%/g)||[]).length>=2 || /50\s*\/\s*50/.test(t);
+}
+
 function _cobfEtapa(o){
   var p=o.pag||{};
   if(p.saldoPagoEm) return 'quitado';
@@ -2670,7 +2676,7 @@ function renderCobrancasFechados(){
   var resumo=document.getElementById('cobf-resumo');
   var agora=Date.now(), DIA=24*60*60*1000;
   var fechados=db('orc').filter(function(o){
-    return _pipeNormStatus(o.status||'lead')==='fechado' && _cobfEtapa(o)!=='quitado';
+    return _pipeNormStatus(o.status||'lead')==='fechado' && _cobfEh5050(o) && _cobfEtapa(o)!=='quitado';
   });
   var aReceber=0, vencidos=0;
   var ordem={saldo:0,entrada:1,entrega:2};
