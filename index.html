@@ -695,6 +695,14 @@
       </div>
       <div id="d-cobrancas"><div class="empty">Nenhum orçamento pendente de cobrança.</div></div>
     </div>
+    <div class="card no-print" id="card-cobrancas-fechados">
+      <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+        Cobrança 50% / 50% — Clientes Fechados
+        <span id="cobf-badge" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;padding:1px 8px;font-size:11px;font-weight:700"></span>
+        <span id="cobf-resumo" style="margin-left:auto;font-size:12px;font-weight:400;color:var(--text-muted)"></span>
+      </div>
+      <div id="d-cobf"><div class="empty">Nenhum cliente fechado com cobrança em aberto.</div></div>
+    </div>
     <div class="card">
       <div class="card-title">Documentos Recentes</div>
       <div id="d-recentes"><div class="empty">Nenhum documento salvo ainda.</div></div>
@@ -2343,6 +2351,7 @@ function atualizarDash(){
   renderFunil();
   renderPipeline();
   renderCobranças();
+  renderCobrancasFechados();
 }
 
 function _funilFiltrarOrcs(){
@@ -2643,6 +2652,106 @@ function cobrarOrc(id){
   toast('Cobrança registrada!','ok');
 }
 
+// ── COBRANÇA 50% NO ATO + 50% NA ENTREGA (clientes fechados) ──
+// o.pag = {entradaPagoEm, entregueEm, saldoPagoEm, cobradoEm}
+function _cobfFmtR(v){return 'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function _cobfEtapa(o){
+  var p=o.pag||{};
+  if(p.saldoPagoEm) return 'quitado';
+  if(!p.entradaPagoEm) return 'entrada';
+  if(!p.entregueEm) return 'entrega';
+  return 'saldo';
+}
+
+function renderCobrancasFechados(){
+  var el=document.getElementById('d-cobf'); if(!el) return;
+  var badge=document.getElementById('cobf-badge');
+  var resumo=document.getElementById('cobf-resumo');
+  var agora=Date.now(), DIA=24*60*60*1000;
+  var fechados=db('orc').filter(function(o){
+    return _pipeNormStatus(o.status||'lead')==='fechado' && _cobfEtapa(o)!=='quitado';
+  });
+  var aReceber=0, vencidos=0;
+  var ordem={saldo:0,entrada:1,entrega:2};
+  fechados.sort(function(a,b){
+    var d=ordem[_cobfEtapa(a)]-ordem[_cobfEtapa(b)];
+    return d||((a._statusHistory&&a._statusHistory.fechado||a._ts||0)-(b._statusHistory&&b._statusHistory.fechado||b._ts||0));
+  });
+  var html=fechados.map(function(o){
+    var p=o.pag||{};
+    var total=parseFloat(o.total)||0;
+    var entrada=Math.round(total*50)/100;
+    var saldo=Math.round((total-entrada)*100)/100;
+    var etapa=_cobfEtapa(o);
+    var fechadoEm=(o._statusHistory&&o._statusHistory.fechado)||o._ts||0;
+    var ref=etapa==='saldo'?p.entregueEm:fechadoEm;
+    var dias=ref?Math.floor((agora-ref)/DIA):0;
+    var pendente=etapa==='entrada'||etapa==='saldo'?(etapa==='entrada'?entrada:saldo):0;
+    aReceber+=etapa==='entrada'?entrada+saldo:(etapa==='entrega'||etapa==='saldo'?saldo:0);
+    if(pendente>0&&dias>=1) vencidos++;
+    var chip=function(ok,txt){return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+(ok?'rgba(16,185,129,.15)':'var(--bg2)')+';color:'+(ok?'#10b981':'var(--text-muted)')+';border:1px solid '+(ok?'rgba(16,185,129,.35)':'var(--border)')+'">'+(ok?'✓ ':'')+txt+'</span>';};
+    var steps=chip(!!p.entradaPagoEm,'Entrada 50% · '+_cobfFmtR(entrada))+' '+chip(!!p.entregueEm,'Entregue')+' '+chip(!!p.saldoPagoEm,'Saldo 50% · '+_cobfFmtR(saldo));
+    var btn=function(txt,fn,cor){return '<button class="btn btn-s" style="font-size:11px;padding:4px 10px;'+(cor?'background:'+cor+';color:#fff;border-color:'+cor+';':'')+'" onclick="'+fn+'">'+txt+'</button>';};
+    var acoes='', alerta='';
+    if(etapa==='entrada'){
+      acoes=btn('Entrada recebida','cobfMarcar(\''+o.id+'\',\'entradaPagoEm\')','#10b981');
+      alerta='Cobrar entrada de '+_cobfFmtR(entrada)+' — fechado há '+dias+' dia'+(dias!==1?'s':'');
+    }else if(etapa==='entrega'){
+      acoes=btn('Marcar entregue','cobfMarcar(\''+o.id+'\',\'entregueEm\')','#3b82f6');
+      alerta='Entrada recebida em '+fmtTs(p.entradaPagoEm)+' — aguardando entrega para cobrar o saldo';
+    }else{
+      acoes=btn('Saldo recebido','cobfMarcar(\''+o.id+'\',\'saldoPagoEm\')','#10b981');
+      alerta='Entregue — cobrar saldo de '+_cobfFmtR(saldo)+' ('+dias+' dia'+(dias!==1?'s':'')+' desde a entrega)';
+    }
+    var fone=(o.fone||'').replace(/\D/g,'');
+    var zap='';
+    if(fone&&(etapa==='entrada'||etapa==='saldo')){
+      var msg='Olá '+(o.cliente||'')+', tudo bem? Passando para combinar o pagamento '+(etapa==='entrada'?'da entrada (50%)':'do saldo (50%)')+' do pedido #'+(o.num||'')+', no valor de '+_cobfFmtR(pendente)+'. Obrigado!';
+      zap='<a class="btn" style="font-size:11px;padding:4px 10px;background:var(--bg2);border:1px solid var(--border);text-decoration:none;color:inherit" target="_blank" rel="noopener" href="https://wa.me/'+(fone.length<=11?'55':'')+fone+'?text='+encodeURIComponent(msg)+'">WhatsApp</a>';
+    }
+    var desfazer=(p.entradaPagoEm||p.entregueEm)?'<button class="btn" style="font-size:11px;padding:4px 8px;background:none;border:none;color:var(--text-muted)" title="Desfazer a última etapa" onclick="cobfDesfazer(\''+o.id+'\')">↶</button>':'';
+    var cor=(pendente>0&&dias>=3)?'#ef4444':'var(--text-muted)';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">'+
+      '<div style="flex:1;min-width:260px">'+
+        '<div style="font-weight:600;font-size:13px">'+esc(o.cliente||'—')+' <span style="font-weight:400;font-size:11px;color:var(--text-muted)">#'+esc(o.num||'—')+' · Total '+(total?_cobfFmtR(total):'sem valor')+'</span></div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0 3px">'+steps+'</div>'+
+        '<div style="font-size:11px;color:'+cor+'">'+alerta+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">'+acoes+zap+desfazer+'</div>'+
+    '</div>';
+  }).join('');
+  el.innerHTML=html||'<div class="empty">Nenhum cliente fechado com cobrança em aberto.</div>';
+  if(badge){
+    if(fechados.length){badge.textContent=fechados.length;badge.style.display='';}else badge.style.display='none';
+  }
+  if(resumo) resumo.textContent=fechados.length?('A receber: '+_cobfFmtR(aReceber)+(vencidos?' · '+vencidos+' com cobrança pendente':'')):'';
+}
+
+function cobfMarcar(id,campo){
+  var arr=db('orc');
+  var o=arr.find(function(x){return x.id===id;});
+  if(!o) return;
+  if(!o.pag) o.pag={};
+  if(campo==='saldoPagoEm'&&!confirm('Confirmar recebimento do saldo (50%)? O cliente sairá desta lista.')) return;
+  o.pag[campo]=Date.now();
+  o._ts=o._ts||Date.now();
+  dbSave('orc',arr);
+  renderCobrancasFechados();
+  toast(campo==='entregueEm'?'Entrega registrada — cobrar o saldo!':'Pagamento registrado!','ok');
+}
+
+function cobfDesfazer(id){
+  var arr=db('orc');
+  var o=arr.find(function(x){return x.id===id;});
+  if(!o||!o.pag) return;
+  var campo=o.pag.entregueEm?'entregueEm':'entradaPagoEm';
+  delete o.pag[campo];
+  dbSave('orc',arr);
+  renderCobrancasFechados();
+  toast('Etapa desfeita.','ok');
+}
+
 function fmtTs(ts){
   if(!ts) return '';
   var d=new Date(ts);
@@ -2773,6 +2882,8 @@ function orcSerializar(){
     clienteId:v('orc-clienteId'),projetoId:v('orc-projetoId')||'',cliente:v('orc-cliente'),fone:v('orc-fone'),end:v('orc-end'),intro:v('orc-intro'),
     prazo:v('orc-prazo'),pagamento:v('orc-pagamento'),validade:v('orc-validade'),obs:v('orc-obs'),
     status:newStatus,_statusHistory:hist,
+    pag:existing&&existing.pag?existing.pag:undefined,
+    _cobradoEm:existing&&existing._cobradoEm?existing._cobradoEm:undefined,
     itens:itens,total:orcCalc()};
 }
 
