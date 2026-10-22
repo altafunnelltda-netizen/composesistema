@@ -350,7 +350,21 @@ app.get('/admin/volume', authAdmin, (req, res) => {
   const arqs = _volumeArquivos();
   let dadosJson = 0;
   try { dadosJson = fs.statSync(DADOS_PATH).size; } catch (_) {}
+  const dir = process.env.DADOS_DIR || __dirname;
+  let disco = null, conteudo = [];
+  try {
+    const st = fs.statfsSync(dir);
+    disco = { totalMB: Math.round(st.blocks * st.bsize / 1048576), livreMB: Math.round(st.bavail * st.bsize / 1048576) };
+  } catch (_) {}
+  try {
+    conteudo = fs.readdirSync(dir, { withFileTypes: true }).map(e => {
+      let bytes = 0;
+      try { bytes = e.isFile() ? fs.statSync(path.join(dir, e.name)).size : fs.readdirSync(path.join(dir, e.name)).length; } catch (_) {}
+      return { nome: e.name, tipo: e.isDirectory() ? 'pasta(itens)' : 'arquivo(bytes)', valor: bytes };
+    }).filter(x => x.nome !== 'node_modules').slice(0, 40);
+  } catch (_) {}
   res.json({
+    pasta: dir, disco, conteudo,
     modo: pool ? 'postgres' : 'arquivo',
     dadosJsonBytes: dadosJson,
     apagaveis: { arquivos: arqs.length, bytes: arqs.reduce((s, a) => s + a.bytes, 0) },
