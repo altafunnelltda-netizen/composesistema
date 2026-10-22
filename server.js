@@ -327,6 +327,52 @@ app.post('/dados', auth, async (req, res) => {
   }
 });
 
+// ── Limpeza do volume (arquivos antigos do modo arquivo) ──────────────────────
+// GET  /admin/volume         → lista o que ocupa espaço (não apaga nada)
+// POST /admin/volume/limpar  → apaga historico/ e dados_backup_*.json, mas SÓ se
+//                              o app estiver em modo PostgreSQL com dados salvos.
+//                              O dados.json em si é mantido.
+function _volumeArquivos() {
+  const dir = process.env.DADOS_DIR || __dirname;
+  const out = [];
+  const add = (p, rel) => { try { const s = fs.statSync(p); if (s.isFile()) out.push({ rel, p, bytes: s.size }); } catch (_) {} };
+  try {
+    for (const f of fs.readdirSync(dir)) if (/^dados_backup_.*\.json$/.test(f)) add(path.join(dir, f), f);
+  } catch (_) {}
+  const hist = path.join(dir, 'historico');
+  try {
+    for (const f of fs.readdirSync(hist)) add(path.join(hist, f), 'historico/' + f);
+  } catch (_) {}
+  return out;
+}
+
+app.get('/admin/volume', authAdmin, (req, res) => {
+  const arqs = _volumeArquivos();
+  let dadosJson = 0;
+  try { dadosJson = fs.statSync(DADOS_PATH).size; } catch (_) {}
+  res.json({
+    modo: pool ? 'postgres' : 'arquivo',
+    dadosJsonBytes: dadosJson,
+    apagaveis: { arquivos: arqs.length, bytes: arqs.reduce((s, a) => s + a.bytes, 0) },
+    amostra: arqs.slice(0, 10).map(a => ({ arquivo: a.rel, bytes: a.bytes }))
+  });
+});
+
+app.post('/admin/volume/limpar', authAdmin, async (req, res) => {
+  if (!pool) return res.status(409).json({ ok: false, erro: 'App em modo arquivo: nada foi apagado (os dados estão neste volume).' });
+  try {
+    const r = await pool.query("SELECT valor FROM dados WHERE id = 'main'");
+    const d = r.rows[0] && r.rows[0].valor;
+    const chaves = d ? Object.keys(d).filter(k => k !== '_lastModified') : [];
+    if (!chaves.length) return res.status(409).json({ ok: false, erro: 'Postgres sem dados: nada foi apagado.' });
+  } catch (e) { return res.status(500).json({ ok: false, erro: e.message }); }
+  let apagados = 0, bytes = 0;
+  for (const a of _volumeArquivos()) {
+    try { fs.unlinkSync(a.p); apagados++; bytes += a.bytes; } catch (_) {}
+  }
+  res.json({ ok: true, apagados, bytesLiberados: bytes });
+});
+
 // Endpoint de backup — download do JSON completo
 app.get('/backup', auth, async (req, res) => {
   try {
