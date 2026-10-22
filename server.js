@@ -358,6 +358,29 @@ app.get('/admin/volume', authAdmin, (req, res) => {
   });
 });
 
+// POST /admin/volume/migrar → copia o dados.json do volume para o Postgres.
+// Só roda se o app estiver em modo Postgres E a tabela estiver vazia (nunca sobrescreve).
+app.post('/admin/volume/migrar', authAdmin, async (req, res) => {
+  if (!pool) return res.status(409).json({ ok: false, erro: 'App em modo arquivo: nada a migrar.' });
+  try {
+    const r = await pool.query("SELECT valor FROM dados WHERE id = 'main'");
+    const atual = r.rows[0] && r.rows[0].valor;
+    if (atual && Object.keys(atual).filter(k => k !== '_lastModified').length)
+      return res.status(409).json({ ok: false, erro: 'Postgres já tem dados: nada foi migrado.' });
+    let arq;
+    try { arq = JSON.parse(fs.readFileSync(DADOS_PATH, 'utf8')); }
+    catch (_) { return res.status(404).json({ ok: false, erro: 'dados.json não encontrado/ilegível no volume.' }); }
+    const chaves = Object.keys(arq).filter(k => k !== '_lastModified');
+    if (!chaves.length) return res.status(409).json({ ok: false, erro: 'dados.json do volume está vazio.' });
+    const lm = Date.now();
+    await writeLocked(async () => {
+      await salvarDados(Object.assign({}, arq, { _lastModified: lm }));
+      _lastModifiedCache = lm;
+    });
+    res.json({ ok: true, chaves, bytes: fs.statSync(DADOS_PATH).size });
+  } catch (e) { res.status(500).json({ ok: false, erro: e.message }); }
+});
+
 app.post('/admin/volume/limpar', authAdmin, async (req, res) => {
   if (!pool) return res.status(409).json({ ok: false, erro: 'App em modo arquivo: nada foi apagado (os dados estão neste volume).' });
   try {
