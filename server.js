@@ -284,7 +284,26 @@ app.post('/dados', auth, async (req, res) => {
       const ts = Date.now();
 
       const merged = Object.assign({}, existing);
-      if (changedKey && Object.prototype.hasOwnProperty.call(incoming, changedKey)) {
+      const delta = incoming._delta;
+      if (changedKey && delta && Array.isArray(delta.upserts) && Array.isArray(existing[changedKey])) {
+        // Gravação por registro: aplica só o que este usuário mudou sobre a versão
+        // ATUAL do servidor — não apaga o que outra pessoa salvou no meio tempo.
+        const atual = existing[changedKey].slice();
+        const del = new Set((delta.deletes || []).map(String));
+        let lista = atual.filter(r => !(r && del.has(String(r.id))));
+        const pos = new Map(lista.map((r, i) => [r && String(r.id), i]));
+        delta.upserts.forEach(u => {
+          if (!u || !u.rec || u.rec.id == null) return;
+          const id = String(u.rec.id);
+          if (pos.has(id)) lista[pos.get(id)] = u.rec;
+          else {
+            const i = Math.max(0, Math.min(+u.idx || 0, lista.length));
+            lista.splice(i, 0, u.rec);
+            pos.clear(); lista.forEach((r, k) => pos.set(r && String(r.id), k));
+          }
+        });
+        merged[changedKey] = lista;
+      } else if (changedKey && Object.prototype.hasOwnProperty.call(incoming, changedKey)) {
         merged[changedKey] = incoming[changedKey];
       }
       merged._lastModified = ts;
@@ -318,10 +337,11 @@ app.post('/dados', auth, async (req, res) => {
 
       await salvarDados(merged);
       _lastModifiedCache = ts; // atualiza cache
-      return ts;
+      return { ts, chave: changedKey, valor: incoming._delta && changedKey ? merged[changedKey] : undefined };
     });
 
-    res.json({ ok: true, lastModified: lm });
+    // Na gravação por registro, devolve a lista já juntada para o navegador se atualizar
+    res.json({ ok: true, lastModified: lm.ts, chave: lm.valor !== undefined ? lm.chave : undefined, valor: lm.valor });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
   }
@@ -514,6 +534,9 @@ if (process.env.AUGE_DEBUG === 'true') {
     } catch (e) { res.send('ERRO: ' + e.message); }
   });
 }
+
+// ── INTEGRAÇÃO eDECORAÇÃO (somente leitura de pedidos) — ver edecoracao.js ──
+require('./edecoracao').registrarRotas(app, auth);
 
 // ── IA — GEMINI ─────────────────────────────────────────────────────────────
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
